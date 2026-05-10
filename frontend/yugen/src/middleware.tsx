@@ -7,7 +7,7 @@ export function middleware(req: NextRequest) {
     const isNotProtected = req.nextUrl.pathname === "/login" || req.nextUrl.pathname.startsWith("/api");
 
     if (!token && !isNotProtected) {
-        console.log("redirect from " + req.nextUrl.pathname);
+        //console.log("redirect from " + req.nextUrl.pathname);
         //return NextResponse.redirect(new URL("/login", req.url));
     }
 

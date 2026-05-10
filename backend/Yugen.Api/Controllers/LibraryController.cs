@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Yugen.Api.Helpers;
+using Yugen.Core.Data;
 using Yugen.Core.Services;
 using Yugen.Domain.Models;
 
@@ -23,5 +24,13 @@ public class LibraryController : ControllerBase
     {
         HttpContext.GetUserFromSession(out UserModel usr);
         await _libraryService.ResyncLibrary(usr);
+    }
+
+    [HttpGet("currentlyWatching")]
+    [Authorize]
+    public async Task<MediaCard[]> GetCurrentlyWatching()
+    {
+        HttpContext.GetUserFromSession(out UserModel usr);
+        return await _libraryService.GetCurrentlyWatching(usr);
     }
 }

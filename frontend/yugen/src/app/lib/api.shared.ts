@@ -9,7 +9,7 @@ export async function get<T>(uri: string, nextCaching: NextFetchRequestConfig | 
         method: "GET",
         credentials: "include",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         },
         next: nextCaching
     });
@@ -30,7 +30,7 @@ export async function post<T>(uri: string, obj?: any, nextCaching: NextFetchRequ
         method: "POST",
         credentials: "include",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         },
         body: obj ? JSON.stringify(obj) : "",
         next: nextCaching

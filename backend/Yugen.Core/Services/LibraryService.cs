@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Yugen.Core.Configs;
+using Yugen.Core.Data;
 using Yugen.Data;
 using Yugen.Domain.Models;
 using Yugen.Providers;
@@ -47,5 +48,14 @@ public class LibraryService
 
         await _db.AddRangeAsync(newEntries);
         await _db.SaveChangesAsync();
+    }
+
+    public async Task<MediaCard[]> GetCurrentlyWatching(UserModel user)
+    {
+        MediaModel[] cards = await _db.media.Take(10).ToArrayAsync();
+        return cards.Select(x => new MediaCard()
+        {
+            Title = x.Title,
+        }).ToArray();
     }
 }
