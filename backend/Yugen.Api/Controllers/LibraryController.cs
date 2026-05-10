@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Yugen.Api.Controllers;
@@ -7,6 +8,7 @@ namespace Yugen.Api.Controllers;
 public class LibraryController : ControllerBase
 {
     [HttpPost("sync")]
+    [Authorize]
     public void SyncExternalLibraries()
     {
 

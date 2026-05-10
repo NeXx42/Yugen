@@ -12,13 +12,14 @@ interface Props {
 
 export default function (props: Props) {
     const [password, setPassword] = useState<string | undefined>(undefined);
-    const [username, setUsername] = useState<string | undefined>(undefined);
+    const [username, setUsername] = useState<string>(props.usrs[0].name);
 
     const login = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        console.log(username, password);
         if (password === undefined || username === undefined)
             return;
 
-        e.preventDefault();
         await api.auth_Login(username, password)
 
         router.push("/");

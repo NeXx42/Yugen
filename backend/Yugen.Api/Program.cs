@@ -25,7 +25,6 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(builder.Configuration["Encryption:JWTToken"]!)),
-        RoleClaimType = ClaimTypes.Role
     };
 
     options.Events = new JwtBearerEvents
@@ -37,6 +36,11 @@ builder.Services.AddAuthentication(options =>
                 context.Token = cookie;
             }
 
+            return Task.CompletedTask;
+        },
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine(context.Exception);
             return Task.CompletedTask;
         }
     };
@@ -55,6 +59,7 @@ builder.Services.AddCors(options =>
     });
 });
 
+
 builder.Services.Configure<EncryptionConfig>(builder.Configuration.GetSection("Encryption"));
 builder.Services.Configure<ProviderConfig>(builder.Configuration.GetSection("Provider"));
 
@@ -66,11 +71,15 @@ builder.Services.AddScoped<UserService>();
 
 var app = builder.Build();
 
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.UseCors("localhost");
 }
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 app.Run();

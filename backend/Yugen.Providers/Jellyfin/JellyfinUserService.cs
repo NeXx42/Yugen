@@ -48,7 +48,7 @@ public class JellyfinUserService : IUserProvider
 
     private async Task<T?> SendRequest<T>(string uri, string? body = null)
     {
-        HttpRequestMessage req = new HttpRequestMessage(string.IsNullOrEmpty(body) ? HttpMethod.Get : HttpMethod.Post, $"{_url}{uri}");
+        HttpRequestMessage req = new HttpRequestMessage(string.IsNullOrEmpty(body) ? HttpMethod.Get : HttpMethod.Post, Path.Combine(_url, uri));
         req.Headers.Add("X-Emby-Token", _apiKey);
 
         if (!string.IsNullOrEmpty(body))

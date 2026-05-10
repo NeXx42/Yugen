@@ -1,3 +1,11 @@
+import ContinueWatching from "./continueWatching";
+
 export default function () {
-    return (<h1>testq</h1>)
+    return (
+        <div>
+            <h1>testq</h1>
+            <ContinueWatching />
+        </div>
+
+    )
 }

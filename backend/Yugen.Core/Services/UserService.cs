@@ -69,8 +69,8 @@ public class UserService
             {
                 new Claim(ClaimTypes.NameIdentifier, usr.Id.ToString()),
             }),
-            Audience = "portfolio",
-            Issuer = "portfolio",
+            Audience = "Yugen",
+            Issuer = "Yugen",
             Expires = DateTime.UtcNow.AddDays(7),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(_jwtToken), SecurityAlgorithms.HmacSha256Signature)
         };
