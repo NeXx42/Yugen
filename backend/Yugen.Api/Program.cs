@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Yugen.Core.Configs;
 using Yugen.Core.Services;
 using Yugen.Data;
+using Yugen.Domain.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +39,20 @@ builder.Services.AddAuthentication(options =>
 
             return Task.CompletedTask;
         },
+
+        OnTokenValidated = async context =>
+        {
+            string? userId = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+                return;
+
+            UserService userService = context.HttpContext.RequestServices.GetRequiredService<UserService>();
+
+            UserModel user = await userService.GetUser(Guid.Parse(userId));
+            context.HttpContext.Items["User"] = user;
+        },
+
         OnAuthenticationFailed = context =>
         {
             Console.WriteLine(context.Exception);
@@ -66,7 +81,9 @@ builder.Services.Configure<ProviderConfig>(builder.Configuration.GetSection("Pro
 builder.Services.AddDbContext<YugenContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddSingleton<CatalogService>();
+
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<LibraryService>();
 
 
 var app = builder.Build();

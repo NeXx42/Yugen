@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -25,6 +26,11 @@ public class UserService
 
         _userProvider = new JellyfinUserService(providerSettings.Value.jellyfin_Url!, providerSettings.Value.jellyfin_ApiKey!);
         _jwtToken = Convert.FromBase64String(encryptionSettings.Value.jwtToken);
+    }
+
+    public async Task<UserModel> GetUser(Guid userId)
+    {
+        return await _db.user.SingleAsync(x => x.Id == userId);
     }
 
     public async Task<ExternalUser[]> GetAllUsers()
