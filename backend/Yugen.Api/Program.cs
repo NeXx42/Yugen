@@ -1,0 +1,76 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Yugen.Core.Configs;
+using Yugen.Core.Services;
+using Yugen.Data;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = "Yugen",
+
+        ValidateAudience = true,
+        ValidAudience = "Yugen",
+
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(builder.Configuration["Encryption:JWTToken"]!)),
+        RoleClaimType = ClaimTypes.Role
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            if (context.Request.Cookies.TryGetValue("AuthToken", out string? cookie))
+            {
+                context.Token = cookie;
+            }
+
+            return Task.CompletedTask;
+        }
+    };
+});
+
+builder.Services.AddOpenApi();
+builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("localhost", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
+builder.Services.Configure<EncryptionConfig>(builder.Configuration.GetSection("Encryption"));
+builder.Services.Configure<ProviderConfig>(builder.Configuration.GetSection("Provider"));
+
+builder.Services.AddDbContext<YugenContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddSingleton<CatalogService>();
+builder.Services.AddScoped<UserService>();
+
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.UseCors("localhost");
+}
+
+app.MapControllers();
+app.Run();

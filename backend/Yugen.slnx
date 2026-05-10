@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Yugen.Api/Yugen.Api.csproj" />
+  <Project Path="Yugen.Core/Yugen.Core.csproj" />
+  <Project Path="Yugen.Data/Yugen.Data.csproj" />
+  <Project Path="Yugen.Domain/Yugen.Domain.csproj" />
+  <Project Path="Yugen.Providers/Yugen.Providers.csproj" />
+</Solution>

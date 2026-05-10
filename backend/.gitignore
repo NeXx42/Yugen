@@ -1,0 +1,20 @@
+# Visual Studio / .NET
+bin/
+obj/
+.vscode/
+*.user
+*.suo
+*.dll
+*.exe
+*.pdb
+
+# EF Core Migrations (only exclude database snapshots if you want)
+*.db
+
+# Node / React frontend (if in same repo)
+node_modules/
+dist/
+.env
+
+# secrets
+appsettings.Development.json
