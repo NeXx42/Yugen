@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Yugen.Core.Data;
 using Yugen.Core.Services;
+using Yugen.Domain.Data.Media;
 
 namespace Yugen.Api.Controllers;
 
@@ -25,5 +26,11 @@ public class CatalogController : ControllerBase
     public async Task<MediaCard[]> Search([FromQuery] string query)
     {
         return await _catalogService.Search(query);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<MediaInfo> GetMediaInfo(Guid id)
+    {
+        return await _catalogService.GetMediaInfo(id);
     }
 }

@@ -55,6 +55,7 @@ public class LibraryService
         MediaModel[] cards = await _db.media.Take(10).ToArrayAsync();
         return cards.Select(x => new MediaCard()
         {
+            Id = x.Id,
             Title = x.Title,
         }).ToArray();
     }

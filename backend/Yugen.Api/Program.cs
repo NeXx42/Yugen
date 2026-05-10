@@ -80,9 +80,9 @@ builder.Services.Configure<ProviderConfig>(builder.Configuration.GetSection("Pro
 
 builder.Services.AddDbContext<YugenContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddSingleton<CatalogService>();
-
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<MediaService>();
+builder.Services.AddScoped<CatalogService>();
 builder.Services.AddScoped<LibraryService>();
 
 

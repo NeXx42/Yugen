@@ -4,12 +4,13 @@ const URL = typeof window === "undefined"
     ? SERVER_URL
     : BASE_URL;
 
-export async function get<T>(uri: string, nextCaching: NextFetchRequestConfig | undefined = undefined): Promise<T | undefined> {
+export async function get<T>(uri: string, nextCaching: NextFetchRequestConfig | undefined = undefined, authToken: string | undefined = undefined): Promise<T | undefined> {
     const res = await fetch(`${URL}/api/${uri}`, {
         method: "GET",
         credentials: "include",
         headers: {
             "Content-Type": "application/json",
+            ...(authToken ? { Cookie: `AuthToken=${authToken}` } : {})
         },
         next: nextCaching
     });
@@ -25,12 +26,13 @@ export async function get<T>(uri: string, nextCaching: NextFetchRequestConfig | 
     return res.json();
 }
 
-export async function post<T>(uri: string, obj?: any, nextCaching: NextFetchRequestConfig | undefined = undefined): Promise<T | undefined> {
+export async function post<T>(uri: string, obj?: any, nextCaching: NextFetchRequestConfig | undefined = undefined, authToken: string | undefined = undefined): Promise<T | undefined> {
     const res = await fetch(`${URL}/api/${uri}`, {
         method: "POST",
         credentials: "include",
         headers: {
             "Content-Type": "application/json",
+            ...(authToken ? { Cookie: `AuthToken=${authToken}` } : {})
         },
         body: obj ? JSON.stringify(obj) : "",
         next: nextCaching

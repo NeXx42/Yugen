@@ -3,6 +3,18 @@ export interface User {
     id: string,
 }
 
-export interface MediaCard {
+export interface MediaCardInfo {
+    id: string,
     title: string,
+}
+
+export interface MediaInfo {
+    title: string,
+    isDownloaded: boolean,
+
+    seasons: MediaSeason[]
+}
+
+export interface MediaSeason {
+    episodeNames: string[]
 }

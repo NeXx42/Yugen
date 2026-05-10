@@ -1,12 +1,14 @@
 "use client"
 
-import { MediaCard } from "@shared/types";
 import * as api from "@lib/api.local"
+import { MediaCardInfo } from "@shared/types";
+
 import { useEffect, useState } from "react";
+import MediaCard from "@comps/mediaCard";
 
 export default function () {
     const [isLoading, setLoading] = useState(false)
-    const [cards, setCards] = useState<MediaCard[] | undefined>(undefined)
+    const [cards, setCards] = useState<MediaCardInfo[] | undefined>(undefined)
 
     useEffect(() => {
         setLoading(true);
@@ -17,10 +19,7 @@ export default function () {
         <div>
             <h1>Continue Watching</h1>
             <div>
-                <ol>
-
-                    {cards?.map((x, i) => (<li><a key={`${x.title}_${i}`}>{x.title}</a></li>))}
-                </ol>
+                {cards?.map(x => <MediaCard Card={x} key={x.id} />)}
             </div>
         </div>
     )

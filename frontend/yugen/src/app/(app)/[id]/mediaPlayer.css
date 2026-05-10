@@ -1,0 +1,15 @@
+.MediaPlayer {
+    background-color: green;
+    position: absolute;
+
+    width: 500px;
+    height: 250px;
+
+    cursor: pointer;
+}
+
+.MediaPlayer video {
+    position: absolute;
+    width: 100%;
+    inset: 0px;
+}
