@@ -1,5 +1,21 @@
 .MediCard {
-    width: 100px;
-    height: 100px;
-    background-color: green;
+    width: calc(460px * .5);
+    height: calc(650px * .5);
+    background-color: #262629;
+
+    border-radius: 8px;
+    cursor: pointer;
+
+    position: relative;
+    overflow: hidden;
+}
+
+.MediCard a {
+    position: absolute;
+    bottom: 5px;
+}
+
+.MediCard img {
+    width: 100%;
+    height: 100%;
 }

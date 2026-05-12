@@ -84,7 +84,9 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<MediaService>();
 builder.Services.AddScoped<CatalogService>();
 builder.Services.AddScoped<LibraryService>();
+builder.Services.AddScoped<HydrationService>();
 
+builder.Services.AddSingleton<CacheService>();
 
 var app = builder.Build();
 

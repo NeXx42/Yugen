@@ -6,7 +6,7 @@ import * as api from "@lib/api.local"
 
 import "./mediaPlayer.css"
 
-export default function ({ ItemId }: { ItemId: string }) {
+export default function ({ itemId }: { itemId: string | undefined }) {
     const [playbackUrl, setPlaybackUrl] = useState<string | undefined>()
 
     const startPlayback = () => {
@@ -15,9 +15,9 @@ export default function ({ ItemId }: { ItemId: string }) {
 
     return (
         <div className="MediaPlayer" onClick={startPlayback}>
-            {playbackUrl != undefined &&
+            {playbackUrl != undefined && itemId != undefined &&
                 <iframe
-                    src="https://jellyfin.local/web/index.html#!/details?id=3a1340d44e2b8c59eb25226608786fb6"
+                    src={`https://jellyfin.local/web/index.html#!/details?id=${itemId}`}
                     allow="autoplay; fullscreen"
                 ></iframe>
             }

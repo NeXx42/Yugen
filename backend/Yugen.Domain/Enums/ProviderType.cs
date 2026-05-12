@@ -1,6 +1,7 @@
 namespace Yugen.Domain.Enums;
 
-public enum ProviderType
+public class ExternalProviderType
 {
-    AniList,
+    public const string MyAnimeList = "myanimelist";
+    public const string AniList = "anilist";
 }

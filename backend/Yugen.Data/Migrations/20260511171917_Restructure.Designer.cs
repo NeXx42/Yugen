@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Yugen.Data;
@@ -11,9 +12,11 @@ using Yugen.Data;
 namespace Yugen.Data.Migrations
 {
     [DbContext(typeof(YugenContext))]
-    partial class YugenContextModelSnapshot : ModelSnapshot
+    [Migration("20260511171917_Restructure")]
+    partial class Restructure
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,27 +46,6 @@ namespace Yugen.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("BannerImage")
-                        .HasColumnType("text");
-
-                    b.Property<string>("CardImageLarge")
-                        .HasColumnType("text");
-
-                    b.Property<string>("CardImageSmall")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Colour")
-                        .HasColumnType("text");
-
-                    b.Property<int>("EpisodeCount")
-                        .HasColumnType("integer");
-
-                    b.Property<bool?>("Hydrated")
-                        .HasColumnType("boolean");
-
-                    b.Property<int?>("MalId")
-                        .HasColumnType("integer");
-
                     b.Property<int?>("SuccessorId")
                         .HasColumnType("integer");
 
@@ -85,18 +67,6 @@ namespace Yugen.Data.Migrations
 
                     b.Property<int>("EpisodeNumber")
                         .HasColumnType("integer");
-
-                    b.Property<string>("EpisodeTitle")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsFiller")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsRecap")
-                        .HasColumnType("boolean");
-
-                    b.Property<float?>("Score")
-                        .HasColumnType("real");
 
                     b.HasKey("MediaId", "EpisodeNumber");
 

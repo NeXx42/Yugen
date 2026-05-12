@@ -15,14 +15,18 @@ namespace Yugen.Core.Services;
 
 public class UserService
 {
-    private readonly IUserProvider _userProvider;
     private readonly YugenContext _db;
+
+    private readonly CacheService _cache;
+    private readonly IUserProvider _userProvider;
 
     private readonly byte[] _jwtToken;
 
-    public UserService(YugenContext db, IOptions<EncryptionConfig> encryptionSettings, IOptions<ProviderConfig> providerSettings)
+    public UserService(YugenContext db, IOptions<EncryptionConfig> encryptionSettings, IOptions<ProviderConfig> providerSettings, CacheService cache)
     {
         _db = db;
+
+        _cache = cache;
 
         _userProvider = new JellyfinUserService(providerSettings.Value.jellyfin_Url!, providerSettings.Value.jellyfin_ApiKey!);
         _jwtToken = Convert.FromBase64String(encryptionSettings.Value.jwtToken);
@@ -30,7 +34,15 @@ public class UserService
 
     public async Task<UserModel> GetUser(Guid userId)
     {
-        return await _db.user.SingleAsync(x => x.Id == userId);
+        string CACHE_KEY = $"USER_SESSION_{userId}";
+
+        if (_cache.TryGetValue(CACHE_KEY, out UserModel? usr))
+            return usr!;
+
+        usr = await _db.user.SingleAsync(x => x.Id == userId);
+        _cache.SetIfNotExists(CACHE_KEY, usr);
+
+        return usr;
     }
 
     public async Task<ExternalUser[]> GetAllUsers()

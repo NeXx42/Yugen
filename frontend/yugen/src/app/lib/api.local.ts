@@ -16,6 +16,11 @@ export async function library_CurrentWatching(): Promise<MediaCardInfo[]> {
     return (await get<MediaCardInfo[]>("library/currentlyWatching"))!;
 }
 
+export async function catalog_Upcoming(): Promise<MediaCardInfo[]> {
+    return (await get<MediaCardInfo[]>("catalog/Upcoming"))!;
+}
+
+
 export async function media_PlayItem(itemId: string): Promise<string> {
     return (await get<string>("media/play"))!
 }

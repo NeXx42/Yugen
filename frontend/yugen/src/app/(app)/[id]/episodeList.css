@@ -1,0 +1,20 @@
+.EpisodeList {
+    overflow: scroll;
+
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.Episode {
+    height: 35px;
+
+    border: 1px solid transparent;
+    background: linear-gradient(#121419, #121419) padding-box, linear-gradient(to left, rgba(24, 71, 177, .2), rgba(161, 196, 247, .2)) border-box;
+    padding: 8px;
+
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.Episode p {}

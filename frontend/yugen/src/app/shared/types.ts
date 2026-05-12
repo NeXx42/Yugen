@@ -4,17 +4,29 @@ export interface User {
 }
 
 export interface MediaCardInfo {
-    id: string,
+    aniListId: string,
     title: string,
+
+    colour: string,
+    cardImg: string,
 }
 
 export interface MediaInfo {
     title: string,
-    isDownloaded: boolean,
 
-    seasons: MediaSeason[]
+    bannerUrl: string | null,
+    cardUrl: string | null,
+    colour: string | null,
+
+    episodes: MediaEpisodeInfo[]
 }
 
-export interface MediaSeason {
-    episodeNames: string[]
+export interface MediaEpisodeInfo {
+    title: string | null,
+    number: number,
+
+    isRecap: boolean,
+    isFiller: boolean,
+
+    score: number,
 }

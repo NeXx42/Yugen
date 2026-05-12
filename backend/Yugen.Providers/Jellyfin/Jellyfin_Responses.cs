@@ -29,6 +29,12 @@ public class JellyfinResponse_Media
 {
     public string? name { get; set; }
     public string? id { get; set; }
+    public string? type { get; set; }
+    public string? seasonId { get; set; }
+    public string? seriesId { get; set; }
+    public string? seriesName { get; set; }
+    public int? indexNumber { get; set; }
+
     public ProviderIds? providerIds { get; set; }
 
     public class ProviderIds

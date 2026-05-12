@@ -17,9 +17,9 @@ public class CatalogController : ControllerBase
     }
 
     [HttpGet("Upcoming")]
-    public IResult GetUpcoming()
+    public async Task<MediaCard[]> GetUpcoming()
     {
-        return Results.Ok();
+        return await _catalogService.Upcoming();
     }
 
     [HttpGet("Search")]
@@ -29,7 +29,7 @@ public class CatalogController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<MediaInfo> GetMediaInfo(Guid id)
+    public async Task<MediaInfo?> GetMediaInfo(int id)
     {
         return await _catalogService.GetMediaInfo(id);
     }

@@ -1,16 +1,21 @@
 import { MediaInfo } from "@/app/shared/types";
 import * as api from "@lib/api.server"
 import MediaPlayer from "./mediaPlayer";
+import EpisodeList from "./episodeList";
+import MediaContainer from "./mediaContainer";
 
-export default async function ({ params }: { params: { id: string } }) {
+export default async function ({ params }: { params: { id: number } }) {
     const { id } = await params;
-
+    console.log(id);
     const media: MediaInfo = await api.catalog_GetInfo(id);
+
+    console.log(media);
+
+    const drawEpisodes = () => { }
 
     return (<div>
         <h1>{media.title}</h1>
-        <a>{media.isDownloaded ? "test" : "as"}</a>
 
-        <MediaPlayer ItemId="" />
+        <MediaContainer mediaInfo={media} />
     </div>)
 }

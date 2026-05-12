@@ -26,8 +26,8 @@ export async function getAllUsers(): Promise<User[]> {
     }))!;
 }
 
-export async function catalog_GetInfo(internalId: string): Promise<MediaInfo> {
-    return (await getWithAuth<MediaInfo>(`catalog/${internalId}`, {
+export async function catalog_GetInfo(aniListId: number): Promise<MediaInfo> {
+    return (await getWithAuth<MediaInfo>(`catalog/${aniListId}`, {
         revalidate: 60
     }))!;
 }

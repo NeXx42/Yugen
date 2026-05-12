@@ -9,10 +9,11 @@ export default function ({ Card }: { Card: MediaCardInfo }) {
     const navigate = useRouter();
 
     const navigateToPage = () => {
-        navigate.push(`${Card.id}`)
+        navigate.push(`${Card.aniListId}`)
     };
 
     return (<div className="MediCard" onClick={navigateToPage}>
-        <h2>{Card.title}</h2>
+        <img src={Card.cardImg} />
+        <a>{Card.title}</a>
     </div>)
 }
