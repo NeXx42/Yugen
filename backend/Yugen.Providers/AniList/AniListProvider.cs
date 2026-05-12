@@ -85,24 +85,23 @@ public class AniListProvider : IMetaDataProvider
         }).ToArray() ?? [];
     }
 
-    public async Task<MediaCard[]> SearchMedia(string textFilter)
+    public async Task<int[]> SearchMedia(string textFilter)
     {
         string query = @"
         query ($search: String!) {
             Page {
                 media(search: $search, type: ANIME) {
-                id
-                title {
-                    romaji
-                    english
-                    native
-                }
+                    id
                 }
             }
         }";
 
         AniListResponse_Search? res = await SendRequest<AniListResponse_Search>(query, new { search = textFilter });
-        return [];
+
+        if (res == null)
+            return [];
+
+        return res.data.page.media?.Select(m => m.id).ToArray() ?? [];
     }
 
     public async Task<Dictionary<int, long>> UpcomingMedia()

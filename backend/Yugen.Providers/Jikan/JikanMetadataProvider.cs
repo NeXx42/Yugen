@@ -37,7 +37,7 @@ public class JikanMetadataProvider : IMetaDataProvider
         throw new NotImplementedException();
     }
 
-    public Task<MediaCard[]> SearchMedia(string textFilter)
+    public Task<int[]> SearchMedia(string textFilter)
     {
         throw new NotImplementedException();
     }

@@ -15,4 +15,6 @@ public class Model_MediaEpisode
     public bool IsRecap { get; set; }
     public bool IsFiller { get; set; }
     public float? Score { get; set; }
+
+    //public string? JellyfinItemId { get; set; }
 }

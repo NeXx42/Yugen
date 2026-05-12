@@ -14,6 +14,11 @@ public class CacheService
         return cache.TryAdd(set, new CacheObject(dat, expire));
     }
 
+    public void Set<T>(string key, T dat, TimeSpan? expire = null)
+    {
+        cache.TryAdd(key, new CacheObject(dat, expire));
+    }
+
     public bool TryGetValue<T>(string key, out T? dat)
     {
         if (cache.TryGetValue(key, out CacheObject o))

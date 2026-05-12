@@ -20,6 +20,11 @@ export async function catalog_Upcoming(): Promise<MediaCardInfo[]> {
     return (await get<MediaCardInfo[]>("catalog/Upcoming"))!;
 }
 
+export async function catalog_Search(text: string): Promise<MediaCardInfo[]> {
+    return (await post<MediaCardInfo[]>("catalog/Search", {
+        text: text
+    }))!;
+}
 
 export async function media_PlayItem(itemId: string): Promise<string> {
     return (await get<string>("media/play"))!

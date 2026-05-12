@@ -22,10 +22,15 @@ public class CatalogController : ControllerBase
         return await _catalogService.Upcoming();
     }
 
-    [HttpGet("Search")]
-    public async Task<MediaCard[]> Search([FromQuery] string query)
+    public class Search_Query
     {
-        return await _catalogService.Search(query);
+        public string? text { get; set; }
+    }
+
+    [HttpPost("Search")]
+    public async Task<MediaCard[]> Search([FromBody] Search_Query query)
+    {
+        return await _catalogService.Search(query.text!);
     }
 
     [HttpGet("{id}")]

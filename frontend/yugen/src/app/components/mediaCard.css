@@ -1,17 +1,24 @@
 .MediCard {
-    width: calc(460px * .5);
-    height: calc(650px * .5);
-    background-color: #262629;
+    width: 170px;
 
     border-radius: 8px;
     cursor: pointer;
 
     position: relative;
     overflow: hidden;
+
+    display: grid;
+    grid-template-rows: 250px 50px;
+    gap: 5px;
+
+    transition: all .1s;
+}
+
+.MediCard:hover {
+    transform: scale(1.01);
 }
 
 .MediCard a {
-    position: absolute;
     bottom: 5px;
 }
 

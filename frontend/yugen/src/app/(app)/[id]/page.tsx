@@ -6,12 +6,7 @@ import MediaContainer from "./mediaContainer";
 
 export default async function ({ params }: { params: { id: number } }) {
     const { id } = await params;
-    console.log(id);
     const media: MediaInfo = await api.catalog_GetInfo(id);
-
-    console.log(media);
-
-    const drawEpisodes = () => { }
 
     return (<div>
         <h1>{media.title}</h1>

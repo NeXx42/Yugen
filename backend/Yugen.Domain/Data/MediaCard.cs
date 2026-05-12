@@ -20,7 +20,7 @@ public class MediaCard
             Title = dbData.Title,
 
             colour = dbData.Colour,
-            cardImg = dbData.CardImageSmall
+            cardImg = dbData.CardImageLarge
         };
     }
 

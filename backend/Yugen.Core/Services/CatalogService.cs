@@ -32,7 +32,30 @@ public class CatalogService
 
     public async Task<MediaCard[]> Search(string textFilter)
     {
-        return await _currentProvider.SearchMedia(textFilter);
+        const string CACHE_KEY = "SearchResults";
+        const string SEARCH_CACHE = $"SearchFilter";
+
+        MediaCard[]? cards;
+
+        if (_cache.TryGetValue(SEARCH_CACHE, out string? res))
+        {
+            if (res == textFilter)
+            {
+                if (_cache.TryGetValue(CACHE_KEY, out cards))
+                    return cards!;
+            }
+        }
+
+        if (string.IsNullOrEmpty(textFilter))
+            throw new ArgumentException();
+
+        int[] media = await _currentProvider.SearchMedia(textFilter);
+        cards = await GetOrCreateMediaCardsFromIds(media.ToList());
+
+        _cache.Set(CACHE_KEY, cards);
+        _cache.Set(SEARCH_CACHE, textFilter);
+
+        return cards;
     }
 
     public async Task<MediaInfo> GetMediaInfo(int aniListId)
@@ -78,21 +101,24 @@ public class CatalogService
             _cache.SetIfNotExists(CACHE_KEY, upcoming);
         }
 
-        List<int> newIds = upcoming.Keys.ToList();
-        Model_Media[] cachedMedia = await _db.media.Where(m => newIds.Contains(m.Id)).ToArrayAsync();
+        MediaCard[] media = await GetOrCreateMediaCardsFromIds(upcoming.Keys.ToList());
+        return media.Select(x => x.WithReleaseDate(upcoming[x.aniListId])).ToArray();
+    }
+
+    private async Task<MediaCard[]> GetOrCreateMediaCardsFromIds(List<int> ids)
+    {
+        Model_Media[] cachedMedia = await _db.media.Where(m => ids.Contains(m.Id)).ToArrayAsync();
 
         List<int> uncached = new List<int>();
         List<MediaCard> results = new List<MediaCard>();
 
         foreach (Model_Media media in cachedMedia)
         {
-            newIds.Remove(media.Id);
+            ids.Remove(media.Id);
             results.Add(MediaCard.Map(media));
         }
 
-        Model_Media[] newMedia = await _hydrationService.SaveMedia(newIds);
-        results.AddRange(newMedia.Select(MediaCard.Map));
-
-        return results.Select(x => x.WithReleaseDate(upcoming[x.aniListId])).ToArray();
+        Model_Media[] newMedia = await _hydrationService.SaveMedia(ids);
+        return [.. results, .. newMedia.Select(MediaCard.Map)];
     }
 }
