@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Yugen.Data;
@@ -11,9 +12,11 @@ using Yugen.Data;
 namespace Yugen.Data.Migrations
 {
     [DbContext(typeof(YugenContext))]
-    partial class YugenContextModelSnapshot : ModelSnapshot
+    [Migration("20260513184754_FindAnotherWayToLink")]
+    partial class FindAnotherWayToLink
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,31 +24,6 @@ namespace Yugen.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("Yugen.Domain.Data.Linking.Model_Link", b =>
-                {
-                    b.Property<int>("anidbid")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("anidbid"));
-
-                    b.Property<int?>("defaulttvdbseason")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("tmdbseason")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("tmdbtv")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("tvdbid")
-                        .HasColumnType("integer");
-
-                    b.HasKey("anidbid");
-
-                    b.ToTable("links");
-                });
 
             modelBuilder.Entity("Yugen.Domain.Models.Library.Model_DownloadedMedia", b =>
                 {

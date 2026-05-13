@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Yugen.Data;
@@ -11,9 +12,11 @@ using Yugen.Data;
 namespace Yugen.Data.Migrations
 {
     [DbContext(typeof(YugenContext))]
-    partial class YugenContextModelSnapshot : ModelSnapshot
+    [Migration("20260513185319_DefineLinksInContext")]
+    partial class DefineLinksInContext
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,16 +33,16 @@ namespace Yugen.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("anidbid"));
 
-                    b.Property<int?>("defaulttvdbseason")
+                    b.Property<int>("defaulttvdbseason")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("tmdbseason")
+                    b.Property<int>("tmdbseason")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("tmdbtv")
+                    b.Property<int>("tmdbtv")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("tvdbid")
+                    b.Property<int>("tvdbid")
                         .HasColumnType("integer");
 
                     b.HasKey("anidbid");

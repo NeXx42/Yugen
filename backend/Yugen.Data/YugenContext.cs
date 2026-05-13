@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Yugen.Domain.Data.Linking;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.Library;
 using Yugen.Domain.Models.Media;
@@ -11,6 +12,7 @@ public class YugenContext : DbContext
 
     public DbSet<Model_Media> media { get; set; }
     public DbSet<Model_MediaEpisode> mediaEpisodes { get; set; }
+    public DbSet<Model_Link> links { get; set; }
 
     // from sonnar
     public DbSet<Model_DownloadedMedia> downloadedMedia { get; set; }
@@ -21,11 +23,5 @@ public class YugenContext : DbContext
     {
         modelBuilder.Entity<Model_MediaEpisode>().HasKey(e => new { e.MediaId, e.EpisodeNumber });
         modelBuilder.Entity<Model_MediaEpisode>().HasOne(e => e.Media).WithMany(e => e.Episodes);
-
-        modelBuilder.Entity<Model_Media>()
-            .HasOne(m => m.Successor)
-            .WithOne(m => m.Predecessor)
-            .HasForeignKey<Model_Media>(m => m.SuccessorId)
-            .OnDelete(DeleteBehavior.Restrict);
     }
 }

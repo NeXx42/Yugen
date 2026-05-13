@@ -19,6 +19,8 @@ public class IdMoe_Responses_Ids
     public int? silveryasha { get; set; }
     public int? simkl { get; set; }
     public int? themoviedb { get; set; }
+    public int? themoviedb_season { get; set; }
+    public string? themoviedb_type { get; set; }
     public string? kaize { get; set; }
     public int? kaize_id { get; set; }
     public string? nautiljon { get; set; }

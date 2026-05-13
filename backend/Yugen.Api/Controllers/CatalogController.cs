@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Yugen.Core.Data;
 using Yugen.Core.Services;
@@ -6,6 +7,7 @@ using Yugen.Domain.Data.Media;
 namespace Yugen.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/catalog")]
 public class CatalogController : ControllerBase
 {
@@ -37,5 +39,19 @@ public class CatalogController : ControllerBase
     public async Task<MediaInfo?> GetMediaInfo(int id)
     {
         return await _catalogService.GetMediaInfo(id);
+    }
+
+    [HttpPost("RedownloadLinking")]
+    public async Task<bool> RedownloadLinks()
+    {
+        try
+        {
+            await _catalogService.RedownloadLinks();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

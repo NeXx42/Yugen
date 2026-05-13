@@ -20,7 +20,6 @@ public class LibraryService
     {
         _db = db;
 
-        _libraryProvider = new JellyfinLibraryService(options.Value.jellyfin_Url!, options.Value.jellyfin_ApiKey!);
     }
 
     public async Task ResyncLibrary(UserModel user)
@@ -35,11 +34,6 @@ public class LibraryService
 
     public async Task RecheckDownloads(int aniListId)
     {
-        Model_Media? media = await _db.media.Include(m => m.Episodes).FirstAsync(m => m.Id == aniListId);
-
-        if (media == null)
-            return;
-
 
     }
 }

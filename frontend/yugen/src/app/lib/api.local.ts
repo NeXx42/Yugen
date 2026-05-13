@@ -9,7 +9,7 @@ export async function auth_Login(username: string, password: string) {
 
 
 export async function library_sync() {
-    return (await post("library/sync"))
+    return (await post("catalog/RedownloadLinking"))
 }
 
 export async function library_CurrentWatching(): Promise<MediaCardInfo[]> {

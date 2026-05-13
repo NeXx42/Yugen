@@ -5,6 +5,7 @@
     <ProjectReference Include="..\Yugen.Data\Yugen.Data.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="EFCore.BulkExtensions" Version="10.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
   </ItemGroup>
   <PropertyGroup>

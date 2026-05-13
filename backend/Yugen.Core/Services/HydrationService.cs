@@ -70,8 +70,20 @@ public class HydrationService
 
         Dictionary<string, string>? links = await _linkingProvider.GetMediaProviderIds(media.Id.ToString());
 
-        if ((links?.TryGetValue(ExternalProviderType.MyAnimeList, out string? _malIdString) ?? false) && int.TryParse(_malIdString, out int _malId))
-            media.MalId = _malId;
+        SetProvider(ExternalProviderType.MyAnimeList, r => SetInt(r, v => media.MalId = v));
+        SetProvider(ExternalProviderType.AniDB, r => SetInt(r, v => media.AniDBId = v));
+
+        void SetInt(string inp, Action<int> setter)
+        {
+            if (int.TryParse(inp, out int id))
+                setter(id);
+        }
+
+        void SetProvider(string header, Action<string> setter)
+        {
+            if ((links?.TryGetValue(header, out string? val) ?? false) && !string.IsNullOrEmpty(val))
+                setter(val);
+        }
     }
 
     private async Task HydrateEpisodes(Model_Media media, bool _)
