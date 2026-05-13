@@ -14,4 +14,6 @@
     border-radius: 12px;
 }
 
-.Episode p {}
+.Episode-Selected {
+    background-color: red;
+}

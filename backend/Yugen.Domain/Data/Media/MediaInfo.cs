@@ -4,6 +4,10 @@ namespace Yugen.Domain.Data.Media;
 
 public class MediaInfo
 {
+    public int id { get; set; }
+    public int? malId { get; set; }
+    public int? aniDbId { get; set; }
+
     public string? title { get; set; }
 
     public string? bannerImage { get; set; }
@@ -16,6 +20,10 @@ public class MediaInfo
     {
         return new MediaInfo()
         {
+            id = media.Id,
+            aniDbId = media.AniDBId,
+            malId = media.MalId,
+
             title = media.Title,
             bannerImage = media.BannerImage,
             cardImage = media.CardImageLarge,

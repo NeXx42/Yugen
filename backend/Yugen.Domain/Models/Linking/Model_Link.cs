@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Yugen.Domain.Data.Linking;
+namespace Yugen.Domain.Models.Linking;
 
 public class Model_Link
 {

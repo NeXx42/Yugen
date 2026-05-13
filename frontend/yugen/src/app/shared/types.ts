@@ -12,6 +12,7 @@ export interface MediaCardInfo {
 }
 
 export interface MediaInfo {
+    id: number,
     title: string,
 
     bannerUrl: string | null,
@@ -29,4 +30,9 @@ export interface MediaEpisodeInfo {
     isFiller: boolean,
 
     score: number,
+}
+
+export interface SonarrEpisodeInfo {
+    episode: number,
+    jellyfinId: string,
 }

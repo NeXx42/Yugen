@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Yugen.Domain.Models.Library;
 
 namespace Yugen.Domain.Models.Media;
 
@@ -16,5 +17,5 @@ public class Model_MediaEpisode
     public bool IsFiller { get; set; }
     public float? Score { get; set; }
 
-    //public string? JellyfinItemId { get; set; }
+    public Model_DownloadedEpisode? downloadedEpisode { get; set; }
 }

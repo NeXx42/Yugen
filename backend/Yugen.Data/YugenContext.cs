@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Yugen.Domain.Data.Linking;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.Library;
+using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
 
 namespace Yugen.Data;
@@ -16,6 +16,7 @@ public class YugenContext : DbContext
 
     // from sonnar
     public DbSet<Model_DownloadedMedia> downloadedMedia { get; set; }
+    public DbSet<Model_DownloadedEpisode> sonarrEpisodes { get; set; }
 
     public DbSet<UserModel> user { get; set; }
 
@@ -23,5 +24,8 @@ public class YugenContext : DbContext
     {
         modelBuilder.Entity<Model_MediaEpisode>().HasKey(e => new { e.MediaId, e.EpisodeNumber });
         modelBuilder.Entity<Model_MediaEpisode>().HasOne(e => e.Media).WithMany(e => e.Episodes);
+
+        modelBuilder.Entity<Model_DownloadedEpisode>().HasKey(e => new { e.MediaId, e.EpisodeNumber });
+        modelBuilder.Entity<Model_DownloadedEpisode>().HasOne(e => e.DownloadedMedia).WithMany(e => e.downloadedEpisodes);
     }
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { MediaCardInfo, User } from "@shared/types";
+import { MediaCardInfo, SonarrEpisodeInfo, User } from "@shared/types";
 import { post, get } from "./api.shared";
 
 export async function auth_Login(username: string, password: string) {
@@ -28,4 +28,8 @@ export async function catalog_Search(text: string): Promise<MediaCardInfo[]> {
 
 export async function media_PlayItem(itemId: string): Promise<string> {
     return (await get<string>("media/play"))!
+}
+
+export async function library_GetSonarrEpisodes(aniListId: number): Promise<SonarrEpisodeInfo[]> {
+    return (await get<SonarrEpisodeInfo[]>(`library/${aniListId}`))!;
 }

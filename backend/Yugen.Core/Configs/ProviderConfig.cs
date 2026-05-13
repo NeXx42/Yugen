@@ -9,4 +9,7 @@ public class ProviderConfig
     public string? idMoe_ApiKey { set; get; } = null;
 
     public string? jikan_Url { set; get; } = null;
+
+    public string? sonarr_Url { get; set; } = null;
+    public string? sonarr_ApiKey { get; set; } = null;
 }

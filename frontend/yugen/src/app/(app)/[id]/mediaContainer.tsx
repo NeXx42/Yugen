@@ -14,7 +14,7 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
         <div className="MediaContainer">
             <div className="MediaContainer_Items">
                 <MediaPlayer itemId={selectedItem} />
-                <EpisodeList episodes={mediaInfo.episodes} selectedItem={selectedItem} setSelectedItem={setSelectedItem} />
+                <EpisodeList mediaId={mediaInfo.id} selectedItem={selectedItem} setSelectedItem={setSelectedItem} episodes={mediaInfo.episodes} />
             </div>
 
             <div className="MediaContainer_Seasons">

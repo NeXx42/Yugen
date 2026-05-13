@@ -1,15 +1,37 @@
 "use client"
 
-import { MediaEpisodeInfo } from "@shared/types";
-import React, { Dispatch, SetStateAction, useState } from "react";
+import * as api from "@lib/api.local"
+
+import { MediaEpisodeInfo, SonarrEpisodeInfo } from "@shared/types";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import "./episodeList.css"
 
-export default function ({ episodes, selectedItem, setSelectedItem }: { episodes: MediaEpisodeInfo[], selectedItem: string | undefined, setSelectedItem: Dispatch<SetStateAction<string | undefined>> }) {
+interface Props {
+    mediaId: number,
+    episodes: MediaEpisodeInfo[],
 
-    const drawEpisode = (ep: MediaEpisodeInfo): React.ReactNode => {
+    selectedItem: string | undefined,
+    setSelectedItem: Dispatch<SetStateAction<string | undefined>>,
+}
+
+export default function (props: Props) {
+
+    const [selectedEpisode, setSelectedEpisode] = useState(0);
+
+    const [loading, setLoading] = useState(false);
+    const [sonarrEpisodeInfo, setSonarrEpisodeInfo] = useState<SonarrEpisodeInfo[] | undefined>();
+
+    useEffect(() => {
+
+        setLoading(true);
+        api.library_GetSonarrEpisodes(props.mediaId).then(setSonarrEpisodeInfo).finally(() => setLoading(false));
+
+    }, [props.episodes])
+
+    const drawEpisode = (ep: MediaEpisodeInfo, pos: number): React.ReactNode => {
         return (
-            <div className="Episode" key={ep.number}>
+            <div className={`Episode ${pos == selectedEpisode ? "Episode-Selected" : ""}`} key={ep.number} onClick={() => setSelectedEpisode(pos)}>
                 <p>{ep.title ?? `Episode ${ep.number}`}</p>
             </div>
         )
@@ -17,7 +39,7 @@ export default function ({ episodes, selectedItem, setSelectedItem }: { episodes
 
     return (
         <div className="EpisodeList">
-            {episodes.map(drawEpisode)}
+            {props.episodes.map(drawEpisode)}
         </div>
     )
 }

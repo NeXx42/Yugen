@@ -1,14 +1,10 @@
 using System.Xml;
 using EFCore.BulkExtensions;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Yugen.Core.Data;
 using Yugen.Data;
-using Yugen.Domain.Data.Linking;
 using Yugen.Domain.Data.Media;
-using Yugen.Domain.Enums;
-using Yugen.Domain.Models;
+using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
 using Yugen.Providers;
 using Yugen.Providers.AniList;
@@ -169,6 +165,5 @@ public class CatalogService
         }
 
         await _db.BulkInsertOrUpdateAsync(links);
-
     }
 }

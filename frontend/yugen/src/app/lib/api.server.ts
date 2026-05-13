@@ -3,7 +3,7 @@
 import * as api from "./api.shared";
 import { cookies } from "next/headers";
 
-import { MediaInfo, User } from "@shared/types";
+import { MediaInfo, SonarrEpisodeInfo, User } from "@shared/types";
 
 async function postWithAuth<T>(uri: string, obj?: any, nextCaching: NextFetchRequestConfig | undefined = undefined): Promise<T | undefined> {
     const cookieStore = cookies();

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Yugen.Api.Helpers;
 using Yugen.Core.Data;
 using Yugen.Core.Services;
+using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Models;
 
 namespace Yugen.Api.Controllers;
@@ -32,5 +33,11 @@ public class LibraryController : ControllerBase
     {
         HttpContext.GetUserFromSession(out UserModel usr);
         return await _libraryService.GetCurrentlyWatching(usr);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<DownloadedEpisode[]> GetDownloadedEpisodes(int id)
+    {
+        return await _libraryService.GetDownloadedEpisodes(id);
     }
 }
