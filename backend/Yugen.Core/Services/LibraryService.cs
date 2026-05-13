@@ -20,14 +20,19 @@ namespace Yugen.Core.Services;
 public class LibraryService
 {
     private readonly YugenContext _db;
+
+    private readonly MediaService _mediaService;
     private readonly CatalogService _catalogService;
+
     private readonly ILibraryProvider _libraryProvider;
 
-    public LibraryService(YugenContext db, IOptions<ProviderConfig> options, CatalogService catalogService)
+    public LibraryService(YugenContext db, IOptions<ProviderConfig> options, CatalogService catalogService, MediaService mediaService)
     {
         _db = db;
 
+        _mediaService = mediaService;
         _catalogService = catalogService;
+
         _libraryProvider = new SonarrLibraryProvider(options.Value.sonarr_Url!, options.Value.sonarr_ApiKey!);
     }
 
@@ -80,13 +85,13 @@ public class LibraryService
         }
 
         _db.sonarrEpisodes.RemoveRange(media.downloadedEpisodes);
+
         media.downloadedEpisodes.Clear();
+        media.downloadedEpisodes = (await _libraryProvider.GetDownloadedEpisodes(aniListId, link!)) ?? [];
 
-        Model_DownloadedEpisode[]? episodes = await _libraryProvider.GetDownloadedEpisodes(aniListId, link!);
+        await _mediaService.LinkSonarrToJellyfin(media);
 
-        media.downloadedEpisodes = episodes ?? [];
         await _db.SaveChangesAsync();
-
         return media;
     }
 }

@@ -22,6 +22,14 @@ export default function (props: Props) {
     const [loading, setLoading] = useState(false);
     const [sonarrEpisodeInfo, setSonarrEpisodeInfo] = useState<SonarrEpisodeInfo[] | undefined>();
 
+
+    const onSelectEpisode = (pos: number) => {
+        setSelectedEpisode(pos);
+
+        if (sonarrEpisodeInfo !== undefined && sonarrEpisodeInfo?.length > pos)
+            props.setSelectedItem(sonarrEpisodeInfo[pos].jellyfinId);
+    }
+
     useEffect(() => {
 
         setLoading(true);
@@ -31,7 +39,7 @@ export default function (props: Props) {
 
     const drawEpisode = (ep: MediaEpisodeInfo, pos: number): React.ReactNode => {
         return (
-            <div className={`Episode ${pos == selectedEpisode ? "Episode-Selected" : ""}`} key={ep.number} onClick={() => setSelectedEpisode(pos)}>
+            <div className={`Episode ${pos == selectedEpisode ? "Episode-Selected" : ""}`} key={ep.number} onClick={() => onSelectEpisode(pos)}>
                 <p>{ep.title ?? `Episode ${ep.number}`}</p>
             </div>
         )

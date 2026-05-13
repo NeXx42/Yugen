@@ -2,7 +2,7 @@ namespace Yugen.Providers.Jellyfin;
 
 public class JellyfinResponse_Page<T>
 {
-    public T[] Items { get; set; }
+    public required T[] Items { get; set; }
     public int TotalRecordCount { get; set; }
     public int StartIndex { get; set; }
 }
@@ -41,4 +41,11 @@ public class JellyfinResponse_Media
     {
         public string? AniList { get; set; }
     }
+}
+
+public class Jellyfin_Response_Item
+{
+    public string? id { get; set; }
+    public string? serverId { get; set; }
+    public string? path { get; set; }
 }
