@@ -12,7 +12,7 @@ public class JellyfinResponse_Session
 {
     public string? AccessToken { get; set; }
     public string? ServerId { get; set; }
-    public JellyfinResponse_User? User { get; set; }
+    public required JellyfinResponse_User User { get; set; }
 }
 
 public class JellyfinResponse_User
@@ -48,4 +48,20 @@ public class Jellyfin_Response_Item
     public string? id { get; set; }
     public string? serverId { get; set; }
     public string? path { get; set; }
+}
+
+public class Jellyfin_Response_History
+{
+    public required string id { get; set; }
+    public required long runTimeTicks { get; set; }
+    public required UserData userData { get; set; }
+
+    public class UserData
+    {
+        public long playBackPositionTicks { get; set; }
+        public int playCount { get; set; }
+        public bool isFavorite { get; set; }
+        public bool played { get; set; }
+        public DateTime? LastPlayedDate { get; set; }
+    }
 }

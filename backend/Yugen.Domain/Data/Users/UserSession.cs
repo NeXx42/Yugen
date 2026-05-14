@@ -4,7 +4,7 @@ namespace Yugen.Domain.Data.Users;
 
 public class UserSession
 {
-    public UserModel User { get; set; }
-    public object ProviderSession { get; set; }
-    public string AccessToken { get; set; }
+    public required UserModel User { get; set; }
+    public required string JellyfinId { get; set; }
+    public required string AccessToken { get; set; }
 }

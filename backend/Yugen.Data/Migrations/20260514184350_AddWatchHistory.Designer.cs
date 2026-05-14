@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Yugen.Data;
@@ -11,9 +12,11 @@ using Yugen.Data;
 namespace Yugen.Data.Migrations
 {
     [DbContext(typeof(YugenContext))]
-    partial class YugenContextModelSnapshot : ModelSnapshot
+    [Migration("20260514184350_AddWatchHistory")]
+    partial class AddWatchHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,7 +36,7 @@ namespace Yugen.Data.Migrations
                     b.Property<DateTime?>("UpdatedTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("WatchedEpisode")
+                    b.Property<int>("WatchedEpisode")
                         .HasColumnType("integer");
 
                     b.HasKey("MediaId");
@@ -49,7 +52,7 @@ namespace Yugen.Data.Migrations
                     b.Property<int>("EpisodeNumber")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime?>("LastWatched")
+                    b.Property<DateTime>("LastWatched")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<float?>("WatchPercentage")

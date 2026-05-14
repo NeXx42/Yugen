@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Yugen.Core.Configs;
 using Yugen.Core.Services;
 using Yugen.Data;
+using Yugen.Domain.Data.Users;
 using Yugen.Domain.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -48,8 +49,7 @@ builder.Services.AddAuthentication(options =>
                 return;
 
             UserService userService = context.HttpContext.RequestServices.GetRequiredService<UserService>();
-
-            UserModel user = await userService.GetUser(Guid.Parse(userId));
+            UserSession user = await userService.GetUser(Guid.Parse(userId));
             context.HttpContext.Items["User"] = user;
         },
 

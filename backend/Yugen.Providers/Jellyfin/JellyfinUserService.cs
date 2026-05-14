@@ -23,7 +23,7 @@ public class JellyfinUserService : IUserProvider
         return await _http.SendRequest<ExternalUser[]>("Users");
     }
 
-    public async Task<(object providerSession, ExternalUser externalUserId)?> LoginUser(string username, string password)
+    public async Task<string?> LoginUser(string username, string password)
     {
         JellyfinResponse_Session? session = await _http.SendRequest<JellyfinResponse_Session>("Users/AuthenticateByName", JsonSerializer.Serialize(new
         {
@@ -34,13 +34,6 @@ public class JellyfinUserService : IUserProvider
         if (session == null)
             return null;
 
-        return (
-            session,
-            new ExternalUser()
-            {
-                Name = session.User.Name,
-                ExternalId = session.User.Id,
-            }
-        );
+        return session.User.Id;
     }
 }

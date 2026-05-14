@@ -34,10 +34,10 @@ public class RestfulHelper
 
         if (!res.IsSuccessStatusCode)
         {
+            Console.Write(await res.Content.ReadAsStringAsync());
             throw new Exception("Invalid request - " + res.ReasonPhrase);
         }
 
-        Console.Write(await res.Content.ReadAsStringAsync());
         return await res.Content.ReadFromJsonAsync<T>();
     }
 }

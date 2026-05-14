@@ -105,7 +105,7 @@ public class CatalogService
         return media.Select(x => x.WithReleaseDate(upcoming[x.aniListId])).ToArray();
     }
 
-    private async Task<MediaCard[]> GetOrCreateMediaCardsFromIds(List<int> ids)
+    public async Task<MediaCard[]> GetOrCreateMediaCardsFromIds(List<int> ids)
     {
         Model_Media[] cachedMedia = await _db.media.Where(m => ids.Contains(m.Id)).ToArrayAsync();
 

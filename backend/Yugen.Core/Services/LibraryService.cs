@@ -6,6 +6,7 @@ using Yugen.Core.Data;
 using Yugen.Data;
 using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.Media;
+using Yugen.Domain.Data.Users;
 using Yugen.Domain.Enums;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.Library;
@@ -36,14 +37,9 @@ public class LibraryService
         _libraryProvider = new SonarrLibraryProvider(options.Value.sonarr_Url!, options.Value.sonarr_ApiKey!);
     }
 
-    public async Task ResyncLibrary(UserModel user)
+    public async Task ResyncLibrary(UserSession user)
     {
 
-    }
-
-    public async Task<MediaCard[]> GetCurrentlyWatching(UserModel user)
-    {
-        return null;
     }
 
     public async Task<DownloadedEpisode[]> GetDownloadedEpisodes(int aniListId)
@@ -93,5 +89,24 @@ public class LibraryService
 
         await _db.SaveChangesAsync();
         return media;
+    }
+
+    public async Task<MediaCard[]> GetWatchHistory(int take)
+    {
+        List<int> results = await _db.watchHistory
+            .Where(w => w.WatchedEpisode.HasValue)
+            .Select(w => new
+            {
+                Id = w.MediaId,
+                Episode = w.WatchedEpisodes
+                    .FirstOrDefault(e => e.EpisodeNumber == w.WatchedEpisode)
+            })
+            .Where(x => x.Episode != null)
+            .OrderByDescending(x => x.Episode!.LastWatched)
+            .Take(take)
+            .Select(w => w.Id)
+            .ToListAsync();
+
+        return await _catalogService.GetOrCreateMediaCardsFromIds(results);
     }
 }

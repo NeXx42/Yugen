@@ -32,16 +32,22 @@ public class UserService
         _jwtToken = Convert.FromBase64String(encryptionSettings.Value.jwtToken);
     }
 
-    public async Task<UserModel> GetUser(Guid userId)
+    public async Task<UserSession> GetUser(Guid userId)
     {
         string CACHE_KEY = $"USER_SESSION_{userId}";
 
-        if (_cache.TryGetValue(CACHE_KEY, out UserModel? usr))
+        if (_cache.TryGetValue(CACHE_KEY, out UserSession? usr))
             return usr!;
 
-        usr = await _db.user.SingleAsync(x => x.Id == userId);
-        _cache.SetIfNotExists(CACHE_KEY, usr);
+        UserModel dbUser = await _db.user.SingleAsync(x => x.Id == userId);
+        usr = new UserSession()
+        {
+            User = dbUser!,
+            JellyfinId = dbUser.ProviderId,
+            AccessToken = GenerateToken(dbUser)
+        };
 
+        _cache.SetIfNotExists(CACHE_KEY, usr);
         return usr;
     }
 
@@ -52,29 +58,29 @@ public class UserService
 
     public async Task<UserSession?> LoginUser(string username, string password)
     {
-        (object providerSession, ExternalUser externalUser)? res = await _userProvider.LoginUser(username, password);
+        string? jellyfinId = await _userProvider.LoginUser(username, password);
 
-        if (res == null)
+        if (string.IsNullOrEmpty(jellyfinId))
             return null;
 
-        UserModel? dbUser = _db.user.FirstOrDefault(x => x.ProviderId == res.Value.externalUser.ExternalId);
+        UserModel? dbUser = _db.user.FirstOrDefault(x => x.ProviderId == jellyfinId);
 
         if (dbUser == null)
         {
             await _db.AddAsync(new UserModel()
             {
-                ProviderId = res.Value.externalUser.ExternalId
+                ProviderId = jellyfinId
             });
 
             await _db.SaveChangesAsync();
-            dbUser = _db.user.FirstOrDefault(x => x.ProviderId == res.Value.externalUser.ExternalId);
+            dbUser = _db.user.FirstOrDefault(x => x.ProviderId == jellyfinId);
         }
 
         return new UserSession()
         {
             User = dbUser!,
-            AccessToken = GenerateToken(dbUser!),
-            ProviderSession = res.Value.providerSession,
+            JellyfinId = dbUser!.ProviderId,
+            AccessToken = GenerateToken(dbUser)
         };
     }
 

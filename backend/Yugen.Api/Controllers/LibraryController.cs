@@ -4,6 +4,7 @@ using Yugen.Api.Helpers;
 using Yugen.Core.Data;
 using Yugen.Core.Services;
 using Yugen.Domain.Data.Downloads;
+using Yugen.Domain.Data.Users;
 using Yugen.Domain.Models;
 
 namespace Yugen.Api.Controllers;
@@ -23,7 +24,7 @@ public class LibraryController : ControllerBase
     [Authorize]
     public async Task SyncExternalLibraries()
     {
-        HttpContext.GetUserFromSession(out UserModel usr);
+        HttpContext.GetUserFromSession(out UserSession usr);
         await _libraryService.ResyncLibrary(usr);
     }
 
@@ -31,8 +32,7 @@ public class LibraryController : ControllerBase
     [Authorize]
     public async Task<MediaCard[]> GetCurrentlyWatching()
     {
-        HttpContext.GetUserFromSession(out UserModel usr);
-        return await _libraryService.GetCurrentlyWatching(usr);
+        return await _libraryService.GetWatchHistory(10);
     }
 
     [HttpGet("{id}")]

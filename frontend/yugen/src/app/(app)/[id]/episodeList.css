@@ -12,6 +12,10 @@
 
     overflow: hidden;
     border-radius: 12px;
+
+    display: flex;
+    gap: 15px;
+    white-space: nowrap;
 }
 
 .Episode-Selected {

@@ -40,6 +40,11 @@ export default function (props: Props) {
     const drawEpisode = (ep: MediaEpisodeInfo, pos: number): React.ReactNode => {
         return (
             <div className={`Episode ${pos == selectedEpisode ? "Episode-Selected" : ""}`} key={ep.number} onClick={() => onSelectEpisode(pos)}>
+                {
+                    sonarrEpisodeInfo !== undefined && sonarrEpisodeInfo?.length > pos && sonarrEpisodeInfo[pos].jellyfinId != undefined && (
+                        (<a>[Downloaded]</a>)
+                    )
+                }
                 <p>{ep.title ?? `Episode ${ep.number}`}</p>
             </div>
         )

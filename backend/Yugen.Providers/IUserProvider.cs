@@ -5,5 +5,5 @@ namespace Yugen.Providers;
 public interface IUserProvider
 {
     public Task<ExternalUser[]> GetAllUsers();
-    public Task<(object providerSession, ExternalUser externalUserId)?> LoginUser(string username, string password);
+    public Task<string?> LoginUser(string username, string password);
 }

@@ -1,3 +1,4 @@
+using Yugen.Domain.Models.History;
 using Yugen.Domain.Models.Library;
 using Yugen.Providers.Helpers;
 
@@ -86,5 +87,42 @@ public class JellyfinMediaService : IMediaProvider
 
         //016d249d8cdaa92c5e8234414bc842cf
         return await _http.SendRequest<string>($"Videos/{itemId}/stream");
+    }
+
+    public async Task<Model_WatchedEpisode[]> UpdateWatchHistory(string userId, ICollection<Model_DownloadedEpisode> episodes)
+    {
+        Dictionary<string, int> jellyfinMapping = new Dictionary<string, int>();
+
+        for (int i = 0; i < episodes.Count; i++)
+        {
+            if (string.IsNullOrEmpty(episodes.ElementAt(i).JellyfinId))
+                continue;
+
+            jellyfinMapping.Add(episodes.ElementAt(i).JellyfinId!, i);
+        }
+
+        string query = $"?Ids={string.Join("&Ids=", jellyfinMapping.Keys)}";
+        JellyfinResponse_Page<Jellyfin_Response_History>? items = await _http.SendRequest<JellyfinResponse_Page<Jellyfin_Response_History>>(Path.Combine("Users", userId, $"Items{query}&Fields=RunTimeTicks"));
+
+        if (items == null)
+            return [];
+
+        List<Model_WatchedEpisode> res = new List<Model_WatchedEpisode>();
+
+        foreach (Jellyfin_Response_History history in items.Items)
+        {
+            if (jellyfinMapping.TryGetValue(history.id, out int index))
+            {
+                res.Add(new Model_WatchedEpisode()
+                {
+                    MediaId = episodes.ElementAt(index).MediaId,
+                    EpisodeNumber = episodes.ElementAt(index).EpisodeNumber,
+                    LastWatched = history.userData.LastPlayedDate,
+                    WatchPercentage = history.userData.played ? 1f : Math.Clamp(history.userData.playBackPositionTicks / history.runTimeTicks, 0, 1)
+                });
+            }
+        }
+
+        return res.ToArray();
     }
 }
