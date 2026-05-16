@@ -71,7 +71,6 @@ public class AniListProvider : IMetaDataProvider
         return res.data.page.media?.Select(x => new Model_Media()
         {
             Id = x.id,
-            MalId = x.malId,
             EpisodeCount = x.episodes ?? 0,
 
             Title = x.title?.getBestMatch ?? "",

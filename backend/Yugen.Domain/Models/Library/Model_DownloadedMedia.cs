@@ -9,8 +9,6 @@ public class Model_DownloadedMedia
     [Required]
     public required int MediaId { get; set; }
 
-    public int? AniDbId { get; set; }
-
     public bool IsMonitored { get; set; }
     public DateTime LastChecked { get; set; }
 

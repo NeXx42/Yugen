@@ -28,8 +28,8 @@ public class SonarrLibraryProvider : ILibraryProvider
 
         foreach (SonarrLibrary_Response_Series entry in series)
         {
-            if ((link.tvdbid.HasValue && entry.tvdbId == link.tvdbid.Value)
-                || (link.tmdbtv.HasValue && entry.tmdbId == link.tmdbtv.Value))
+            if ((link.tvdb_id.HasValue && entry.tvdbId == link.tvdb_id.Value)
+                || (link.themoviedb_id.HasValue && entry.tmdbId == link.themoviedb_id.Value))
             {
                 matchedEntry = entry;
                 break;
@@ -44,7 +44,7 @@ public class SonarrLibraryProvider : ILibraryProvider
         if (episodes == null)
             return null;
 
-        int seasonId = link.defaulttvdbseason ?? link.tmdbseason ?? -1;
+        int seasonId = link.tvdb_season ?? link.tmdb_season ?? -1;
 
         Dictionary<Model_DownloadedEpisode, int?> foundEpisodes = new Dictionary<Model_DownloadedEpisode, int?>();
 
@@ -63,7 +63,14 @@ public class SonarrLibraryProvider : ILibraryProvider
             }
         }
 
+        if (foundEpisodes.Count == 0)
+            return [];
+
         string fileIds = string.Join("&episodeFileIds=", foundEpisodes.Values.Where(x => x.HasValue));
+
+        if (string.IsNullOrEmpty(fileIds))
+            return [];
+
         SonarrLibrary_Response_EpisodeFile[]? files = (await _http.SendRequest<SonarrLibrary_Response_EpisodeFile[]>($"episodefile?episodeFileIds={fileIds}"))!;
 
         foreach (KeyValuePair<Model_DownloadedEpisode, int?> episode in foundEpisodes)

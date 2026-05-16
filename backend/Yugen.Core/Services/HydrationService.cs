@@ -7,6 +7,7 @@ using Yugen.Data;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Enums;
 using Yugen.Domain.Models;
+using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
 using Yugen.Providers;
 using Yugen.Providers.AniList;
@@ -43,6 +44,7 @@ public class HydrationService
         if (media.Length != 1)
             return null;
 
+
         await _db.AddAsync(media[0]);
         await _db.SaveChangesAsync();
 
@@ -55,44 +57,19 @@ public class HydrationService
             return;
 
         media.Hydrated = true;
+        Model_Link? links = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == media.Id);
 
-        await HydrateLinks(media, forceRehydration);
-        await HydrateEpisodes(media, forceRehydration);
-
-
+        await HydrateEpisodes(media, links, forceRehydration);
         await _db.SaveChangesAsync();
     }
 
-    private async Task HydrateLinks(Model_Media media, bool forceRefresh = false)
+    private async Task HydrateEpisodes(Model_Media media, Model_Link? links, bool _)
     {
-        if (media.MalId.HasValue && !forceRefresh)
-            return;
-
-        Dictionary<string, string>? links = await _linkingProvider.GetMediaProviderIds(media.Id.ToString());
-
-        SetProvider(ExternalProviderType.MyAnimeList, r => SetInt(r, v => media.MalId = v));
-        SetProvider(ExternalProviderType.AniDB, r => SetInt(r, v => media.AniDBId = v));
-
-        void SetInt(string inp, Action<int> setter)
-        {
-            if (int.TryParse(inp, out int id))
-                setter(id);
-        }
-
-        void SetProvider(string header, Action<string> setter)
-        {
-            if ((links?.TryGetValue(header, out string? val) ?? false) && !string.IsNullOrEmpty(val))
-                setter(val);
-        }
-    }
-
-    private async Task HydrateEpisodes(Model_Media media, bool _)
-    {
-        if (media.MalId == null)
+        if (links?.mal_id == null)
             return;
 
         _db.RemoveRange(_db.mediaEpisodes.Where(e => e.MediaId == media.Id));
-        Model_MediaEpisode[] episodes = await _metaDataProvider.GetEpisodeData(media.MalId.Value);
+        Model_MediaEpisode[] episodes = await _metaDataProvider.GetEpisodeData(links!.mal_id.Value);
 
         foreach (Model_MediaEpisode ep in episodes)
             ep.MediaId = media.Id;

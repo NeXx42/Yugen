@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Yugen.Domain.Models.Linking;
 
 namespace Yugen.Domain.Models.Media;
 
@@ -9,8 +11,6 @@ public class Model_Media
     [Key]
     [Required]
     public required int Id { get; set; }
-    public int? MalId { get; set; }
-    public int? AniDBId { get; set; }
 
     public string? Title { get; set; }
 

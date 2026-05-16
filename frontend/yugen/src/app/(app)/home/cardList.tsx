@@ -19,7 +19,7 @@ export default function ({ fetch }: { fetch: Promise<MediaCardInfo[]> }) {
         <div>
             <h1>Continue Watching</h1>
             <div className="CardList_Cards">
-                {cards?.map(x => <MediaCard Card={x} key={x.aniListId} />)}
+                {cards?.slice(0, 10).map(x => <MediaCard Card={x} key={x.aniListId} />)}
             </div>
         </div>
     )

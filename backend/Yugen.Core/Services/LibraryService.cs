@@ -64,15 +64,13 @@ public class LibraryService
             };
 
             MediaInfo info = await _catalogService.GetMediaInfo(aniListId);
-            media.AniDbId = info.aniDbId;
-
             await _db.downloadedMedia.AddAsync(media);
         }
         else if (!force)
             return media;
 
         media.LastChecked = DateTime.UtcNow;
-        Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anidbid == media.AniDbId);
+        Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == media.MediaId);
 
         if (link == null)
         {

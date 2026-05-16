@@ -1,5 +1,7 @@
+using System.Net.Http.Json;
 using System.Xml;
 using EFCore.BulkExtensions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Yugen.Core.Data;
 using Yugen.Data;
@@ -124,6 +126,57 @@ public class CatalogService
 
     public async Task RedownloadLinks()
     {
+        const string url = "https://raw.githubusercontent.com/Fribb/anime-lists/refs/heads/master/anime-list-full.json";
+
+        using (HttpClient client = new HttpClient())
+        {
+            HttpResponseMessage res = await client.GetAsync(url);
+            Link[]? links = await res.Content.ReadFromJsonAsync<Link[]>();
+
+            if (links == null)
+                return;
+
+            List<Model_Link> newLinks = new List<Model_Link>();
+
+            foreach (Link l in links)
+            {
+                if (l.anilist_id == null)
+                    continue;
+
+                newLinks.Add(new Model_Link()
+                {
+                    anilist_id = l.anilist_id,
+                    anidb_id = l.anidb_id,
+                    animecountdown_id = l.animecountdown_id,
+                    animenewsnetwork_id = l.animenewsnetwork_id,
+                    anime_planet_id = l.anime_planet_id,
+                    anisearch_id = l.anisearch_id,
+                    imdb_id = l.imdb_id,
+                    kitsu_id = l.kitsu_id,
+                    livechart_id = l.livechart_id,
+                    mal_id = l.mal_id,
+                    simkl_id = l.simkl_id,
+                    themoviedb_id = l.themoviedb_id,
+                    tmdb_season = l.season?.tmdb,
+                    tvdb_id = l.tvdb_id,
+                    tvdb_season = l.season?.tvdb,
+                    type = l.type
+                });
+            }
+
+            try
+            {
+                await _db.BulkInsertOrUpdateAsync(newLinks);
+                await _db.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
+
+        /*
         const string url = "https://raw.githubusercontent.com/Anime-Lists/anime-lists/refs/heads/master/anime-list-full.xml";
         HttpClient client = new HttpClient();
         HttpResponseMessage res = await client.GetAsync(url);
@@ -165,5 +218,33 @@ public class CatalogService
         }
 
         await _db.BulkInsertOrUpdateAsync(links);
+        */
+    }
+
+    public class Link
+    {
+        public int? anilist_id { get; set; }
+
+        public string? type { get; set; }
+        public int? anidb_id { get; set; }
+        public int? animecountdown_id { get; set; }
+        public int? animenewsnetwork_id { get; set; }
+        public string? anime_planet_id { get; set; }
+        public int? anisearch_id { get; set; }
+        public string? imdb_id { get; set; }
+        public int? kitsu_id { get; set; }
+        public int? livechart_id { get; set; }
+        public int? mal_id { get; set; }
+        public int? simkl_id { get; set; }
+        public int? themoviedb_id { get; set; }
+        public int? tvdb_id { get; set; }
+
+        public Season? season { get; set; }
+
+        public class Season
+        {
+            public int? tvdb { get; set; }
+            public int? tmdb { get; set; }
+        }
     }
 }

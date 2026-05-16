@@ -1,8 +1,5 @@
 .CardList_Cards {
-    display: grid;
-    grid-auto-flow: column;
-
-    grid-auto-columns: auto;
+    display: flex;
 
     gap: 10px;
     overflow-x: auto;
