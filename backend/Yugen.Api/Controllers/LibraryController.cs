@@ -10,6 +10,7 @@ using Yugen.Domain.Models;
 namespace Yugen.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/library")]
 public class LibraryController : ControllerBase
 {
@@ -20,16 +21,7 @@ public class LibraryController : ControllerBase
         _libraryService = libraryService;
     }
 
-    [HttpPost("sync")]
-    [Authorize]
-    public async Task SyncExternalLibraries()
-    {
-        HttpContext.GetUserFromSession(out UserSession usr);
-        await _libraryService.ResyncLibrary(usr);
-    }
-
     [HttpGet("currentlyWatching")]
-    [Authorize]
     public async Task<MediaCard[]> GetCurrentlyWatching()
     {
         return await _libraryService.GetWatchHistory(10);
@@ -40,4 +32,19 @@ public class LibraryController : ControllerBase
     {
         return await _libraryService.GetDownloadedEpisodes(id);
     }
+
+    [HttpPost("Sync/History")]
+    public async Task SyncWatchHistory()
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        await _libraryService.SyncWatchHistory(usr);
+    }
+
+    [HttpPost("Sync/Library")]
+    public async Task SyncExternalLibraries()
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        await _libraryService.ResyncLibrary(usr);
+    }
+
 }

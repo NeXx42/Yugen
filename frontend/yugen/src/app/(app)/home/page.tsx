@@ -1,10 +1,11 @@
 import ContinueWatching from "./continueWatching";
 import Upcoming from "./upcoming";
 
+import "./page.css";
+
 export default function () {
     return (
-        <div>
-            <h1>testq</h1>
+        <div className="HomePage" style={{ margin: "25px" }}>
             <ContinueWatching />
             <Upcoming />
         </div>

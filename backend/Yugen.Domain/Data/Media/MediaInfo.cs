@@ -33,6 +33,9 @@ public class MediaInfo
 
     public MediaInfo RegisterConnectedMedia((int? season, string type, Model_Media media)[]? media)
     {
+        if (media == null)
+            return this;
+
         connectedMedia = media?.Select(m => new Connection()
         {
             season = m.season,

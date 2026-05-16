@@ -1,4 +1,7 @@
+
+import * as api from "@lib/api.local"
 import { ReactNode, useState } from "react"
+
 import "./settingsFoldout.css"
 
 type SettingsGroup = "Jellyfin" | "Sonarr" | "Providers";
@@ -13,23 +16,23 @@ export default function () {
         switch (selectedSettingsGroup) {
             case "Jellyfin":
                 return (<>
-                    {renderSetting_Button("Sync watch history", "Sync")}
+                    {renderSetting_Button("Sync watch history", "Sync", api.library_SyncWatchHistory)}
                 </>)
 
             case "Sonarr":
                 return (<>
-                    {renderSetting_Button("Sync Library", "Sync")}
+                    {renderSetting_Button("Sync Library", "Sync", api.library_sync)}
                 </>)
         }
 
         return <></>
     }
 
-    const renderSetting_Button = (label: string, btnLabel: string): ReactNode => {
+    const renderSetting_Button = (label: string, btnLabel: string, action: () => Promise<void>): ReactNode => {
         return (
             <div className="Settings_Setting_Button">
                 <p>{label}</p>
-                <button>{btnLabel}</button>
+                <button onClick={action}>{btnLabel}</button>
             </div>
         )
     }

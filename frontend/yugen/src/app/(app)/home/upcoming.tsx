@@ -15,7 +15,7 @@ export default function () {
 
     return (
         <div>
-            <h1>Upcoming</h1>
+            <h1 style={{ marginBottom: "15px" }}>Upcoming</h1>
             {cards == undefined ?
                 <>Loading...</> :
                 <CardRow cards={cards} />

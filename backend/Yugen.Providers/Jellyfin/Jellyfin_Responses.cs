@@ -53,8 +53,8 @@ public class Jellyfin_Response_Item
 public class Jellyfin_Response_History
 {
     public required string id { get; set; }
-    public required long runTimeTicks { get; set; }
-    public required UserData userData { get; set; }
+    public long? runTimeTicks { get; set; }
+    public UserData? userData { get; set; }
 
     public class UserData
     {

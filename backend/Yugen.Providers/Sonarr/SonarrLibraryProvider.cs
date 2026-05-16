@@ -84,4 +84,14 @@ public class SonarrLibraryProvider : ILibraryProvider
 
         return foundEpisodes.Keys.ToArray();
     }
+
+    public async Task<List<int>?> GetDownloadedMedia()
+    {
+        SonarrLibrary_Response_Series[]? series = await _http.SendRequest<SonarrLibrary_Response_Series[]>("series");
+
+        if (series == null)
+            return null;
+
+        return series.Where(s => s.tvdbId.HasValue).Select(s => s.tvdbId!.Value).Distinct().ToList();
+    }
 }

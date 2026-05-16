@@ -9,8 +9,13 @@ export async function auth_Login(username: string, password: string) {
 
 
 export async function library_sync() {
-    return (await post("catalog/RedownloadLinking"))
+    await post("Library/Sync/Library");
 }
+
+export async function library_SyncWatchHistory() {
+    await post(`Library/Sync/History`);
+}
+
 
 export async function library_CurrentWatching(): Promise<MediaCardInfo[]> {
     return (await get<MediaCardInfo[]>("library/currentlyWatching"))!;

@@ -18,7 +18,7 @@ export default function ({ fetch }: { fetch: Promise<MediaCardInfo[]> }) {
 
     return (
         <div>
-            <h1>Continue Watching</h1>
+            <h1 style={{ marginBottom: "15px" }}>Continue Watching</h1>
             <CardRow cards={cards ?? []} />
         </div>
     )

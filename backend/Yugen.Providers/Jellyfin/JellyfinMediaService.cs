@@ -113,12 +113,15 @@ public class JellyfinMediaService : IMediaProvider
         {
             if (jellyfinMapping.TryGetValue(history.id, out int index))
             {
+                if (history.userData == null || history.runTimeTicks == null)
+                    continue;
+
                 res.Add(new Model_WatchedEpisode()
                 {
                     MediaId = episodes.ElementAt(index).MediaId,
                     EpisodeNumber = episodes.ElementAt(index).EpisodeNumber,
                     LastWatched = history.userData.LastPlayedDate,
-                    WatchPercentage = history.userData.played ? 1f : Math.Clamp(history.userData.playBackPositionTicks / history.runTimeTicks, 0, 1)
+                    WatchPercentage = history.userData.played ? 1f : Math.Clamp(history.userData.playBackPositionTicks / history.runTimeTicks.Value, 0, 1)
                 });
             }
         }
