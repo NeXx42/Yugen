@@ -1,0 +1,7 @@
+.CardRow_Cards {
+    display: flex;
+
+    gap: 10px;
+    overflow-x: auto;
+    white-space: nowrap;
+}

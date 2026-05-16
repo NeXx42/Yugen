@@ -51,14 +51,12 @@ public class HydrationService
         return media[0];
     }
 
-    public async Task HydrateMedia(Model_Media media, bool forceRehydration = false)
+    public async Task HydrateMedia(Model_Media media, Model_Link? links, bool forceRehydration = false)
     {
         if ((media.Hydrated ?? false) && !forceRehydration)
             return;
 
         media.Hydrated = true;
-        Model_Link? links = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == media.Id);
-
         await HydrateEpisodes(media, links, forceRehydration);
         await _db.SaveChangesAsync();
     }

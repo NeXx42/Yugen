@@ -20,6 +20,7 @@ export interface MediaInfo {
     colour: string | null,
 
     episodes: MediaEpisodeInfo[]
+    connectedMedia: MediaConnection[]
 }
 
 export interface MediaEpisodeInfo {
@@ -30,6 +31,13 @@ export interface MediaEpisodeInfo {
     isFiller: boolean,
 
     score: number,
+}
+
+export interface MediaConnection {
+    season: number | undefined,
+    type: string,
+
+    card: MediaCardInfo,
 }
 
 export interface SonarrEpisodeInfo {

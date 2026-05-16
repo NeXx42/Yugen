@@ -1,3 +1,4 @@
+using Yugen.Core.Data;
 using Yugen.Domain.Models.Media;
 
 namespace Yugen.Domain.Data.Media;
@@ -13,6 +14,7 @@ public class MediaInfo
     public string? colour { get; set; }
 
     public EpisodeInfo[]? episodes { get; set; }
+    public Connection[]? connectedMedia { get; set; }
 
     public static MediaInfo Map(Model_Media media)
     {
@@ -27,5 +29,24 @@ public class MediaInfo
 
             episodes = media.Episodes.Select(EpisodeInfo.Map).ToArray()
         };
+    }
+
+    public MediaInfo RegisterConnectedMedia((int? season, string type, Model_Media media)[]? media)
+    {
+        connectedMedia = media?.Select(m => new Connection()
+        {
+            season = m.season,
+            type = m.type,
+
+            card = MediaCard.Map(m.media),
+        }).ToArray();
+        return this;
+    }
+
+    public class Connection
+    {
+        public int? season { get; set; }
+        public string? type { get; set; }
+        public required MediaCard card { get; set; }
     }
 }

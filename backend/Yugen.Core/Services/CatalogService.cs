@@ -77,8 +77,29 @@ public class CatalogService
                 throw new FileNotFoundException();
         }
 
-        await _hydrationService.HydrateMedia(dbEntry);
-        info = MediaInfo.Map(dbEntry);
+        (int? season, string type, Model_Media model)[]? connectedMedia = null;
+        Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == aniListId);
+
+        if (link != null && link.tvdb_id.HasValue)
+        {
+            connectedMedia = (await
+            (
+                from l in _db.links
+                join m in _db.media
+                    on l.anilist_id equals m.Id into mediaJoin
+                from m in mediaJoin.DefaultIfEmpty()
+                where l.tvdb_id == link.tvdb_id
+                select new
+                {
+                    l.tvdb_season,
+                    l.type,
+                    model = m
+                }
+            ).ToArrayAsync()).Select(r => (r.tvdb_season, r.type, r.model)).ToArray();
+        }
+
+        await _hydrationService.HydrateMedia(dbEntry, link);
+        info = MediaInfo.Map(dbEntry).RegisterConnectedMedia(connectedMedia);
 
         _cache.SetIfNotExists(CACHE_KEY, info);
 

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import MediaCard from "@comps/mediaCard";
 
 import "./cardList.css"
+import CardRow from "@/app/components/cardRow";
 
 export default function ({ fetch }: { fetch: Promise<MediaCardInfo[]> }) {
     const [isLoading, setLoading] = useState(false)
@@ -18,9 +19,7 @@ export default function ({ fetch }: { fetch: Promise<MediaCardInfo[]> }) {
     return (
         <div>
             <h1>Continue Watching</h1>
-            <div className="CardList_Cards">
-                {cards?.slice(0, 10).map(x => <MediaCard Card={x} key={x.aniListId} />)}
-            </div>
+            <CardRow cards={cards ?? []} />
         </div>
     )
 }

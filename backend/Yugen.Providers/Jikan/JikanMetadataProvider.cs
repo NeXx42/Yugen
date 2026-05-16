@@ -17,7 +17,7 @@ public class JikanMetadataProvider : IMetaDataProvider
     {
         JikanReponse_Episodes? episodes = await _http.SendRequest<JikanReponse_Episodes>(Path.Combine("anime", malId.ToString(), "episodes"));
 
-        if (episodes == null)
+        if (episodes?.data == null)
             return [];
 
         return episodes.data.Select(e => new Model_MediaEpisode()
