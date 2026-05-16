@@ -1,6 +1,12 @@
 :root {
-  --background: #ffffff;
   --foreground: #171717;
+
+  --global-primary-bg: #080808;
+  --global-div-tr: #0e0e0e;
+  --global-div: #141414;
+  --global-text: #e8e8e8;
+  --global-border-color: rgba(245, 245, 245, .1);
+  --global-secondary-bg: #141414;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -25,7 +31,7 @@ body {
   display: flex;
   flex-direction: column;
   color: var(--foreground);
-  background: var(--background);
+  background: var(--global-primary-bg);
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

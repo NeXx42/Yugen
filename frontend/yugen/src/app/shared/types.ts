@@ -9,6 +9,11 @@ export interface MediaCardInfo {
 
     colour: string,
     cardImg: string,
+
+    nextReleaseDate: number | undefined,
+
+    watchEpisode: number | undefined,
+    watchPercentage: number | undefined,
 }
 
 export interface MediaInfo {

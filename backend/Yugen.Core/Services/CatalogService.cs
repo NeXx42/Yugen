@@ -112,7 +112,7 @@ public class CatalogService
 
     }
 
-    public async Task<MediaCard[]> Upcoming()
+    public async Task<MediaCard[]> Upcoming(int take)
     {
         const string CACHE_KEY = "CATALOG_UPCOMING";
 
@@ -125,7 +125,7 @@ public class CatalogService
         }
 
         MediaCard[] media = await GetOrCreateMediaCardsFromIds(upcoming.Keys.ToList());
-        return media.Select(x => x.WithReleaseDate(upcoming[x.aniListId])).ToArray();
+        return media.Select(x => x.WithReleaseDate(upcoming[x.aniListId])).OrderBy(x => x.nextReleaseDate).Take(take).ToArray();
     }
 
     public async Task<MediaCard[]> GetOrCreateMediaCardsFromIds(List<int> ids)

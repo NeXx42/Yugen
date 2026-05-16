@@ -1,0 +1,14 @@
+.Notifications {
+    position: fixed;
+    background-color: var(--global-div-tr);
+    box-shadow: -2px 0 5px #0000004d;
+
+    width: 475px;
+    height: 100%;
+
+    right: 0px;
+}
+
+.Notifications_Header {
+    padding: 15px;
+}

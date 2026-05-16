@@ -1,8 +1,25 @@
 "use client"
 
 import * as api from "@lib/api.local"
-import CardList from "./cardList";
+
+import { useEffect, useState } from "react";
+import { MediaCardInfo } from "@shared/types";
+import CardRow from "@/app/components/cardRow";
 
 export default function () {
-    return (<CardList fetch={api.catalog_Upcoming()} />)
+    const [cards, setCards] = useState<MediaCardInfo[] | undefined>(undefined)
+
+    useEffect(() => {
+        api.catalog_Upcoming().then(setCards);
+    }, [fetch])
+
+    return (
+        <div>
+            <h1>Upcoming</h1>
+            {cards == undefined ?
+                <>Loading...</> :
+                <CardRow cards={cards} />
+            }
+        </div>
+    )
 }

@@ -1,15 +1,9 @@
 .MediCard {
     width: 170px;
 
-    border-radius: 8px;
     cursor: pointer;
 
     position: relative;
-    overflow: hidden;
-
-    display: grid;
-    grid-template-rows: 250px 50px;
-    gap: 5px;
 
     transition: all .1s;
 }
@@ -18,11 +12,75 @@
     transform: scale(1.01);
 }
 
-.MediCard a {
-    bottom: 5px;
+.MediaCard_Content {
+    margin-top: 5px;
 }
 
-.MediCard img {
+.MediaCard_Content h3 {
     width: 100%;
+
+    bottom: 5px;
+    font-size: .83rem;
+    white-space: nowrap;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.MediaCard_Img {
+    overflow: hidden;
+    border-radius: 8px;
+    position: relative;
+}
+
+.MediaCard_Img img {
+    width: 170px;
+    height: 240px;
+
+    object-fit: cover;
+    display: block;
+
+}
+
+.MediCard_WatchPercentage {
+    position: absolute;
+    background-color: #000000bf;
+    bottom: 0px;
+    height: 5px;
+    width: 100%;
+}
+
+.MediCard_WatchPercentage div {
+    background-color: red;
     height: 100%;
+}
+
+.MediaCard_WatchedEpisode {
+    position: absolute;
+    bottom: 10px;
+    left: 5px;
+
+    padding: 2px 5px;
+    border-radius: 8px;
+    font-size: 14px;
+
+    text-align: center;
+
+    border: 1px solid var(--global-border-color);
+    background-color: #000000bf;
+}
+
+.MediaCard_NextRelease {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+
+    padding: 2px 5px;
+    border-radius: 8px;
+    font-size: 14px;
+
+    text-align: center;
+
+    border: 1px solid var(--global-border-color);
+    background-color: #000000bf;
 }

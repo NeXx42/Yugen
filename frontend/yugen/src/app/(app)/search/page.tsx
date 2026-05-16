@@ -6,8 +6,7 @@ export default async function ({ searchParams }: { searchParams: { query?: strin
     if (query === undefined)
         return <>Please enter a search query</>
 
-    return (<div>
-        <h1>SEARCH</h1>
+    return (<div style={{ marginTop: "35px" }}>
         <SearchContainer searchQuery={query} />
     </div>)
 }

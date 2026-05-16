@@ -19,9 +19,9 @@ public class CatalogController : ControllerBase
     }
 
     [HttpGet("Upcoming")]
-    public async Task<MediaCard[]> GetUpcoming()
+    public async Task<MediaCard[]> GetUpcoming([FromQuery] int? take)
     {
-        return await _catalogService.Upcoming();
+        return await _catalogService.Upcoming(take ?? 10);
     }
 
     public class Search_Query

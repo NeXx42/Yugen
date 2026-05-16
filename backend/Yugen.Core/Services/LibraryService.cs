@@ -9,6 +9,7 @@ using Yugen.Domain.Data.Media;
 using Yugen.Domain.Data.Users;
 using Yugen.Domain.Enums;
 using Yugen.Domain.Models;
+using Yugen.Domain.Models.History;
 using Yugen.Domain.Models.Library;
 using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
@@ -91,20 +92,21 @@ public class LibraryService
 
     public async Task<MediaCard[]> GetWatchHistory(int take)
     {
-        List<int> results = await _db.watchHistory
+        var results = await _db.watchHistory
             .Where(w => w.WatchedEpisode.HasValue)
             .Select(w => new
             {
-                Id = w.MediaId,
-                Episode = w.WatchedEpisodes
-                    .FirstOrDefault(e => e.EpisodeNumber == w.WatchedEpisode)
+                w.MediaId,
+                Episode = w.WatchedEpisodes.FirstOrDefault(e => e.EpisodeNumber == w.WatchedEpisode)
             })
             .Where(x => x.Episode != null)
             .OrderByDescending(x => x.Episode!.LastWatched)
             .Take(take)
-            .Select(w => w.Id)
             .ToListAsync();
 
-        return await _catalogService.GetOrCreateMediaCardsFromIds(results);
+        Dictionary<int, Model_WatchedEpisode?> historyLookup = results.ToDictionary(x => x.MediaId, x => x.Episode);
+        MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds(results.Select(r => r.MediaId).ToList());
+
+        return cards.Select(c => c.WithWatchInfo(historyLookup[c.aniListId])).ToArray();
     }
 }
