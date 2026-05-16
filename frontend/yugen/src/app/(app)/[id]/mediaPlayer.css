@@ -1,8 +1,17 @@
 .MediaPlayer {
-    background-color: green;
-    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
 
-    cursor: pointer;
+.MediaPlayer_Container {
+    aspect-ratio: 16/ 9;
+
+    background-color: var(--global-div-tr);
+    border: 1px solid var(--global-border-color);
+    border-radius: 5px;
+
+    overflow: hidden;
 }
 
 .MediaPlayer video {
@@ -13,5 +22,21 @@
 
 iframe {
     width: 100%;
+    height: 100%;
+}
+
+.MediaPlayer_Controls {
+    background-color: var(--global-div-tr);
+    border: 1px solid var(--global-border-color);
+    border-radius: 5px;
+
+    height: 40px;
+}
+
+.MediaPlayer_Container_Request {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
     height: 100%;
 }

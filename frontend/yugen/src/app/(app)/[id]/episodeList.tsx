@@ -2,57 +2,60 @@
 
 import * as api from "@lib/api.local"
 
-import { MediaEpisodeInfo, SonarrEpisodeInfo } from "@shared/types";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { EpisodeInfo } from "./mediaContainer"
 
 import "./episodeList.css"
 
 interface Props {
-    mediaId: number,
-    episodes: MediaEpisodeInfo[],
+    episodes: EpisodeInfo[] | undefined,
 
-    selectedItem: string | undefined,
-    setSelectedItem: Dispatch<SetStateAction<string | undefined>>,
+    selectedItem: number | undefined,
+    setSelectedItem: Dispatch<SetStateAction<number | undefined>>,
 }
 
 export default function (props: Props) {
-
-    const [selectedEpisode, setSelectedEpisode] = useState(0);
-
-    const [loading, setLoading] = useState(false);
-    const [sonarrEpisodeInfo, setSonarrEpisodeInfo] = useState<SonarrEpisodeInfo[] | undefined>();
-
-
     const onSelectEpisode = (pos: number) => {
-        setSelectedEpisode(pos);
-
-        if (sonarrEpisodeInfo !== undefined && sonarrEpisodeInfo?.length > pos)
-            props.setSelectedItem(sonarrEpisodeInfo[pos].jellyfinId);
+        props.setSelectedItem(props.episodes![pos].episode.number);
     }
 
-    useEffect(() => {
 
-        setLoading(true);
-        api.library_GetSonarrEpisodes(props.mediaId).then(setSonarrEpisodeInfo).finally(() => setLoading(false));
+    const drawEpisode = (ep: EpisodeInfo, pos: number): React.ReactNode => {
+        const watchPercentage = (ep.watchData?.watchPercentage ?? 0) * 100;
 
-    }, [props.episodes])
-
-    const drawEpisode = (ep: MediaEpisodeInfo, pos: number): React.ReactNode => {
         return (
-            <div className={`Episode ${pos == selectedEpisode ? "Episode-Selected" : ""}`} key={ep.number} onClick={() => onSelectEpisode(pos)}>
+            <div className="Episode" key={ep.episode.number} >
+                <button className={ep.episode.number === props.selectedItem ? "Selected" : ""} onClick={() => onSelectEpisode(pos)}>
+                    <div style={{ width: `${watchPercentage}%` }} className="Episode_WatchPercentage" />
+                    <p>{`${ep.episode.number}. ${ep.episode.title}`}</p>
+                </button>
                 {
-                    sonarrEpisodeInfo !== undefined && sonarrEpisodeInfo?.length > pos && sonarrEpisodeInfo[pos].jellyfinId != undefined && (
-                        (<a>[Downloaded]</a>)
+                    (ep.downloadedData !== undefined) ? (
+                        (<></>)
+                    ) : (
+                        <button >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <path d="M7 10l5 5 5-5" />
+                                <path d="M12 15V3" />
+                            </svg>
+                        </button>
                     )
                 }
-                <p>{ep.title ?? `Episode ${ep.number}`}</p>
             </div>
         )
     }
 
     return (
         <div className="EpisodeList">
-            {props.episodes.map(drawEpisode)}
+            <div className="EpisodeList_Titlebar">
+                <h2>Episodes</h2>
+            </div>
+            <div className="EpisodeList_Entries">
+                {props.episodes?.map(drawEpisode)}
+            </div>
         </div>
     )
 }

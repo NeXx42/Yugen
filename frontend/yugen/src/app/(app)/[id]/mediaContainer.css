@@ -1,9 +1,13 @@
-.MediaContainer_Items {
-    display: grid;
-    grid-template-columns: auto 350px;
-    height: 500px;
-
-    gap: 25px;
-
-    padding: 0px 50px;
+.MediaContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
+
+.MediaContainer_Media {
+    display: grid;
+    grid-template-columns: auto 380px;
+    gap: 15px;
+}
+
+.MediaContainer_EpisodeInfo {}

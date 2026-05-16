@@ -1,23 +1,79 @@
 .EpisodeList {
+    position: relative;
+    width: 100%;
+
     overflow: scroll;
+    background-color: var(--global-div-tr);
+    border: 1px solid var(--global-border-color);
+    border-radius: 5px;
+    padding: 5px;
+
+    display: grid;
+    grid-template-rows: 40px auto;
 }
+
+
+.EpisodeList_Titlebar {
+    position: relative;
+    display: flex;
+
+    align-items: center;
+
+    width: 100%;
+}
+
+.EpisodeList_Titlebar h2 {
+    position: absolute;
+    font-size: 16px;
+    margin: 0px;
+}
+
+
+.EpisodeList_Entries {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
 
 .Episode {
-    height: 35px;
-    margin-bottom: 5px;
-
-    border: 1px solid transparent;
-    background: linear-gradient(#121419, #121419) padding-box, linear-gradient(to left, rgba(24, 71, 177, .2), rgba(161, 196, 247, .2)) border-box;
-    padding: 8px;
-
-    overflow: hidden;
-    border-radius: 12px;
-
-    display: flex;
-    gap: 15px;
-    white-space: nowrap;
+    display: grid;
+    grid-template-columns: auto 0px;
 }
 
-.Episode-Selected {
-    background-color: red;
+.Episode button {
+    position: relative;
+    overflow: hidden;
+
+    outline: 1px solid rgba(245, 245, 245, .1);
+    background-color: #141414;
+    border: none;
+    border-radius: 10px;
+    height: 33px;
+    padding: 5px;
+
+    display: flex;
+    text-align: left;
+    align-items: center;
+}
+
+.Episode button p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+}
+
+.Episode button.Selected {
+    background-color: #685bb2;
+}
+
+.Episode_WatchPercentage {
+    position: absolute;
+    inset: 0px;
+    background-color: rgba(0, 0, 0, 0.457);
+    height: 100%;
+}
+
+.Episode button.Selected .Episode_WatchPercentage {
+    display: none;
 }

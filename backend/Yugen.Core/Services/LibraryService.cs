@@ -4,6 +4,7 @@ using Yugen.Core.Configs;
 using Yugen.Core.Data;
 using Yugen.Data;
 using Yugen.Domain.Data.Downloads;
+using Yugen.Domain.Data.History;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Data.Users;
 using Yugen.Domain.Models.History;
@@ -120,7 +121,7 @@ public class LibraryService
             await _mediaService.SyncWatchHistoryWithJellyfin(usr, i, true);
     }
 
-    public async Task ResyncLibrary(UserSession user)
+    public async Task ResyncLibrary(UserSession __)
     {
         List<int>? ids = await _libraryProvider.GetDownloadedMedia();
 
@@ -138,5 +139,20 @@ public class LibraryService
 
         foreach (int link in links)
             await RecheckDownloads(link, true);
+    }
+
+    public async Task<WatchHistoryContainer?> GetEpisodeWatchHistory(UserSession _, int seriesId)
+    {
+        // this should be scoped to user...
+        Model_WatchHistory? history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(m => m.MediaId == seriesId);
+
+        if (history == null)
+            return null;
+
+        return new WatchHistoryContainer()
+        {
+            lastWatchedEpisode = history.WatchedEpisode,
+            episodes = history.WatchedEpisodes.Select(EpisodeHistory.Map).ToArray()
+        };
     }
 }

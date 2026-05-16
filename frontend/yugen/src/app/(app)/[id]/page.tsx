@@ -1,10 +1,10 @@
-import { MediaInfo } from "@/app/shared/types";
 import * as api from "@lib/api.server"
-import MediaPlayer from "./mediaPlayer";
-import EpisodeList from "./episodeList";
+
+import { MediaInfo } from "@shared/types";
 import MediaContainer from "./mediaContainer";
-import CardList from "../home/cardList";
-import CardRow from "@/app/components/cardRow";
+import CardRow from "@comps/cardRow";
+
+import "./page.css";
 
 export default async function ({ params }: { params: { id: number } }) {
     const { id } = await params;
@@ -12,10 +12,22 @@ export default async function ({ params }: { params: { id: number } }) {
 
     void api.media_SyncWatchTime(id);
 
-    return (<div>
-        <h1>{media.title}</h1>
+    return (
+        <div className="ViewPage">
 
-        <MediaContainer mediaInfo={media} />
-        <CardRow cards={media.connectedMedia?.sort(m => m.season ?? 0).map(m => m.card)} />
-    </div>)
+
+            <MediaContainer mediaInfo={media} />
+
+            <div className="ViewPage_Info ViewPageContainer">
+                <img src={media.cardImage ?? ""} />
+                <div className="ViewPage_Info_Info">
+                    <h2>{media.title}</h2>
+                </div>
+            </div>
+
+            <div className="ViewPage_Seasons ViewPageContainer">
+                <CardRow cards={media.connectedMedia?.sort(m => m.season ?? 0).map(m => m.card)} />
+            </div>
+        </div>
+    )
 }

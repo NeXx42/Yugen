@@ -20,8 +20,8 @@ export interface MediaInfo {
     id: number,
     title: string,
 
-    bannerUrl: string | null,
-    cardUrl: string | null,
+    bannerImage: string | null,
+    cardImage: string | null,
     colour: string | null,
 
     episodes: MediaEpisodeInfo[]
@@ -48,4 +48,14 @@ export interface MediaConnection {
 export interface SonarrEpisodeInfo {
     episode: number,
     jellyfinId: string,
+}
+
+export interface WatchHistory {
+    lastWatchedEpisode: number | undefined,
+    episodes: WatchHistoryEpisode[],
+}
+
+export interface WatchHistoryEpisode {
+    episode: number,
+    watchPercentage: number | undefined
 }
