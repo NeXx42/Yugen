@@ -25,6 +25,10 @@ export async function library_SyncWatchHistory() {
 }
 
 
+export async function catalog_ReloadLinks() {
+    await post(`catalog/RedownloadLinking`)
+}
+
 export async function library_CurrentWatching(): Promise<MediaCardInfo[]> {
     return (await get<MediaCardInfo[]>("library/currentlyWatching"))!;
 }
