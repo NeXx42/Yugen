@@ -22,13 +22,13 @@ public class UserService
 
     private readonly byte[] _jwtToken;
 
-    public UserService(YugenContext db, IOptions<EncryptionConfig> encryptionSettings, IOptions<ProviderConfig> providerSettings, CacheService cache)
+    public UserService(YugenContext db, IOptions<EncryptionConfig> encryptionSettings, SettingsCache settings, CacheService cache)
     {
         _db = db;
 
         _cache = cache;
 
-        _userProvider = new JellyfinUserService(providerSettings.Value.jellyfin_Url!, providerSettings.Value.jellyfin_ApiKey!);
+        _userProvider = new JellyfinUserService(settings.Get(ConfigKeys.Jellyfin_Url), settings.Get(ConfigKeys.Jellyfin_ApiKey));
         _jwtToken = Convert.FromBase64String(encryptionSettings.Value.jwtToken);
     }
 

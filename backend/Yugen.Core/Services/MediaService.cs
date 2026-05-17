@@ -16,10 +16,10 @@ public class MediaService
     private readonly YugenContext _db;
     private readonly IMediaProvider _mediaProvider;
 
-    public MediaService(YugenContext db, IOptions<ProviderConfig> options)
+    public MediaService(YugenContext db, SettingsCache settings)
     {
         _db = db;
-        _mediaProvider = new JellyfinMediaService(options.Value.jellyfin_Url!, options.Value.jellyfin_ApiKey!);
+        _mediaProvider = new JellyfinMediaService(settings.Get(ConfigKeys.Jellyfin_Url), settings.Get(ConfigKeys.Jellyfin_ApiKey));
     }
 
     public async Task<string> Play()

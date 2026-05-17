@@ -11,6 +11,8 @@ public class YugenContext : DbContext
 {
     public YugenContext(DbContextOptions<YugenContext> options) : base(options) { }
 
+    public DbSet<Model_Config> config { get; set; }
+
     public DbSet<Model_Media> media { get; set; }
     public DbSet<Model_MediaEpisode> mediaEpisodes { get; set; }
     public DbSet<Model_Link> links { get; set; }
@@ -28,6 +30,8 @@ public class YugenContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Model_Config>().HasKey(m => m.Key);
+
         modelBuilder.Entity<Model_MediaEpisode>().HasKey(e => new { e.MediaId, e.EpisodeNumber });
         modelBuilder.Entity<Model_MediaEpisode>().HasOne(e => e.Media).WithMany(e => e.Episodes);
 

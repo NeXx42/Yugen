@@ -59,3 +59,10 @@ export interface WatchHistoryEpisode {
     episode: number,
     watchPercentage: number | undefined
 }
+
+
+
+export interface ConfigSetting {
+    key: string;
+    value: string | undefined;
+}

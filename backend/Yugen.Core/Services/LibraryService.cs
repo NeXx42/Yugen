@@ -25,14 +25,14 @@ public class LibraryService
 
     private readonly ILibraryProvider _libraryProvider;
 
-    public LibraryService(YugenContext db, IOptions<ProviderConfig> options, CatalogService catalogService, MediaService mediaService)
+    public LibraryService(YugenContext db, SettingsCache settings, CatalogService catalogService, MediaService mediaService)
     {
         _db = db;
 
         _mediaService = mediaService;
         _catalogService = catalogService;
 
-        _libraryProvider = new SonarrLibraryProvider(options.Value.sonarr_Url!, options.Value.sonarr_ApiKey!);
+        _libraryProvider = new SonarrLibraryProvider(settings.Get(ConfigKeys.Sonarr_Url), settings.Get(ConfigKeys.Sonarr_ApiKey));
     }
 
     public async Task<DownloadedEpisode[]> GetDownloadedEpisodes(int aniListId)

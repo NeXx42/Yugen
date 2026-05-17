@@ -1,8 +1,8 @@
-import { SERVER_URL, BASE_URL } from "@shared/config";
+import { SERVER_URL } from "@shared/config";
 
 const URL = typeof window === "undefined"
     ? SERVER_URL
-    : BASE_URL;
+    : "";
 
 export async function get<T>(uri: string, nextCaching: NextFetchRequestConfig | undefined = undefined, authToken: string | undefined = undefined): Promise<T | undefined> {
     const res = await fetch(`${URL}/api/${uri}`, {

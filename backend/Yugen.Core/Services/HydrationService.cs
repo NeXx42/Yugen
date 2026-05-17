@@ -18,13 +18,11 @@ namespace Yugen.Core.Services;
 public class HydrationService
 {
     private readonly YugenContext _db;
-    private readonly ILinkingProvider _linkingProvider;
     private readonly IMetaDataProvider _metaDataProvider;
 
-    public HydrationService(YugenContext db, IOptions<ProviderConfig> options)
+    public HydrationService(YugenContext db, SettingsCache settings)
     {
         _db = db;
-        _linkingProvider = new IdMoeLinkingProvider(options.Value.idMoe_Url!, options.Value.idMoe_ApiKey!);
         _metaDataProvider = new AniListProvider();
     }
 

@@ -76,7 +76,6 @@ builder.Services.AddCors(options =>
 
 
 builder.Services.Configure<EncryptionConfig>(builder.Configuration.GetSection("Encryption"));
-builder.Services.Configure<ProviderConfig>(builder.Configuration.GetSection("Provider"));
 
 builder.Services.AddDbContext<YugenContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -84,9 +83,13 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<MediaService>();
 builder.Services.AddScoped<CatalogService>();
 builder.Services.AddScoped<LibraryService>();
+builder.Services.AddScoped<SettingsService>();
 builder.Services.AddScoped<HydrationService>();
 
 builder.Services.AddSingleton<CacheService>();
+builder.Services.AddSingleton<SettingsCache>();
+
+builder.Services.AddHostedService<SettingsInit>();
 
 var app = builder.Build();
 

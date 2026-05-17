@@ -1,12 +1,20 @@
 "use client"
 
-import { MediaCardInfo, SonarrEpisodeInfo, User, WatchHistory } from "@shared/types";
+import { ConfigSetting, MediaCardInfo, SonarrEpisodeInfo, User, WatchHistory } from "@shared/types";
 import { post, get } from "./api.shared";
 
 export async function auth_Login(username: string, password: string) {
     return (await post<User>("auth/login", { username, password }))!;
 }
 
+
+export async function settings_Load() {
+    return (await get<ConfigSetting[]>("Settings"))!;
+}
+
+export async function settings_Save(key: string, value: string | undefined) {
+    return (await post(`Settings/${key}`, { value: value }))!;
+}
 
 export async function library_sync() {
     await post("Library/Sync/Library");
