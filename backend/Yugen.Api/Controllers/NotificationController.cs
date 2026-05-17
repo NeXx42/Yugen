@@ -6,7 +6,7 @@ using Yugen.Domain.Enums;
 namespace Yugen.Api.Controllers;
 
 [ApiController]
-[Route("Notifications")]
+[Route("api/Notifications")]
 public class NotificationController : ControllerBase
 {
     public class WebhookMessage
