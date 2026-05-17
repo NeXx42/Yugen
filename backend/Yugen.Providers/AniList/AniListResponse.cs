@@ -11,6 +11,7 @@ public class AniListResponse_Search
         public class Page
         {
             public Media[]? media { get; set; }
+            public PageInfo? pageInfo { get; set; }
 
             public class Media
             {
@@ -41,6 +42,11 @@ public class AniListResponse_Search
                     public string? medium { get; set; }
                     public string? color { get; set; }
                 }
+            }
+
+            public class PageInfo
+            {
+                public int total { get; set; }
             }
         }
     }

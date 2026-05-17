@@ -84,23 +84,49 @@ public class AniListProvider : IMetaDataProvider
         }).ToArray() ?? [];
     }
 
-    public async Task<int[]> SearchMedia(string textFilter)
+    public async Task<(int, int[])> SearchMedia(string textFilter, int page, int pageSize)
     {
-        string query = @"
-        query ($search: String!) {
-            Page {
-                media(search: $search, type: ANIME) {
-                    id
-                }
-            }
-        }";
+        string query;
 
-        AniListResponse_Search? res = await SendRequest<AniListResponse_Search>(query, new { search = textFilter });
+        if (string.IsNullOrEmpty(textFilter))
+        {
+            query = @"query Page($perPage: Int, $page: Int, $type: MediaType) {
+                Page(perPage: $perPage, page: $page) {
+                    media(type: $type) {
+                        id
+                    }
+                    pageInfo {
+                        total
+                    }
+                }
+            }";
+        }
+        else
+        {
+            query = @"query Page( $search: String!, $perPage: Int, $page: Int, $type: MediaType) {
+                Page(perPage: $perPage, page: $page) {
+                    media(search: $search, type: $type) {
+                        id
+                    }
+                    pageInfo {
+                        total
+                    }
+                }
+            }";
+        }
+
+        AniListResponse_Search? res = await SendRequest<AniListResponse_Search>(query, new
+        {
+            search = textFilter,
+            perPage = pageSize,
+            page = page,
+            MediaType = "ANIME"
+        });
 
         if (res == null)
-            return [];
+            return (0, []);
 
-        return res.data.page.media?.Select(m => m.id).ToArray() ?? [];
+        return (res.data.page?.pageInfo?.total ?? 0, res.data.page?.media?.Select(m => m.id).ToArray() ?? []);
     }
 
     public async Task<Dictionary<int, long>> UpcomingMedia()

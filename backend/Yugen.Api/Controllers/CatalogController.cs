@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Yugen.Core.Data;
 using Yugen.Core.Services;
+using Yugen.Domain.Data;
 using Yugen.Domain.Data.Media;
 
 namespace Yugen.Api.Controllers;
@@ -26,13 +27,16 @@ public class CatalogController : ControllerBase
 
     public class Search_Query
     {
+        public int? page { get; set; }
+        public int? pageSize { get; set; }
+
         public string? text { get; set; }
     }
 
     [HttpPost("Search")]
-    public async Task<MediaCard[]> Search([FromBody] Search_Query query)
+    public async Task<PageResponse<MediaCard>> Search([FromBody] Search_Query query)
     {
-        return await _catalogService.Search(query.text!);
+        return await _catalogService.Search(query.text!, query.page ?? 0, query.pageSize ?? 10);
     }
 
     [HttpGet("{id}")]

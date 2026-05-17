@@ -2,31 +2,35 @@
 
 import * as api from "@lib/api.local"
 
-import { MediaCardInfo } from "@/app/shared/types"
+import { MediaCardInfo, PageResponse } from "@shared/types"
 import { ReactNode, useEffect, useState } from "react"
 
-import MediaCard from "@/app/components/mediaCard"
+import MediaCard from "@comps/mediaCard"
+import PageContainer from "@comps/pageContainer"
 
 import "./page.css"
 
 type LibraryGroup = "Downloaded" | "Watching" | "OnHold" | "Planning" | "Completed" | "Dropped";
 
 export default function () {
+    const pageSize = 54;
+
     const [selectedGroup, setSelectedGroup] = useState<LibraryGroup>("Downloaded");
-    const [page, setPage] = useState(0)
+    const [currentPage, setCurrentPage] = useState(0);
 
-    const [isLoading, setLoading] = useState(false);
-    const [content, SetContent] = useState<MediaCardInfo[] | undefined>();
-
-    useEffect(() => {
-
-        setLoading(true);
-        api.library_Search(page, 54, selectedGroup).then(SetContent).finally(() => setLoading(false));
-
-    }, [page, selectedGroup]);
+    const search = (): Promise<PageResponse<MediaCardInfo>> => api.library_Search(currentPage, pageSize, selectedGroup);
 
     const drawGroupBtn = (group: LibraryGroup, label: string | undefined = undefined): ReactNode => {
-        return (<button className={group === selectedGroup ? "Selected" : ""} onClick={() => setSelectedGroup(group)}>{label ?? group}</button>)
+        const callback = () => {
+            setCurrentPage(0);
+            setSelectedGroup(group);
+        }
+
+        return (<button className={group === selectedGroup ? "Selected" : ""} onClick={callback}>{label ?? group}</button>)
+    }
+
+    const drawCard = (inp: MediaCardInfo): ReactNode => {
+        return <MediaCard Card={inp} />
     }
 
     return (
@@ -41,14 +45,8 @@ export default function () {
             </div>
 
             <div className="Library_Items">
-                {
-                    isLoading ? (
-                        <a>loading</a>
-                    ) : (
-                        content?.map(c => <MediaCard key={c.aniListId} Card={c} />)
-                    )
-                }
+                {<PageContainer search={search} currentPage={currentPage} setCurrentPage={setCurrentPage} pageSize={pageSize} drawElement={drawCard} track={[selectedGroup]} />}
             </div>
-        </div>
+        </div >
     )
 }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Yugen.Core.Data;
 using Yugen.Data;
+using Yugen.Domain.Data;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
@@ -32,32 +33,31 @@ public class CatalogService
         _hydrationService = hydrationService;
     }
 
-    public async Task<MediaCard[]> Search(string textFilter)
+    public async Task<PageResponse<MediaCard>> Search(string textFilter, int page, int pageSize)
     {
         const string CACHE_KEY = "SearchResults";
         const string SEARCH_CACHE = $"SearchFilter";
 
-        MediaCard[]? cards;
+        string searchCacheValue = $"{textFilter}_{page}_{pageSize}";
+
+        PageResponse<MediaCard>? pageResponse;
 
         if (_cache.TryGetValue(SEARCH_CACHE, out string? res))
         {
-            if (res == textFilter)
+            if (res == searchCacheValue)
             {
-                if (_cache.TryGetValue(CACHE_KEY, out cards))
-                    return cards!;
+                if (_cache.TryGetValue(CACHE_KEY, out pageResponse))
+                    return pageResponse!;
             }
         }
 
-        if (string.IsNullOrEmpty(textFilter))
-            throw new ArgumentException();
+        (int total, int[] media) = await _currentProvider.SearchMedia(textFilter, page, pageSize);
+        pageResponse = new PageResponse<MediaCard>(await GetOrCreateMediaCardsFromIds(media.ToList()), page, pageSize, total);
 
-        int[] media = await _currentProvider.SearchMedia(textFilter);
-        cards = await GetOrCreateMediaCardsFromIds(media.ToList());
+        _cache.Set(CACHE_KEY, pageResponse);
+        _cache.Set(SEARCH_CACHE, searchCacheValue);
 
-        _cache.Set(CACHE_KEY, cards);
-        _cache.Set(SEARCH_CACHE, textFilter);
-
-        return cards;
+        return pageResponse;
     }
 
     public async Task<MediaInfo> GetMediaInfo(int aniListId)

@@ -6,7 +6,7 @@ namespace Yugen.Providers;
 
 public interface IMetaDataProvider
 {
-    public Task<int[]> SearchMedia(string textFilter);
+    public Task<(int total, int[] ids)> SearchMedia(string textFilter, int page, int pageSize);
     public Task<Dictionary<int, long>> UpcomingMedia();
 
     public Task<Model_Media[]> GetMediaInfo(ICollection<int> aniListIds);

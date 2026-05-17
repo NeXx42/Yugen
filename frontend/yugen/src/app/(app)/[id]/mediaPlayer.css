@@ -26,6 +26,8 @@ iframe {
 
     outline: none;
     border: none;
+
+    overflow: hidden;
 }
 
 .MediaPlayer_Controls {

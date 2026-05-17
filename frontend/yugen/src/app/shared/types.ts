@@ -1,3 +1,12 @@
+export interface PageResponse<T> {
+    page: number,
+    pageSize: number,
+    totalResults: number,
+
+    data: T[]
+}
+
+
 export interface User {
     name: string,
     id: string,

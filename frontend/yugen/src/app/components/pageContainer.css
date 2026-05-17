@@ -1,12 +1,36 @@
-.Library {
-    margin: 50px;
-
+.Paginator {
     display: flex;
     flex-direction: column;
-    gap: 25px;
+    gap: 15px;
+
+    min-height: 850px;
 }
 
-.Library_Filters {
+.Page_Top {
+    display: flex;
+    align-items: center;
+    justify-content: right;
+}
+
+.Page_Top a {
+    background-color: var(--global-div-tr);
+    border: 1px solid var(--global-border-color);
+    border-radius: 5px;
+    padding: 5px 10px;
+
+    font-size: 13px;
+}
+
+.Page_Content {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    row-gap: 25px;
+}
+
+
+.Page_Pages {
+    margin-top: auto;
+
     background-color: var(--global-div-tr);
     border: 1px solid var(--global-border-color);
     border-radius: 5px;
@@ -14,13 +38,11 @@
     padding: 15px;
 
     display: flex;
-    align-items: center;
     justify-content: center;
-    gap: 15px;
 }
 
-.Library_Filters button {
-    padding: 8px 15px;
+.Page_Pages button {
+    padding: 8px;
 
     border-radius: 8px;
     background-color: var(--global-div);
@@ -29,7 +51,7 @@
     cursor: pointer;
 }
 
-.Library_Filters button.Selected {
+.Page_Pages button.Selected {
     filter: brightness(1.05);
     color: var(--primary-accent);
     background-color: var(--primary-accent-dk-tr);

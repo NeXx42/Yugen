@@ -1,6 +1,6 @@
 "use client"
 
-import { ConfigSetting, MediaCardInfo, SonarrEpisodeInfo, User, WatchHistory } from "@shared/types";
+import { ConfigSetting, MediaCardInfo, PageResponse, SonarrEpisodeInfo, User, WatchHistory } from "@shared/types";
 import { post, get, upload } from "./api.shared";
 
 export async function auth_Login(username: string, password: string) {
@@ -33,17 +33,19 @@ export async function catalog_ReloadLinks() {
     await post(`catalog/RedownloadLinking`)
 }
 
-export async function library_CurrentWatching(): Promise<MediaCardInfo[]> {
-    return (await get<MediaCardInfo[]>("library/currentlyWatching"))!;
+export async function library_CurrentWatching(page: number, pageSize: number): Promise<PageResponse<MediaCardInfo>> {
+    return (await get<PageResponse<MediaCardInfo>>(`library/WatchHistory?page=${page}&pageSize=${pageSize}`))!;
 }
 
 export async function catalog_Upcoming(): Promise<MediaCardInfo[]> {
     return (await get<MediaCardInfo[]>("catalog/Upcoming"))!;
 }
 
-export async function catalog_Search(text: string): Promise<MediaCardInfo[]> {
-    return (await post<MediaCardInfo[]>("catalog/Search", {
-        text: text
+export async function catalog_Search(text: string, page: number, pageSize: number): Promise<PageResponse<MediaCardInfo>> {
+    return (await post<PageResponse<MediaCardInfo>>("catalog/Search", {
+        text: text,
+        page,
+        pageSize
     }))!;
 }
 
@@ -55,8 +57,8 @@ export async function library_GetWatchHistoryForSeries(aniListId: number): Promi
     return (await get<WatchHistory>(`library/${aniListId}/WatchHistory`))!;
 }
 
-export async function library_Search(page: number, pageSize: number, group: string): Promise<MediaCardInfo[]> {
-    return (await post<MediaCardInfo[]>("library/Search", {
+export async function library_Search(page: number, pageSize: number, group: string): Promise<PageResponse<MediaCardInfo>> {
+    return (await post<PageResponse<MediaCardInfo>>("library/Search", {
         page,
         pageSize,
         group,

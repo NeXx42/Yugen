@@ -30,7 +30,7 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
 
             setEpisodeInfo(mediaInfo.episodes.map((ep) => {
                 const downloadedData: SonarrEpisodeInfo | undefined = downloadData.find(d => d.episode === ep.number) ?? undefined;
-                const episodeWatchData: WatchHistoryEpisode | undefined = watchData.episodes.find(w => w.episode === ep.number) ?? undefined;
+                const episodeWatchData: WatchHistoryEpisode | undefined = watchData?.episodes.find(w => w.episode === ep.number) ?? undefined;
 
                 return {
                     episode: ep,
@@ -39,7 +39,7 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
                 }
             }))
 
-            setSelectedEpisode(watchData.lastWatchedEpisode ?? mediaInfo.episodes[0].number)
+            setSelectedEpisode(watchData?.lastWatchedEpisode ?? mediaInfo.episodes[0].number)
         }
 
         loadExtraData();

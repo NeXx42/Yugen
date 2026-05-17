@@ -3,29 +3,22 @@
 import { useEffect, useState } from "react"
 
 import * as api from "@lib/api.local"
-import { MediaCardInfo } from "@shared/types"
+import { MediaCardInfo, PageResponse } from "@shared/types"
 import MediaCard from "@/app/components/mediaCard";
 
 
 import "./searchContainer.css"
+import PageContainer from "@/app/components/pageContainer";
 
 export default function ({ searchQuery }: { searchQuery: string }) {
-    const [loading, setLoading] = useState<boolean>(false);
-    const [results, setResults] = useState<MediaCardInfo[] | undefined>(undefined);
+    const pageSize = 54;
 
-    useEffect(() => {
-
-        setLoading(true);
-        api.catalog_Search(searchQuery).then(setResults).finally(() => setLoading(false));
-
-    }, [searchQuery])
-
-    if (loading)
-        return (<>loading...</>)
+    const [currentPage, setCurrentPage] = useState(0);
+    const search = (): Promise<PageResponse<MediaCardInfo>> => api.catalog_Search(searchQuery, currentPage, pageSize);
 
     return (
         <div className="SearchContainer">
-            {results?.map(e => <MediaCard Card={e} />)}
+            <PageContainer search={search} pageSize={pageSize} currentPage={currentPage} setCurrentPage={setCurrentPage} drawElement={e => <MediaCard key={e.aniListId} Card={e} />} track={[searchQuery]} />
         </div>
     )
 }

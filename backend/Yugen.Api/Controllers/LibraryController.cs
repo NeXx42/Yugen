@@ -1,8 +1,10 @@
+using Azure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Yugen.Api.Helpers;
 using Yugen.Core.Data;
 using Yugen.Core.Services;
+using Yugen.Domain.Data;
 using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.History;
 using Yugen.Domain.Data.Users;
@@ -22,10 +24,10 @@ public class LibraryController : ControllerBase
         _libraryService = libraryService;
     }
 
-    [HttpGet("currentlyWatching")]
-    public async Task<MediaCard[]> GetCurrentlyWatching()
+    [HttpGet("WatchHistory")]
+    public async Task<PageResponse<MediaCard>> GetWatchHistory([FromQuery] int? page, [FromQuery] int? pageSize)
     {
-        return await _libraryService.GetWatchHistory(10);
+        return await _libraryService.GetWatchHistory(page ?? 0, pageSize ?? 10);
     }
 
     [HttpGet("{id}")]
@@ -63,7 +65,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost("Search")]
-    public async Task<MediaCard[]> SearchLibrary([FromBody] SearchLibraryFilter filter)
+    public async Task<PageResponse<MediaCard>> SearchLibrary([FromBody] SearchLibraryFilter filter)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
         return await _libraryService.SearchLibrary(usr, filter.page ?? 0, filter.pageSize ?? 10, filter.group ?? "all");

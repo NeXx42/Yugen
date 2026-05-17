@@ -1,8 +1,10 @@
+using Azure;
 using EFCore.BulkExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Yugen.Core.Data;
 using Yugen.Data;
+using Yugen.Domain.Data;
 using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.History;
 using Yugen.Domain.Data.Users;
@@ -93,9 +95,9 @@ public class LibraryService
         return media;
     }
 
-    public async Task<MediaCard[]> GetWatchHistory(int take)
+    public async Task<PageResponse<MediaCard>> GetWatchHistory(int page, int pageSize)
     {
-        var results = await _db.watchHistory
+        var query = _db.watchHistory
             .Where(w => w.WatchedEpisode.HasValue)
             .Select(w => new
             {
@@ -103,14 +105,15 @@ public class LibraryService
                 Episode = w.WatchedEpisodes.FirstOrDefault(e => e.EpisodeNumber == w.WatchedEpisode)
             })
             .Where(x => x.Episode != null)
-            .OrderByDescending(x => x.Episode!.LastWatched)
-            .Take(take)
-            .ToListAsync();
+            .OrderByDescending(x => x.Episode!.LastWatched);
+
+        int totalResults = await query.CountAsync();
+        var results = await query.Skip(page * pageSize).Take(pageSize).ToArrayAsync();
 
         Dictionary<int, Model_WatchedEpisode?> historyLookup = results.ToDictionary(x => x.MediaId, x => x.Episode);
         MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds(results.Select(r => r.MediaId).ToList());
 
-        return cards.Select(c => c.WithWatchInfo(historyLookup[c.aniListId])).ToArray();
+        return new PageResponse<MediaCard>(cards.Select(c => c.WithWatchInfo(historyLookup[c.aniListId])).ToArray(), page, pageSize, totalResults);
     }
 
     public async Task SyncWatchHistory(UserSession usr)
@@ -156,7 +159,7 @@ public class LibraryService
         };
     }
 
-    public async Task<MediaCard[]> SearchLibrary(UserSession session, int page, int pageSize, string group)
+    public async Task<PageResponse<MediaCard>> SearchLibrary(UserSession session, int page, int pageSize, string group)
     {
         IQueryable<int>? query = null;
 
@@ -177,10 +180,12 @@ public class LibraryService
         }
 
         if (query == null)
-            return [];
+            return PageResponse<MediaCard>.Empty();
 
+        int totalCount = await query.CountAsync();
         List<int> results = await query.Skip(page * pageSize).Take(pageSize).ToListAsync();
-        return await _catalogService.GetOrCreateMediaCardsFromIds(results);
+
+        return new PageResponse<MediaCard>(await _catalogService.GetOrCreateMediaCardsFromIds(results), page, pageSize, totalCount);
     }
 
     public async Task UploadLibrary(UserSession usr, IFormFile file)
