@@ -85,6 +85,7 @@ builder.Services.AddScoped<CatalogService>();
 builder.Services.AddScoped<LibraryService>();
 builder.Services.AddScoped<SettingsService>();
 builder.Services.AddScoped<HydrationService>();
+builder.Services.AddScoped<NotificationService>();
 
 builder.Services.AddSingleton<CacheService>();
 builder.Services.AddSingleton<SettingsCache>();

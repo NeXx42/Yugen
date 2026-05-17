@@ -32,6 +32,7 @@ public class YugenContext : DbContext
     public DbSet<Model_UserBookmark> userBookmarks { get; set; }
 
     public DbSet<UserModel> user { get; set; }
+    public DbSet<Model_Notification> notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
