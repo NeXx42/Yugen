@@ -12,6 +12,9 @@ public class JellyfinUserService : IUserProvider
 
     public JellyfinUserService(string url, string apiKey)
     {
+        Console.WriteLine(url);
+        Console.WriteLine(apiKey);
+
         _http = new RestfulHelper(url, new Dictionary<string, string>()
         {
             { "X-Emby-Token", apiKey}

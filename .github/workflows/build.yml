@@ -1,0 +1,35 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+      
+  workflow_dispatch:
+      
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      # build
+        
+      - name: Build Docker image
+        run: |
+          docker build -t ghcr.io/nexx42/Yugen ./
+          
+      # push  
+        
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/nexx42/Yugen

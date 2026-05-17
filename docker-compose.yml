@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres:16
+    container_name: yugen_db
+    restart: always
+    environment:
+      POSTGRES_USER: yugen
+      POSTGRES_PASSWORD: yugen
+      POSTGRES_DB: yugen
+    ports:
+      - "5433:5432"
+
+  backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: yugen
+    restart: always
+    depends_on:
+      - db
+    environment:
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=yugen;Username=yugen;Password=yugen
+      Encryption__JWTToken: "ZGV2LXN1cGVyLXNlY3JldC1qd3Qta2V5LWRvLW5vdC11c2UtaW4tcHJvZHVjdGlvbi0xMjM0NTY3ODkw" # just for testing, its not real
+    ports:
+      - "3002:3000"
