@@ -35,6 +35,9 @@
       "@lib/*": [
         "./src/app/lib/*"
       ],
+      "@context/*": [
+        "./src/app/context/*"
+      ],
     }
   },
   "include": [

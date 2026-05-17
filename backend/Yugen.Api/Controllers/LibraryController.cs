@@ -68,4 +68,16 @@ public class LibraryController : ControllerBase
         HttpContext.GetUserFromSession(out UserSession usr);
         return await _libraryService.SearchLibrary(usr, filter.page ?? 0, filter.pageSize ?? 10, filter.group ?? "all");
     }
+
+    [HttpPost("Upload")]
+    public async Task<IResult> UploadLibrary(IFormFile? file)
+    {
+        if ((file?.Length ?? 0) == 0)
+            return Results.BadRequest();
+
+        HttpContext.GetUserFromSession(out UserSession usr);
+        await _libraryService.UploadLibrary(usr, file!);
+
+        return Results.Ok();
+    }
 }

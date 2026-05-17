@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Yugen.Domain.Enums;
 using Yugen.Domain.Models;
+using Yugen.Domain.Models.Bookmarks;
 using Yugen.Domain.Models.History;
 using Yugen.Domain.Models.Library;
 using Yugen.Domain.Models.Linking;
@@ -25,6 +27,9 @@ public class YugenContext : DbContext
     public DbSet<Model_WatchHistory> watchHistory { get; set; }
     public DbSet<Model_WatchedEpisode> watchedEpisodes { get; set; }
 
+    // Bookmarks
+    public DbSet<Model_Bookmark> bookmarkTypes { get; set; }
+    public DbSet<Model_UserBookmark> userBookmarks { get; set; }
 
     public DbSet<UserModel> user { get; set; }
 
@@ -40,5 +45,15 @@ public class YugenContext : DbContext
 
         modelBuilder.Entity<Model_WatchedEpisode>().HasKey(w => new { w.MediaId, w.EpisodeNumber });
         modelBuilder.Entity<Model_WatchedEpisode>().HasOne(w => w.WatchedHistory).WithMany(w => w.WatchedEpisodes);
+
+        modelBuilder.Entity<Model_UserBookmark>().HasKey(e => new { e.MediaId, e.UserId });
+
+        modelBuilder.Entity<Model_Bookmark>().HasData(
+            new Model_Bookmark { Id = (int)BookmarkType.Watching, Title = "Watching" },
+            new Model_Bookmark { Id = (int)BookmarkType.OnHold, Title = "OnHold" },
+            new Model_Bookmark { Id = (int)BookmarkType.Planning, Title = "Planning" },
+            new Model_Bookmark { Id = (int)BookmarkType.Completed, Title = "Completed" },
+            new Model_Bookmark { Id = (int)BookmarkType.Dropped, Title = "Dropped" }
+        );
     }
 }

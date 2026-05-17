@@ -1,7 +1,7 @@
 "use client"
 
 import { ConfigSetting, MediaCardInfo, SonarrEpisodeInfo, User, WatchHistory } from "@shared/types";
-import { post, get } from "./api.shared";
+import { post, get, upload } from "./api.shared";
 
 export async function auth_Login(username: string, password: string) {
     return (await post<User>("auth/login", { username, password }))!;
@@ -62,6 +62,11 @@ export async function library_Search(page: number, pageSize: number, group: stri
         group,
     }))!
 }
+
+export async function library_Upload(file: FormData) {
+    await upload("library/Upload", file);
+}
+
 
 
 export async function media_PlayItem(itemId: string): Promise<string> {

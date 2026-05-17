@@ -1,17 +1,16 @@
+using EFCore.BulkExtensions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using NetTopologySuite.Index.HPRtree;
-using Yugen.Core.Configs;
 using Yugen.Core.Data;
 using Yugen.Data;
 using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.History;
-using Yugen.Domain.Data.Media;
 using Yugen.Domain.Data.Users;
+using Yugen.Domain.Enums;
+using Yugen.Domain.Models.Bookmarks;
 using Yugen.Domain.Models.History;
 using Yugen.Domain.Models.Library;
 using Yugen.Domain.Models.Linking;
-using Yugen.Domain.Models.Media;
 using Yugen.Providers;
 using Yugen.Providers.Sonarr;
 
@@ -159,19 +158,103 @@ public class LibraryService
 
     public async Task<MediaCard[]> SearchLibrary(UserSession session, int page, int pageSize, string group)
     {
-        List<int> items;
+        IQueryable<int>? query = null;
 
         switch (group.ToLower())
         {
             case "downloaded":
-                items = await _db.downloadedMedia.Skip(page * pageSize).Take(pageSize).Select(m => m.MediaId).ToListAsync();
+                query = _db.downloadedMedia.Select(m => m.MediaId);
                 break;
 
             default:
-                items = new List<int>();
+
+                if (Enum.TryParse(group, out BookmarkType bookmarkType))
+                {
+                    query = _db.userBookmarks.Where(b => b.UserId == session.User.Id && b.BookmarkId == (int)bookmarkType).Select(b => b.MediaId);
+                }
+
                 break;
         }
 
-        return await _catalogService.GetOrCreateMediaCardsFromIds(items);
+        if (query == null)
+            return [];
+
+        List<int> results = await query.Skip(page * pageSize).Take(pageSize).ToListAsync();
+        return await _catalogService.GetOrCreateMediaCardsFromIds(results);
+    }
+
+    public async Task UploadLibrary(UserSession usr, IFormFile file)
+    {
+        DateTime dateAdded = DateTime.UtcNow;
+        List<Model_UserBookmark> allBookmarks = new List<Model_UserBookmark>();
+
+        BookmarkType? currentGroupHeader = null;
+        List<int> currentGroup = new List<int>();
+
+        using (StreamReader reader = new StreamReader(file.OpenReadStream()))
+        {
+            string? line;
+
+            while ((line = await reader.ReadLineAsync()) != null)
+            {
+                if (line.StartsWith("### "))
+                {
+                    if (currentGroupHeader.HasValue)
+                    {
+                        allBookmarks.AddRange(currentGroup.Select(i => new Model_UserBookmark()
+                        {
+                            UserId = usr.User.Id,
+                            MediaId = i,
+                            BookmarkId = (int)currentGroupHeader.Value,
+                            DateAdded = dateAdded,
+                        }));
+
+                        currentGroup.Clear();
+                    }
+
+
+                    string headerStr = line.Substring(4, line.Length - 4).Replace("-", "");
+                    if (Enum.TryParse(headerStr, out BookmarkType header))
+                    {
+                        currentGroupHeader = header;
+                        continue;
+                    }
+                    else
+                    {
+                        throw new Exception($"Unknown header group - {headerStr}");
+                    }
+                }
+                else if (line.StartsWith("# "))
+                {
+                    _ = await reader.ReadLineAsync(); // mal
+                    string? aniList = await reader.ReadLineAsync();
+
+                    if (string.IsNullOrEmpty(aniList))
+                        continue;
+
+                    aniList = aniList.Replace("https://anilist.co/anime/", "").Replace("/", "");
+
+                    if (int.TryParse(aniList, out int id))
+                    {
+                        currentGroup.Add(id);
+                    }
+                }
+            }
+        }
+
+        if (currentGroupHeader.HasValue)
+        {
+            allBookmarks.AddRange(currentGroup.Select(i => new Model_UserBookmark()
+            {
+                UserId = usr.User.Id,
+                MediaId = i,
+                BookmarkId = (int)currentGroupHeader.Value,
+                DateAdded = dateAdded,
+            }));
+        }
+
+        _db.RemoveRange(_db.userBookmarks.Where(b => b.UserId == usr.User.Id));
+        await _db.SaveChangesAsync();
+        await _db.BulkInsertAsync(allBookmarks);
     }
 }

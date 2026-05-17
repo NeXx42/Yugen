@@ -59,8 +59,8 @@
 
 .Settings_Foldout_Navigation button:hover {
     filter: brightness(1.05);
-    background-color: var(--primary-accent-dk-tr);
     color: var(--primary-accent);
+    background-color: var(--primary-accent-dk-tr);
     border-right-color: var(--primary-accent);
 }
 

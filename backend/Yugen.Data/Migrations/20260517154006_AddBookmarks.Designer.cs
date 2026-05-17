@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Yugen.Data;
@@ -11,9 +12,11 @@ using Yugen.Data;
 namespace Yugen.Data.Migrations
 {
     [DbContext(typeof(YugenContext))]
-    partial class YugenContextModelSnapshot : ModelSnapshot
+    [Migration("20260517154006_AddBookmarks")]
+    partial class AddBookmarks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,7 +25,7 @@ namespace Yugen.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Yugen.Domain.Models.Bookmarks.Model_Bookmark", b =>
+            modelBuilder.Entity("Yugen.Domain.Data.Bookmarks.Model_Bookmark", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -66,7 +69,7 @@ namespace Yugen.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Yugen.Domain.Models.Bookmarks.Model_UserBookmark", b =>
+            modelBuilder.Entity("Yugen.Domain.Data.Bookmarks.Model_UserBookmark", b =>
                 {
                     b.Property<int>("MediaId")
                         .HasColumnType("integer");
@@ -76,9 +79,6 @@ namespace Yugen.Data.Migrations
 
                     b.Property<int>("BookmarkId")
                         .HasColumnType("integer");
-
-                    b.Property<DateTime>("DateAdded")
-                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("MediaId", "UserId");
 
@@ -320,9 +320,9 @@ namespace Yugen.Data.Migrations
                     b.ToTable("user");
                 });
 
-            modelBuilder.Entity("Yugen.Domain.Models.Bookmarks.Model_UserBookmark", b =>
+            modelBuilder.Entity("Yugen.Domain.Data.Bookmarks.Model_UserBookmark", b =>
                 {
-                    b.HasOne("Yugen.Domain.Models.Bookmarks.Model_Bookmark", "Bookmark")
+                    b.HasOne("Yugen.Domain.Data.Bookmarks.Model_Bookmark", "Bookmark")
                         .WithMany()
                         .HasForeignKey("BookmarkId")
                         .OnDelete(DeleteBehavior.Cascade)

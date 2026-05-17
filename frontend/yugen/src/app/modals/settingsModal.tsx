@@ -2,19 +2,25 @@
 
 import * as api from "@lib/api.local"
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
+import { useToast } from "@/app/context/toast"
+
 import "./settingsModal.css"
 
 
-type SettingsGroup = "Jellyfin" | "Sonarr" | "Providers";
+type SettingsGroup = "App" | "Jellyfin" | "Sonarr" | "Providers";
 
 
 export default function () {
+    const { showToast } = useToast();
+    const filePicker = useRef<HTMLInputElement>(null);
 
-    const [selectedSettingsGroup, setSelectedSettingsGroup] = useState<SettingsGroup>("Jellyfin");
-    const groups: SettingsGroup[] = ["Jellyfin", "Sonarr", "Providers"];
+    const groups: SettingsGroup[] = ["App", "Jellyfin", "Sonarr", "Providers"];
 
+    const [selectedSettingsGroup, setSelectedSettingsGroup] = useState<SettingsGroup>(groups[0]);
     const [savedConfigValues, setSavedConfigValues] = useState<Record<string, string>>()
+
+    const [filePickerCall, setFilePickerCallback] = useState<(() => void) | undefined>();
 
     useEffect(() => {
         api.settings_Load().then(r => setSavedConfigValues(
@@ -24,8 +30,39 @@ export default function () {
         ));
     }, [])
 
+    const tryToImportLibrary = async () => {
+        setFilePickerCallback(() => () => {
+            if (filePicker?.current?.files?.[0] == undefined) {
+                showToast("Invalid file", "error")
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", filePicker!.current!.files![0]!);
+
+            api.library_Upload(formData).then(() => {
+
+            }).catch(() => {
+                showToast("Failed");
+            });
+        })
+
+        if (filePicker?.current == undefined) {
+            showToast("File picked doesnt exist", "error")
+            return;
+        }
+
+        filePicker.current.accept = ".txt";
+        filePicker.current.click();
+    }
+
     const renderSettingsGroup = (): ReactNode => {
         switch (selectedSettingsGroup) {
+            case "App":
+                return (<>
+                    {renderSetting_Button("Import Library", "Import", tryToImportLibrary)}
+                </>)
+
             case "Jellyfin":
                 return (<>
                     {renderSetting_Button("Sync watch history", "Sync", api.library_SyncWatchHistory)}
@@ -49,11 +86,23 @@ export default function () {
         return <></>
     }
 
-    const renderSetting_Button = (label: string, btnLabel: string, action: () => Promise<void>): ReactNode => {
+    const renderSetting_Button = (label: string, btnLabel: string, action: () => Promise<void>, suppressToast: boolean = false): ReactNode => {
+        const btnIntercept = async () => {
+            try {
+                await action();
+
+                if (suppressToast)
+                    showToast("Success", "success");
+            }
+            catch {
+                showToast("Failed", "error");
+            }
+        }
+
         return (
             <div className="Settings_Setting_Button">
                 <p>{label}</p>
-                <button onClick={action}>{btnLabel}</button>
+                <button onClick={btnIntercept}>{btnLabel}</button>
             </div>
         )
     }
@@ -73,10 +122,17 @@ export default function () {
         }
 
         const save = async () => {
-            await Promise.all([
-                api.settings_Save(apiUrlKey, savedConfigValues[apiUrlKey]),
-                api.settings_Save(apiKeyKey, savedConfigValues[apiKeyKey]),
-            ])
+            try {
+                await Promise.all([
+                    api.settings_Save(apiUrlKey, savedConfigValues[apiUrlKey]),
+                    api.settings_Save(apiKeyKey, savedConfigValues[apiKeyKey]),
+                ])
+
+                showToast("Saved", "success");
+            }
+            catch {
+                showToast("Error", "error");
+            }
         }
 
         return (
@@ -98,6 +154,8 @@ export default function () {
 
     return (
         <div className="Settings_Menu" onClick={e => e.stopPropagation()}>
+            <input ref={filePicker} type="file" hidden onChange={() => filePickerCall?.()} />
+
             <header className="Settings_Menu_Header">
                 <h1>Settings</h1>
             </header>

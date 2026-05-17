@@ -21,7 +21,7 @@ export default function () {
     useEffect(() => {
 
         setLoading(true);
-        api.library_Search(page, 10, selectedGroup).then(SetContent).finally(() => setLoading(false));
+        api.library_Search(page, 54, selectedGroup).then(SetContent).finally(() => setLoading(false));
 
     }, [page, selectedGroup]);
 
