@@ -7,6 +7,8 @@ using Yugen.Core.Data;
 using Yugen.Data;
 using Yugen.Domain.Data;
 using Yugen.Domain.Data.Media;
+using Yugen.Domain.Data.Users;
+using Yugen.Domain.Models.Bookmarks;
 using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
 using Yugen.Providers;
@@ -22,6 +24,7 @@ public class CatalogService
 
     private readonly CacheService _cache;
     private readonly HydrationService _hydrationService;
+
 
     public CatalogService(YugenContext db, HydrationService hydrationService, CacheService cache)
     {
@@ -60,13 +63,8 @@ public class CatalogService
         return pageResponse;
     }
 
-    public async Task<MediaInfo> GetMediaInfo(int aniListId)
+    public async Task<MediaInfo> GetMediaInfo(UserSession usr, int aniListId)
     {
-        string CACHE_KEY = $"{nameof(GetMediaInfo)}_{aniListId}";
-
-        if (_cache.TryGetValue(CACHE_KEY, out MediaInfo? info))
-            return info!;
-
         Model_Media? dbEntry = await _db.media.Include(m => m.Episodes).FirstOrDefaultAsync(m => m.Id == aniListId);
 
         if (dbEntry == null)
@@ -98,12 +96,10 @@ public class CatalogService
             ).ToArrayAsync()).Select(r => (r.tvdb_season, r.type, r.model)).ToArray();
         }
 
+        Model_UserBookmark? bookmark = await _db.userBookmarks.FirstOrDefaultAsync(b => b.UserId == usr.User.Id && b.MediaId == aniListId);
+
         await _hydrationService.HydrateMedia(dbEntry, link);
-        info = MediaInfo.Map(dbEntry).RegisterConnectedMedia(connectedMedia);
-
-        _cache.SetIfNotExists(CACHE_KEY, info);
-
-        return info;
+        return MediaInfo.Map(dbEntry).RegisterConnectedMedia(connectedMedia).RegisterBookmark(bookmark);
     }
 
     public async Task UpdateMetadata(Guid internalId)

@@ -1,18 +1,19 @@
-"use client"
-
-import { useEffect, useState } from "react"
-
-import * as api from "@lib/api.local"
+import { ReactNode } from "react"
 
 import "./mediaPlayer.css"
 
-export default function ({ itemId }: { itemId: string | undefined }) {
+interface Props {
+    itemId: string | undefined,
+    bookmarkNode: ReactNode
+}
+
+export default function (props: Props) {
     return (
         <div className="MediaPlayer">
             <div className="MediaPlayer_Container">
-                {itemId != undefined ? (
+                {props.itemId != undefined ? (
                     <iframe
-                        src={`https://jellyfin.local/web/index.html#!/details?id=${itemId}`}
+                        src={`https://jellyfin.local/web/index.html#!/details?id=${props.itemId}`}
                         allow="autoplay; fullscreen"
                     ></iframe>
                 ) :
@@ -24,7 +25,9 @@ export default function ({ itemId }: { itemId: string | undefined }) {
                 }
             </div>
             <div className="MediaPlayer_Controls">
-
+                <div className="MediaPlayer_Controls_Bookmark">
+                    {props.bookmarkNode}
+                </div>
             </div>
         </div>
     )

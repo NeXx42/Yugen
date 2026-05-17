@@ -1,3 +1,5 @@
+export type BookmarkType = "None" | "Watching" | "OnHold" | "Planning" | "Completed" | "Dropped";
+
 export interface PageResponse<T> {
     page: number,
     pageSize: number,
@@ -32,6 +34,8 @@ export interface MediaInfo {
     bannerImage: string | null,
     cardImage: string | null,
     colour: string | null,
+
+    bookmark: number | undefined,
 
     episodes: MediaEpisodeInfo[]
     connectedMedia: MediaConnection[]

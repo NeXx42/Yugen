@@ -12,6 +12,8 @@ export default async function ({ params }: { params: { id: number } }) {
 
     void api.media_SyncWatchTime(id);
 
+    console.log(media);
+
     return (
         <div className="ViewPage">
 
@@ -25,9 +27,13 @@ export default async function ({ params }: { params: { id: number } }) {
                 </div>
             </div>
 
-            <div className="ViewPage_Seasons ViewPageContainer">
-                <CardRow cards={media.connectedMedia?.sort(m => m.season ?? 0).map(m => m.card)} />
-            </div>
+            {
+                (media.connectedMedia?.length ?? 0) > 1 && (
+                    <div className="ViewPage_Seasons ViewPageContainer">
+                        <CardRow cards={media.connectedMedia?.sort(m => m.season ?? 0).map(m => m.card)} />
+                    </div>
+                )
+            }
         </div>
     )
 }

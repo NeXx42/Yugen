@@ -69,6 +69,10 @@ export async function library_Upload(file: FormData) {
     await upload("library/Upload", file);
 }
 
+export async function library_UpdateBookmark(mediaId: number, bookmarkId: number) {
+    await post(`library/${mediaId}/UpdateBookmark?id=${bookmarkId}`);
+}
+
 
 
 export async function media_PlayItem(itemId: string): Promise<string> {

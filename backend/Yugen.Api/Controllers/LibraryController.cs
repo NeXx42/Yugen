@@ -82,4 +82,20 @@ public class LibraryController : ControllerBase
 
         return Results.Ok();
     }
+
+    [HttpPost("{mediaId}/UpdateBookmark")]
+    public async Task<IResult> UpdateBookmark(int mediaId, [FromQuery] int id)
+    {
+        try
+        {
+            HttpContext.GetUserFromSession(out UserSession usr);
+            await _libraryService.UpdateBookmark(usr, mediaId, id);
+        }
+        catch
+        {
+            return Results.InternalServerError();
+        }
+
+        return Results.Ok();
+    }
 }

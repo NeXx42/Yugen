@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Yugen.Api.Helpers;
 using Yugen.Core.Data;
 using Yugen.Core.Services;
 using Yugen.Domain.Data;
 using Yugen.Domain.Data.Media;
+using Yugen.Domain.Data.Users;
 
 namespace Yugen.Api.Controllers;
 
@@ -42,7 +44,8 @@ public class CatalogController : ControllerBase
     [HttpGet("{id}")]
     public async Task<MediaInfo?> GetMediaInfo(int id)
     {
-        return await _catalogService.GetMediaInfo(id);
+        HttpContext.GetUserFromSession(out UserSession usr);
+        return await _catalogService.GetMediaInfo(usr, id);
     }
 
     [HttpPost("RedownloadLinking")]

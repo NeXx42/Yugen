@@ -1,4 +1,5 @@
 using Yugen.Core.Data;
+using Yugen.Domain.Models.Bookmarks;
 using Yugen.Domain.Models.Media;
 
 namespace Yugen.Domain.Data.Media;
@@ -12,6 +13,8 @@ public class MediaInfo
     public string? bannerImage { get; set; }
     public string? cardImage { get; set; }
     public string? colour { get; set; }
+
+    public int? bookmark { get; set; }
 
     public EpisodeInfo[]? episodes { get; set; }
     public Connection[]? connectedMedia { get; set; }
@@ -43,6 +46,12 @@ public class MediaInfo
 
             card = MediaCard.Map(m.media),
         }).ToArray();
+        return this;
+    }
+
+    public MediaInfo RegisterBookmark(Model_UserBookmark? bookmark)
+    {
+        this.bookmark = bookmark?.BookmarkId;
         return this;
     }
 

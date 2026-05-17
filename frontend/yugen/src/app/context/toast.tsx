@@ -8,7 +8,7 @@ import { createContext, useContext, useState } from "react"
 type Toast = {
     id: number
     message: string
-    type: "success" | "error"
+    type: "Success" | "Error"
 }
 
 const ToastContext = createContext<any>(null)
@@ -16,7 +16,7 @@ const ToastContext = createContext<any>(null)
 export function ToastProvider({ children }: { children: React.ReactNode }) {
     const [toasts, setToasts] = useState<Toast[]>([])
 
-    const showToast = (message: string, type: Toast["type"] = "success") => {
+    const showToast = (message: string, type: Toast["type"] = "Success") => {
         const id = Date.now()
         setToasts((prev) => [...prev, { id, message, type }])
 
@@ -32,7 +32,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             {createPortal((
                 <div className="ToastContainer">
                     {toasts.sort((a, b) => a.id - b.id).slice(0, 10).map((t) => (
-                        <div key={t.id} className={`Toast ${t.type === "error" ? "Error" : ""}`}>{t.message}</div>
+                        <div key={t.id} className={`Toast ${t.type == "Error" ? "Error" : ""}`}>{t.message}</div>
                     ))}
                 </div>
             ), document.body)}

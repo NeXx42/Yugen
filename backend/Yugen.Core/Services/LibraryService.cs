@@ -22,15 +22,17 @@ public class LibraryService
 {
     private readonly YugenContext _db;
 
+    private readonly CacheService _cache;
     private readonly MediaService _mediaService;
     private readonly CatalogService _catalogService;
 
     private readonly ILibraryProvider _libraryProvider;
 
-    public LibraryService(YugenContext db, SettingsCache settings, CatalogService catalogService, MediaService mediaService)
+    public LibraryService(YugenContext db, SettingsCache settings, CatalogService catalogService, MediaService mediaService, CacheService cache)
     {
         _db = db;
 
+        _cache = cache;
         _mediaService = mediaService;
         _catalogService = catalogService;
 
@@ -186,6 +188,23 @@ public class LibraryService
         List<int> results = await query.Skip(page * pageSize).Take(pageSize).ToListAsync();
 
         return new PageResponse<MediaCard>(await _catalogService.GetOrCreateMediaCardsFromIds(results), page, pageSize, totalCount);
+    }
+
+    public async Task UpdateBookmark(UserSession usr, int mediaId, int bookmarkId)
+    {
+        _db.RemoveRange(_db.userBookmarks.Where(b => b.UserId == usr.User.Id && b.MediaId == mediaId));
+
+        if (bookmarkId <= 0 || bookmarkId > (int)BookmarkType.Dropped)
+            return;
+
+        await _db.AddAsync(new Model_UserBookmark()
+        {
+            MediaId = mediaId,
+            UserId = usr.User.Id,
+            BookmarkId = bookmarkId,
+            DateAdded = DateTime.UtcNow,
+        });
+        await _db.SaveChangesAsync();
     }
 
     public async Task UploadLibrary(UserSession usr, IFormFile file)

@@ -7,7 +7,7 @@
 .MediaContainer_Media {
     display: grid;
     grid-template-columns: auto 380px;
-    gap: 15px;
+    gap: 5px;
 }
 
 .MediaContainer_EpisodeInfo {}
