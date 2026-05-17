@@ -195,51 +195,6 @@ public class CatalogService
                 Console.WriteLine(e.Message);
             }
         }
-
-
-        /*
-        const string url = "https://raw.githubusercontent.com/Anime-Lists/anime-lists/refs/heads/master/anime-list-full.xml";
-        HttpClient client = new HttpClient();
-        HttpResponseMessage res = await client.GetAsync(url);
-
-        List<Model_Link> links = new List<Model_Link>();
-
-        using (XmlReader reader = XmlReader.Create(await res.Content.ReadAsStreamAsync()))
-        {
-            while (reader.Read())
-            {
-                if (reader.NodeType == XmlNodeType.Element && reader.Name == "anime")
-                {
-                    var anilist = reader.GetAttribute("anidbid");
-
-                    if (int.TryParse(anilist, out var aniId))
-                    {
-                        links.Add(new Model_Link
-                        {
-                            anidbid = aniId,
-
-                            tvdbid = TryGetIntValue("tvdbid"),
-                            defaulttvdbseason = TryGetIntValue("defaulttvdbseason"),
-                            tmdbtv = TryGetIntValue("tmdbtv"),
-                            tmdbseason = TryGetIntValue("tmdbseason"),
-                        });
-                    }
-
-                    int? TryGetIntValue(string attribute)
-                    {
-                        string? str = reader.GetAttribute(attribute);
-
-                        if (int.TryParse(str, out int res))
-                            return res;
-
-                        return null;
-                    }
-                }
-            }
-        }
-
-        await _db.BulkInsertOrUpdateAsync(links);
-        */
     }
 
     public class Link

@@ -7,6 +7,7 @@ import { ReactNode, useState } from "react";
 import { createPortal } from "react-dom";
 import NotificationFoldout from "../foldouts/notificationFoldout";
 import SettingsFoldout from "../foldouts/settingsFoldout";
+import ProfileFoldout from "../foldouts/profileFoldout";
 
 type FoldoutType = "None" | "Notifications" | "Profile" | "Settings";
 
@@ -22,7 +23,8 @@ export default function () {
     const renderFoldout = (): ReactNode => {
         switch (currentFoldout) {
             case "Notifications": return <NotificationFoldout />
-            case "Settings": return <SettingsFoldout />
+            case "Settings": return <SettingsFoldout requestClose={() => setCurrentFoldout("None")} />
+            case "Profile": return <ProfileFoldout />
         }
 
         return <></>

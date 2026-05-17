@@ -9,6 +9,61 @@
     left: 0px;
 }
 
+.Settings_Foldout_Top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+
+    border-bottom: 1px solid var(--global-border-color);
+}
+
+.Settings_Foldout_Top button {
+    background-color: var(--global-div);
+    text-align: center;
+
+    border-radius: 100%;
+    border: 1px solid var(--global-border-color);
+
+    height: 35px;
+    width: 35px;
+    font-size: 16px;
+
+    cursor: pointer;
+}
+
+
+
+.Settings_Foldout_Navigation {
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+    gap: 5px;
+}
+
+.Settings_Foldout_Navigation button {
+    height: 50px;
+    background-color: transparent;
+    border: none;
+    text-align: left;
+    padding: 15px;
+    border-radius: 8px;
+    border-right: 3px solid transparent;
+
+    cursor: pointer;
+}
+
+.Settings_Foldout_Navigation button:nth-child(even) {
+    background-color: var(--global-div);
+}
+
+.Settings_Foldout_Navigation button:hover {
+    filter: brightness(1.05);
+    background-color: var(--primary-accent-dk-tr);
+    color: var(--primary-accent);
+    border-right-color: var(--primary-accent);
+}
+
 .Settings_Foldout_Bottom {
     position: absolute;
     bottom: 0px;
@@ -21,138 +76,14 @@
 }
 
 .Settings_Foldout_Bottom button {
-    background-color: var(--global-div);
     text-align: center;
 
     width: 100%;
     height: 100%;
 
     border-radius: 8px;
-    border: 1px solid var(--global-border-color);
-
-    cursor: pointer;
-}
-
-/*   Modal (prob should be another comp)     */
-
-
-.Settings {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    height: 100%
-}
-
-.Settings_Menu {
-    position: relative;
-
-    width: min(64rem, calc(100vw - 2rem));
-    height: min(44rem, calc(100vh - 2rem));
-
-    border: 1px solid var(--global-border-color);
-    background-color: var(--global-div-tr);
-    border-radius: 15px;
-
-    display: grid;
-    grid-template-rows: 70px auto;
-    overflow: hidden;
-}
-
-.Settings_Menu_Header {
-    background: var(--global-div);
-    border-bottom: 1px solid var(--global-border-color);
-
-    display: flex;
-    align-items: center;
-    padding: 25px;
-    font-size: 12px;
-}
-
-.Settings_Menu_Content {
-    background-color: var(--global-primary-bg);
-
-    display: grid;
-    grid-template-columns: 250px auto;
-}
-
-.Settings_Menu_Content_Sidebar {
-    border-right: 1px solid var(--global-border-color);
-    background-color: var(--global-div-tr);
-
-    display: flex;
-    flex-direction: column;
-    padding: 15px;
-    gap: 5px;
-}
-
-.Settings_Menu_Content_Sidebar button {
-    background-color: transparent;
-    border: none;
-
-    cursor: pointer;
-    border-radius: 5px;
-    height: 40px;
-
-    text-align: left;
-    padding: 10px;
-}
-
-.Settings_Menu_Content_Sidebar button.Selected {
-    background-color: var(--global-secondary-bg);
-}
-
-.Settings_Menu_Content_Sidebar button:hover {
-    background-color: var(--global-secondary-bg);
-}
-
-
-.Settings_Menu_Content_Entries {
-    padding: 15px;
-
-    display: flex;
-    flex-direction: column;
-
-    gap: 10px;
-}
-
-.Settings_Menu_Content_Entries_Settings {
-    background-color: var(--global-div-tr);
-    border-radius: 10px;
-    border: 1px solid var(--global-border-color);
-    overflow: hidden;
-}
-
-.Settings_Menu_Content_Entries_Settings div {
-    padding: 15px;
-}
-
-.Settings_Menu_Content_Entries_Settings div:nth-child(even) {
-    background-color: var(--global-div);
-}
-
-
-
-
-
-
-
-
-/* Settings */
-
-
-.Settings_Setting_Button {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.Settings_Setting_Button button {
     background-color: var(--global-div);
     border: 1px solid var(--global-border-color);
 
     cursor: pointer;
-    padding: 5px 15px;
-    min-width: 150px;
-    border-radius: 15px;
 }

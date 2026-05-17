@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using NetTopologySuite.Index.HPRtree;
 using Yugen.Core.Configs;
 using Yugen.Core.Data;
 using Yugen.Data;
@@ -154,5 +155,23 @@ public class LibraryService
             lastWatchedEpisode = history.WatchedEpisode,
             episodes = history.WatchedEpisodes.Select(EpisodeHistory.Map).ToArray()
         };
+    }
+
+    public async Task<MediaCard[]> SearchLibrary(UserSession session, int page, int pageSize, string group)
+    {
+        List<int> items;
+
+        switch (group.ToLower())
+        {
+            case "downloaded":
+                items = await _db.downloadedMedia.Skip(page * pageSize).Take(pageSize).Select(m => m.MediaId).ToListAsync();
+                break;
+
+            default:
+                items = new List<int>();
+                break;
+        }
+
+        return await _catalogService.GetOrCreateMediaCardsFromIds(items);
     }
 }

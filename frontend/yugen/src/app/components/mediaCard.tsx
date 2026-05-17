@@ -32,7 +32,7 @@ export default function ({ Card }: { Card: MediaCardInfo }) {
         return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
     }
 
-    return (<div className="MediCard" onClick={navigateToPage}>
+    return (<div key={Card.aniListId} className="MediCard" onClick={navigateToPage}>
         <div className="MediaCard_Container">
             <div className="MediaCard_Img">
                 <img src={Card.cardImg} />

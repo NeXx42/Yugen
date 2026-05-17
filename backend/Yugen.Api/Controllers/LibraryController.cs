@@ -55,4 +55,17 @@ public class LibraryController : ControllerBase
         await _libraryService.ResyncLibrary(usr);
     }
 
+    public class SearchLibraryFilter
+    {
+        public int? page { get; set; }
+        public int? pageSize { get; set; }
+        public string? group { get; set; }
+    }
+
+    [HttpPost("Search")]
+    public async Task<MediaCard[]> SearchLibrary([FromBody] SearchLibraryFilter filter)
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        return await _libraryService.SearchLibrary(usr, filter.page ?? 0, filter.pageSize ?? 10, filter.group ?? "all");
+    }
 }

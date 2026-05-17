@@ -1,0 +1,43 @@
+.Library {
+    margin: 50px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.Library_Filters {
+    background-color: var(--global-div-tr);
+    border: 1px solid var(--global-border-color);
+    border-radius: 5px;
+
+    padding: 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.Library_Filters button {
+    padding: 8px 15px;
+
+    border-radius: 8px;
+    background-color: var(--global-div);
+    border: 1px solid var(--global-border-color);
+
+    cursor: pointer;
+}
+
+.Library_Filters button.Selected {
+    filter: brightness(1.05);
+    color: var(--primary-accent);
+    background-color: var(--primary-accent-dk-tr);
+    border-color: var(--primary-accent);
+}
+
+.Library_Items {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    row-gap: 25px;
+}

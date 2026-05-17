@@ -7,7 +7,7 @@ export function middleware(req: NextRequest) {
     if (req.nextUrl.pathname === "/")
         return NextResponse.redirect(new URL('/home', req.url));
 
-    const protectedRoutes = ['/home']
+    const protectedRoutes = ['/home', 'schedule', 'library', 'history']
 
     const isProtectedRoute = protectedRoutes.some((route) =>
         req.nextUrl.pathname == route

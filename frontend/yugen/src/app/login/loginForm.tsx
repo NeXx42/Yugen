@@ -3,7 +3,7 @@
 import * as api from "@lib/api.local"
 
 import { User } from "@shared/types";
-import router from "next/router";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface Props {
@@ -11,6 +11,8 @@ interface Props {
 }
 
 export default function (props: Props) {
+    const navigate = useRouter();
+
     const [password, setPassword] = useState<string | undefined>(undefined);
     const [username, setUsername] = useState<string>(props.usrs[0].name);
 
@@ -22,7 +24,7 @@ export default function (props: Props) {
 
         await api.auth_Login(username, password)
 
-        router.push("/");
+        navigate.push("/");
     }
 
     return (

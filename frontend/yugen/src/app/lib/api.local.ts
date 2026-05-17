@@ -7,6 +7,10 @@ export async function auth_Login(username: string, password: string) {
     return (await post<User>("auth/login", { username, password }))!;
 }
 
+export async function auth_Logout() {
+    await post("auth/logout");
+}
+
 
 export async function settings_Load() {
     return (await get<ConfigSetting[]>("Settings"))!;
@@ -43,10 +47,6 @@ export async function catalog_Search(text: string): Promise<MediaCardInfo[]> {
     }))!;
 }
 
-export async function media_PlayItem(itemId: string): Promise<string> {
-    return (await get<string>("media/play"))!
-}
-
 export async function library_GetSonarrEpisodes(aniListId: number): Promise<SonarrEpisodeInfo[]> {
     return (await get<SonarrEpisodeInfo[]>(`library/${aniListId}`))!;
 }
@@ -54,3 +54,17 @@ export async function library_GetSonarrEpisodes(aniListId: number): Promise<Sona
 export async function library_GetWatchHistoryForSeries(aniListId: number): Promise<WatchHistory> {
     return (await get<WatchHistory>(`library/${aniListId}/WatchHistory`))!;
 }
+
+export async function library_Search(page: number, pageSize: number, group: string): Promise<MediaCardInfo[]> {
+    return (await post<MediaCardInfo[]>("library/Search", {
+        page,
+        pageSize,
+        group,
+    }))!
+}
+
+
+export async function media_PlayItem(itemId: string): Promise<string> {
+    return (await get<string>("media/play"))!
+}
+

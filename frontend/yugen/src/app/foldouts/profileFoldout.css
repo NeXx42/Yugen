@@ -1,0 +1,34 @@
+.Profile {
+    position: fixed;
+    background-color: var(--global-div-tr);
+    box-shadow: -2px 0 5px #0000004d;
+
+    width: 250px;
+    height: 100%;
+
+    right: 0px;
+}
+
+.Profile_Bottom {
+    position: absolute;
+    bottom: 0px;
+    padding: 15px;
+
+    height: 80px;
+    width: 100%;
+
+    border-top: 1px solid var(--global-border-color);
+}
+
+.Profile_Bottom button {
+    background-color: var(--global-div);
+    text-align: center;
+
+    width: 100%;
+    height: 100%;
+
+    border-radius: 8px;
+    border: 1px solid var(--global-border-color);
+
+    cursor: pointer;
+}
