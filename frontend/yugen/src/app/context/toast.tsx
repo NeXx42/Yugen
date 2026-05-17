@@ -3,7 +3,7 @@
 import { createPortal } from "react-dom";
 import "./toast.css";
 
-import { createContext, useContext, useState } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 
 type Toast = {
     id: number
@@ -14,7 +14,9 @@ type Toast = {
 const ToastContext = createContext<any>(null)
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-    const [toasts, setToasts] = useState<Toast[]>([])
+    const [toasts, setToasts] = useState<Toast[]>([]);
+    const [mounted, setMounted] = useState(false);
+
 
     const showToast = (message: string, type: Toast["type"] = "Success") => {
         const id = Date.now()
@@ -25,11 +27,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         }, 1500)
     }
 
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     return (
         <ToastContext.Provider value={{ showToast }}>
             {children}
-
-            {createPortal((
+            {mounted && createPortal((
                 <div className="ToastContainer">
                     {toasts.sort((a, b) => a.id - b.id).slice(0, 10).map((t) => (
                         <div key={t.id} className={`Toast ${t.type == "Error" ? "Error" : ""}`}>{t.message}</div>
