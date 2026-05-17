@@ -26,10 +26,10 @@ jobs:
         
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/nexx42/Yugen ./
+          docker build -t ghcr.io/nexx42/yugen ./
           
       # push  
         
       - name: Push Docker image
         run: |
-          docker push ghcr.io/nexx42/Yugen
+          docker push ghcr.io/nexx42/yugen
