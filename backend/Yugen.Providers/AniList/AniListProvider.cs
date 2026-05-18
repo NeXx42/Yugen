@@ -84,43 +84,41 @@ public class AniListProvider : IMetaDataProvider
         }).ToArray() ?? [];
     }
 
-    public async Task<(int, int[])> SearchMedia(string textFilter, int page, int pageSize)
+    public async Task<(int, int[])> SearchMedia(string textFilter, int page, int pageSize, bool allowAdult)
     {
-        string query;
+        string inputs = "";
+        string vars = "type: $type";
 
-        if (string.IsNullOrEmpty(textFilter))
+        if (!string.IsNullOrEmpty(textFilter))
         {
-            query = @"query Page($perPage: Int, $page: Int, $type: MediaType) {
-                Page(perPage: $perPage, page: $page) {
-                    media(type: $type) {
-                        id
-                    }
-                    pageInfo {
-                        total
-                    }
-                }
-            }";
+            inputs += ", $search: String!";
+            vars += ", search: $search";
         }
-        else
+
+        if (!allowAdult)
         {
-            query = @"query Page( $search: String!, $perPage: Int, $page: Int, $type: MediaType) {
-                Page(perPage: $perPage, page: $page) {
-                    media(search: $search, type: $type) {
-                        id
-                    }
-                    pageInfo {
-                        total
-                    }
-                }
-            }";
+            inputs += ", $isAdult: Boolean";
+            vars += ", isAdult: $isAdult";
         }
+
+        string query = @$"query Page($perPage: Int, $page: Int, $type: MediaType{inputs}) {{
+            Page(perPage: $perPage, page: $page) {{
+                media({vars}) {{
+                    id
+                }}
+                pageInfo {{
+                    total
+                }}
+            }}
+        }}";
 
         AniListResponse_Search? res = await SendRequest<AniListResponse_Search>(query, new
         {
             search = textFilter,
             perPage = pageSize,
             page = page,
-            MediaType = "ANIME"
+            type = "ANIME",
+            isAdult = false,
         });
 
         if (res == null)
@@ -171,7 +169,15 @@ public class AniListProvider : IMetaDataProvider
         var json = JsonSerializer.Serialize(new { query, variables });
         var response = await _http.PostAsync(_url, new StringContent(json, Encoding.UTF8, "application/json"));
 
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<T>();
+        try
+        {
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<T>();
+        }
+        catch
+        {
+            Console.WriteLine(await response.Content.ReadAsStringAsync());
+            return default;
+        }
     }
 }

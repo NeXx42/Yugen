@@ -16,7 +16,9 @@ public enum ConfigKeys
     Jikan_ApiKey,
 
     Sonarr_Url,
-    Sonarr_ApiKey
+    Sonarr_ApiKey,
+
+    AdultContent,
 }
 
 public class SettingsService
@@ -31,6 +33,9 @@ public class SettingsService
         _db = db;
         _cache = cache;
     }
+
+    public async Task SetConfigValue(ConfigKeys key, bool? value)
+        => await SetConfigValue(key, value.HasValue ? (value.Value ? "1" : "0") : null);
 
     public async Task SetConfigValue(ConfigKeys key, string? value)
     {
@@ -95,5 +100,6 @@ public class SettingsCache
         return fallback;
     }
 
+    public bool Get(ConfigKeys key, bool fallback) => Get(key, fallback ? "1" : "0") == "1";
     public void Clear() => cache.Clear();
 }

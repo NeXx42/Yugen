@@ -59,8 +59,6 @@ public class MediaService
 
             await _db.AddAsync(history);
         }
-        else if (!force && history.UpdatedTime.HasValue && history.UpdatedTime.Value.AddMinutes(-30) <= DateTime.UtcNow)
-            return;
 
         history.UpdatedTime = DateTime.UtcNow;
 

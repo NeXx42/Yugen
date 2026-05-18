@@ -24,18 +24,20 @@ public class CatalogService
     private readonly IMetaDataProvider _currentProvider;
 
     private readonly CacheService _cache;
+    private readonly SettingsCache _settings;
     private readonly HydrationService _hydrationService;
 
     public string GetCardCacheId(int id) => $"CardCache_{id}";
     public string GetInfoCacheId(int id) => $"Info_{id}";
 
-    public CatalogService(YugenContext db, HydrationService hydrationService, CacheService cache)
+    public CatalogService(YugenContext db, HydrationService hydrationService, CacheService cache, SettingsCache settings)
     {
         _db = db;
 
         _currentProvider = new AniListProvider();
 
         _cache = cache;
+        _settings = settings;
         _hydrationService = hydrationService;
     }
 
@@ -57,7 +59,7 @@ public class CatalogService
             }
         }
 
-        (int total, int[] media) = await _currentProvider.SearchMedia(textFilter, page, pageSize);
+        (int total, int[] media) = await _currentProvider.SearchMedia(textFilter, page, pageSize, _settings.Get(ConfigKeys.AdultContent, false));
         pageResponse = new PageResponse<MediaCard>(await GetOrCreateMediaCardsFromIds(media.ToList()), page, pageSize, total);
 
         _cache.Set(CACHE_KEY, pageResponse);

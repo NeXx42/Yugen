@@ -61,6 +61,7 @@ export default function () {
             case "App":
                 return (<>
                     {renderSetting_Button("Import Library", "Import", tryToImportLibrary)}
+                    {renderSetting_Toggle("Allow adult content", "AdultContent")}
                 </>)
 
             case "Jellyfin":
@@ -93,6 +94,41 @@ export default function () {
         }
 
         return <></>
+    }
+
+    const renderSetting_Toggle = (label: string, configKey: string): ReactNode => {
+        if (savedConfigValues === undefined)
+            return (<>LOADING...</>)
+
+        const configValue: boolean = savedConfigValues![configKey] === "1";
+
+        const btnIntercept = async () => {
+            console.log("test");
+            try {
+                const saveValue = (!configValue) ? "1" : "0";
+
+                setSavedConfigValues((prev) => {
+                    if (prev === undefined) return prev;
+                    return {
+                        ...prev,
+                        [configKey]: saveValue
+                    }
+                });
+
+                await api.settings_Save(configKey, saveValue);
+                showToast("Updated");
+            }
+            catch {
+                showToast("Failed", "error");
+            }
+        }
+
+        return (
+            <div className="Settings_Setting_Button">
+                <p>{label}</p>
+                <button onClick={btnIntercept}>{configValue ? "Enabled" : "Disabled"}</button>
+            </div>
+        )
     }
 
     const renderSetting_Button = (label: string, btnLabel: string, action: () => Promise<void>, suppressToast: boolean = false): ReactNode => {

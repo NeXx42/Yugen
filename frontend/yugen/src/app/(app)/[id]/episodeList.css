@@ -1,8 +1,6 @@
 .EpisodeList {
     position: relative;
-    width: 100%;
 
-    overflow: scroll;
     background-color: var(--global-div-tr);
     border: 1px solid var(--global-border-color);
     border-radius: 5px;
@@ -10,6 +8,11 @@
 
     display: grid;
     grid-template-rows: 40px auto;
+
+    min-height: 100%;
+    max-height: 0px;
+    overflow-y: scroll;
+    overflow-x: hidden;
 }
 
 
@@ -18,6 +21,7 @@
     display: flex;
 
     align-items: center;
+    justify-content: center;
 
     width: 100%;
 }
@@ -37,11 +41,14 @@
 
 
 .Episode {
+    height: 35px;
+
     display: grid;
     grid-template-columns: auto 0px;
 }
 
 .Episode button {
+    height: 100%;
     position: relative;
     overflow: hidden;
 
@@ -49,7 +56,6 @@
     background-color: #141414;
     border: none;
     border-radius: 10px;
-    height: 33px;
     padding: 5px;
 
     display: flex;
@@ -57,10 +63,12 @@
     align-items: center;
 }
 
-.Episode button p {
+.Episode button a {
+    display: inline;
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: 12px;
+    white-space: nowrap;
 }
 
 .Episode button.Selected {

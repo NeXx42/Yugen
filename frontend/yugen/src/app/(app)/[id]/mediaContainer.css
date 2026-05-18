@@ -8,6 +8,8 @@
     display: grid;
     grid-template-columns: auto 380px;
     gap: 5px;
+
+    align-items: start;
 }
 
 .MediaContainer_EpisodeInfo {}

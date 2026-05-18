@@ -27,7 +27,7 @@ export default function (props: Props) {
             <div className="Episode" key={ep.episode.number} >
                 <button className={ep.episode.number === props.selectedItem ? "Selected" : ""} onClick={() => onSelectEpisode(pos)}>
                     <div style={{ width: `${watchPercentage}%` }} className="Episode_WatchPercentage" />
-                    <p>{`${ep.episode.number}. ${ep.episode.title}`}</p>
+                    <a>{`${ep.episode.number}. ${ep.episode.title}`}</a>
                 </button>
                 {
                     (ep.downloadedData !== undefined) ? (
