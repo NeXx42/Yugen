@@ -7,6 +7,17 @@
     height: 100%;
 
     left: 0px;
+    animation: .3s ease SettingsSlideIn;
+}
+
+@keyframes SettingsSlideIn {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(0px);
+    }
 }
 
 .Settings_Foldout_Top {
@@ -51,12 +62,14 @@
     border-right: 3px solid transparent;
 
     cursor: pointer;
+    transition: all .1s;
 }
 
 .Settings_Foldout_Navigation button:nth-child(even) {
     background-color: var(--global-div);
 }
 
+.Settings_Foldout_Navigation button.Selected,
 .Settings_Foldout_Navigation button:hover {
     filter: brightness(1.05);
     color: var(--primary-accent);

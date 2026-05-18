@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react"
 
 import "./settingsFoldout.css"
@@ -9,11 +9,16 @@ import SettingsModal from "../modals/settingsModal";
 export default function ({ requestClose }: { requestClose: () => void }) {
     const [modelOpen, setModalOpen] = useState(false);
 
+    const pathname = usePathname();
     const navigate = useRouter();
 
     const changePage = (path: string) => {
         navigate.push(path);
         requestClose();
+    }
+
+    const getNavigationClassName = (needed: string) => {
+        return pathname === needed ? "Selected" : "";
     }
 
     return (<div className="Settings">
@@ -26,10 +31,10 @@ export default function ({ requestClose }: { requestClose: () => void }) {
                     </div>
 
                     <div className="Settings_Foldout_Navigation">
-                        <button onClick={() => changePage("home")}>Home</button>
-                        <button onClick={() => changePage("library")}>Library</button>
-                        <button onClick={() => changePage("history")}>Watch History</button>
-                        <button onClick={() => changePage("schedule")}>Schedule</button>
+                        <button className={getNavigationClassName("/home")} onClick={() => changePage("home")}>Home</button>
+                        <button className={getNavigationClassName("/library")} onClick={() => changePage("library")}>Library</button>
+                        <button className={getNavigationClassName("/history")} onClick={() => changePage("history")}>Watch History</button>
+                        <button className={getNavigationClassName("/schedule")} onClick={() => changePage("schedule")}>Schedule</button>
                     </div>
 
                     <div className="Settings_Foldout_Bottom">

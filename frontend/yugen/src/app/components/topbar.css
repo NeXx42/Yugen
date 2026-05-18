@@ -94,9 +94,26 @@
 }
 
 .Topbar_Right_Notifications {
+    position: relative;
     aspect-ratio: 1;
 }
 
+.Topbar_Right_Notifications a {
+    position: absolute;
+    right: -3px;
+    top: -3px;
+
+    width: 18px;
+    height: 18px;
+
+    background-color: rgb(255, 45, 45);
+    border: 1px solid red;
+    border-radius: 100%;
+
+    text-align: center;
+    align-content: center;
+    font-size: 12px;
+}
 
 
 

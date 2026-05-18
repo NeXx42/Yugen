@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SQLitePCL;
 using Yugen.Api.Helpers;
 using Yugen.Core.Services;
 using Yugen.Domain.Data;
@@ -74,5 +75,20 @@ public class NotificationController : ControllerBase
     {
         HttpContext.GetUserFromSession(out UserSession usr);
         return await _notificationService.GetNotifications(usr);
+    }
+
+    [HttpPost("{id}/Read")]
+    [Authorize]
+    public async Task ReadNotification(int id)
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        await _notificationService.ReadNotification(usr, id);
+    }
+
+    [HttpPost("Clear")]
+    public async Task ClearReadNotifications()
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        await _notificationService.ClearReadNotifications(usr);
     }
 }

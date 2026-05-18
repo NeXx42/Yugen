@@ -9,4 +9,6 @@ public class Notification
     public string? reason { get; set; }
     public string? icon { get; set; }
     public bool hasBeenSeen { get; set; }
+
+    public string? url { get; set; }
 }

@@ -88,10 +88,12 @@ export interface ConfigSetting {
 
 export interface UserNotification {
     id: number;
-    order: number;
+    time: number;
     eventName: string;
     title: string | undefined;
     reason: string | undefined;
     icon: string | undefined,
     hasBeenSeen: boolean;
+
+    url: string | undefined;
 }

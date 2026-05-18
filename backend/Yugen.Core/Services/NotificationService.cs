@@ -67,9 +67,28 @@ public class NotificationService
             reason = n.notification.Message,
             icon = n.media.CardImageLarge,
 
-            hasBeenSeen = !n.notification.HasInteracted
+            hasBeenSeen = n.notification.HasInteracted,
+
+            url = $"{n.media.Id}"
         }).ToArray();
     }
 
     public async Task<int> GetNotificationCount(UserSession usr) => await _db.notifications.Where(n => n.UserId == usr.User.Id && n.HasInteracted != true).CountAsync();
+
+    public async Task ReadNotification(UserSession usr, int id)
+    {
+        Model_Notification? notif = await _db.notifications.FirstOrDefaultAsync(n => n.Id == id && n.UserId == usr.User.Id);
+
+        if (notif == null)
+            return;
+
+        notif.HasInteracted = true;
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task ClearReadNotifications(UserSession usr)
+    {
+        _db.RemoveRange(_db.notifications.Where(n => n.UserId == usr.User.Id && n.HasInteracted));
+        await _db.SaveChangesAsync();
+    }
 }

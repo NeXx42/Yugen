@@ -8,11 +8,45 @@
 
     right: 0px;
     overflow: scroll;
+
+    animation: .3s ease NotificationSlideIn;
 }
+
+@keyframes NotificationSlideIn {
+    0% {
+        transform: translateX(100%);
+    }
+
+    100% {
+        transform: translateX(0px);
+    }
+}
+
 
 .Notifications_Header {
     padding: 15px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--global-border-color);
+
+    display: flex;
+    justify-content: space-between;
 }
+
+.Notifications_Header button {
+    padding: 5px 15px;
+    border-radius: 15px;
+
+    background: var(--global-div);
+    border: 1px solid var(--global-border-color);
+
+    transition: all .1s;
+    cursor: pointer;
+}
+
+.Notifications_Header button:hover {
+    border-color: white;
+}
+
 
 .Notifications_Notifs {
     display: flex;
@@ -32,6 +66,11 @@
     display: flex;
 
     overflow: hidden;
+    cursor: pointer;
+}
+
+.Notifications_Notifs div.Seen {
+    opacity: .5;
 }
 
 .Notifications_Notifs div img {

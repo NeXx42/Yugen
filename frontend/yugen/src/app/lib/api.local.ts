@@ -90,3 +90,11 @@ export async function notification_Count(): Promise<number> {
 export async function notification_Get(): Promise<UserNotification[]> {
     return (await get<UserNotification[]>("Notifications"))!;
 }
+
+export async function notification_Read(id: number) {
+    await post(`Notifications/${id}/Read`);
+}
+
+export async function notification_ClearRead() {
+    await post(`Notifications/Clear`);
+}
