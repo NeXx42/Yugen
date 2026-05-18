@@ -37,6 +37,11 @@ public class JikanMetadataProvider : IMetaDataProvider
         throw new NotImplementedException();
     }
 
+    public Task<long?> GetTimeOfNextEpisode(int id)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<(int, int[])> SearchMedia(string textFilter, int page, int pageSize, bool allowAdult)
     {
         throw new NotImplementedException();

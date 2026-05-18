@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Yugen.Core.Data;
 using Yugen.Domain.Enums;
 using Yugen.Domain.Models.Media;
@@ -28,60 +29,166 @@ public class AniListProvider : IMetaDataProvider
         if (aniListIds.Count == 0)
             return [];
 
-        string query = @"
-        query Page($idIn: [Int]) {
-            Page {
+        string query = @"query Media($page: Int, $perPage: Int, $idIn: [Int]) {
+            Page(page: $page, perPage: $perPage) {
                 media(id_in: $idIn) {
-                    type
-                    tags {
-                        name
-                        category
-                        isAdult
-                    }
-                    popularity
-                    meanScore
-                    isAdult
-                    idMal
                     id
-                    genres
+                    idMal
+                    title {
+                        romaji
+                        english
+                        native
+                        userPreferred
+                    }
+                    type
                     format
+                    status
+                    description
+                    startDate {
+                        year
+                        month
+                        day
+                    }
+                    endDate {
+                        year
+                        month
+                        day
+                    }
+                    season
+                    seasonYear
+                    seasonInt
                     episodes
+                    duration
+                    chapters
+                    volumes
+                    countryOfOrigin
+                    isLicensed
+                    source
+                    hashtag
+                    trailer {
+                        id
+                        site
+                        thumbnail
+                    }
+                    updatedAt
                     coverImage {
                         extraLarge
                         large
                         medium
                         color
                     }
-                    averageScore
                     bannerImage
-                    status
-                    title {
-                        native
-                        english
+                    genres
+                    synonyms
+                    averageScore
+                    meanScore
+                    popularity
+                    isLocked
+                    trending
+                    favourites
+                    tags {
+                        id
+                        name
+                        description
+                        category
+                        rank
+                        isGeneralSpoiler
+                        isMediaSpoiler
+                        isAdult
+                        userId
                     }
+                    isFavourite
+                    isFavouriteBlocked
+                    isAdult
+                    externalLinks {
+                        id
+                        url
+                        site
+                        siteId
+                        type
+                        language
+                        color
+                        icon
+                        notes
+                        isDisabled
+                    }
+                    streamingEpisodes {
+                        title
+                        thumbnail
+                        url
+                        site
+                    }
+                    rankings {
+                        id
+                        rank
+                        type
+                        format
+                        year
+                        season
+                        allTime
+                        context
+                    }
+                    recommendations {
+                        nodes {
+                            id
+                        }
+                    }
+                    siteUrl
+                    autoCreateForumThread
+                    isRecommendationBlocked
+                    isReviewBlocked
+                    modNotes
                 }
             }
         }";
 
-        AniListResponse_Search? res = await SendRequest<AniListResponse_Search>(query, new { idIn = aniListIds.ToArray() });
+        AniListResponse_Search? res = await SendRequest<AniListResponse_Search>(query, new { idIn = aniListIds.ToArray(), perPage = aniListIds.Count });
 
-        if (res == null)
+        if (res?.data?.page?.media == null)
             throw new Exception("Failed");
 
-        return res.data.page.media?.Select(x => new Model_Media()
+        List<Model_Media> results = new List<Model_Media>();
+
+        foreach (AniListResponse_Media media in res.data.page.media)
         {
-            Id = x.id,
-            EpisodeCount = x.episodes ?? 0,
+            Model_Media result = new Model_Media()
+            {
+                Id = media.id,
+                EpisodeCount = media.episodes ?? 0,
 
-            Title = x.title?.getBestMatch ?? "",
+                Title = media.title?.getBestMatch ?? "",
+                Description = media.description,
+                Status = media.status,
+                MediaFormat = media.format,
+                SiteUrl = media.siteUrl,
 
-            BannerImage = x.bannerImage,
-            CardImageLarge = x.coverImage?.extraLarge,
-            CardImageSmall = x.coverImage?.medium,
-            Colour = x.coverImage?.color
+                AverageScore = media.averageScore,
+                MeanScore = media.meanScore,
+
+                BannerImage = media.bannerImage,
+                CardImageLarge = media.coverImage?.extraLarge,
+                CardImageSmall = media.coverImage?.medium,
+                Colour = media.coverImage?.color,
+                thumbnailIcon = media.trailer?.thumbnail,
+            };
 
 
-        }).ToArray() ?? [];
+            for (int i = 0; i < (media.streamingEpisodes?.Length ?? 0); i++)
+            {
+                result.Episodes.Add(new Model_MediaEpisode()
+                {
+                    MediaId = media.id,
+                    EpisodeNumber = i + 1,
+
+                    EpisodeTitle = Regex.Replace(media.streamingEpisodes![i].title ?? "", @"^Episode \d+ - ", ""),
+                    EpisodeIcon = media.streamingEpisodes![i].thumbnail,
+                });
+            }
+
+            results.Add(result);
+        }
+
+        return results.ToArray();
     }
 
     public async Task<(int, int[])> SearchMedia(string textFilter, int page, int pageSize, bool allowAdult)
@@ -174,10 +281,25 @@ public class AniListProvider : IMetaDataProvider
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<T>();
         }
-        catch
+        catch (Exception e)
         {
+            Console.WriteLine(e.Message);
             Console.WriteLine(await response.Content.ReadAsStringAsync());
             return default;
         }
+    }
+
+    public async Task<long?> GetTimeOfNextEpisode(int id)
+    {
+        string query = @"query Media($mediaId: Int) {
+            Media(id: $mediaId) {
+                nextAiringEpisode {
+                airingAt
+                }
+            }
+        }";
+
+        AniListResponse_AiringEpisode? res = await SendRequest<AniListResponse_AiringEpisode>(query, new { mediaId = id });
+        return res?.data?.media?.nextAiringEpisode?.airingAt;
     }
 }

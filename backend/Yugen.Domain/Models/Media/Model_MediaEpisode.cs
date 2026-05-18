@@ -13,6 +13,7 @@ public class Model_MediaEpisode
     public Model_Media Media { get; set; } = null!;
 
     public string? EpisodeTitle { get; set; }
+    public string? EpisodeIcon { get; set; }
     public bool IsRecap { get; set; }
     public bool IsFiller { get; set; }
     public float? Score { get; set; }

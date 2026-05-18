@@ -61,4 +61,7 @@ public class CatalogController : ControllerBase
             return false;
         }
     }
+
+    [HttpGet("{id}/UpcomingEpisode")]
+    public async Task<long?> GetTimeOfNextEpisode(int id) => await _catalogService.GetTimeOfNextEpisode(id);
 }

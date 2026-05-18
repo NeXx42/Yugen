@@ -49,6 +49,8 @@ export async function catalog_Search(text: string, page: number, pageSize: numbe
     }))!;
 }
 
+
+
 export async function library_GetSonarrEpisodes(aniListId: number): Promise<SonarrEpisodeInfo[]> {
     return (await get<SonarrEpisodeInfo[]>(`library/${aniListId}`))!;
 }

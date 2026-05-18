@@ -9,7 +9,9 @@ public class MediaInfo
     public int id { get; set; }
 
     public string? title { get; set; }
+    public string? description { get; set; }
 
+    public string? thumbnailImage { get; set; }
     public string? bannerImage { get; set; }
     public string? cardImage { get; set; }
     public string? colour { get; set; }
@@ -24,8 +26,10 @@ public class MediaInfo
         return new MediaInfo()
         {
             id = media.Id,
-
             title = media.Title,
+            description = media.Description,
+
+            thumbnailImage = media.thumbnailIcon,
             bannerImage = media.BannerImage,
             cardImage = media.CardImageLarge,
             colour = media.Colour,

@@ -1,4 +1,5 @@
 using System.Formats.Asn1;
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Yugen.Core.Configs;
@@ -29,8 +30,7 @@ public class HydrationService
     public async Task<Model_Media[]> SaveMedia(ICollection<int> aniListId)
     {
         Model_Media[] media = await _metaDataProvider.GetMediaInfo(aniListId);
-        await _db.AddRangeAsync(media);
-        await _db.SaveChangesAsync();
+        await _db.BulkInsertOrUpdateAsync(media);
 
         return media;
     }
@@ -49,14 +49,26 @@ public class HydrationService
         return media[0];
     }
 
-    public async Task HydrateMedia(Model_Media media, Model_Link? links, bool forceRehydration = false)
+    public async Task<bool> HydrateMedia(Model_Media media, Model_Link? links, bool forceRehydration = false)
     {
         if ((media.Hydrated ?? false) && !forceRehydration)
-            return;
+            return true;
 
         media.Hydrated = true;
-        await HydrateEpisodes(media, links, forceRehydration);
-        await _db.SaveChangesAsync();
+        try
+        {
+            await HydrateEpisodes(media, links, forceRehydration);
+            await _db.SaveChangesAsync();
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            Console.WriteLine($"Failed to hydrate - {media.Id}");
+
+            return false;
+        }
     }
 
     private async Task HydrateEpisodes(Model_Media media, Model_Link? links, bool _)
@@ -64,12 +76,29 @@ public class HydrationService
         if (links?.mal_id == null)
             return;
 
-        _db.RemoveRange(_db.mediaEpisodes.Where(e => e.MediaId == media.Id));
-        Model_MediaEpisode[] episodes = await _metaDataProvider.GetEpisodeData(links!.mal_id.Value);
+        Model_MediaEpisode[] providedEpisodes = await _metaDataProvider.GetEpisodeData(links!.mal_id.Value);
+        Model_MediaEpisode[] existingEpisodes = await _db.mediaEpisodes.Where(e => e.MediaId == media.Id).ToArrayAsync();
 
-        foreach (Model_MediaEpisode ep in episodes)
-            ep.MediaId = media.Id;
+        List<Model_MediaEpisode> toAdd = [.. providedEpisodes];
 
-        await _db.AddRangeAsync(episodes);
+        foreach (Model_MediaEpisode existingEpisode in existingEpisodes)
+        {
+            Model_MediaEpisode? providedEpisode = providedEpisodes.FirstOrDefault(e => e.EpisodeNumber == existingEpisode.EpisodeNumber);
+
+            if (providedEpisode != null)
+            {
+                toAdd.Remove(providedEpisode);
+
+                existingEpisode.IsFiller = providedEpisode.IsFiller;
+                existingEpisode.IsRecap = providedEpisode.IsRecap;
+                existingEpisode.Score = providedEpisode.Score;
+            }
+        }
+
+        foreach (Model_MediaEpisode newEp in providedEpisodes)
+            newEp.MediaId = media.Id;
+
+        await _db.AddRangeAsync(toAdd);
+        await _db.SaveChangesAsync();
     }
 }

@@ -39,9 +39,26 @@ iframe {
 }
 
 .MediaPlayer_Container_Request {
+    position: relative;
+
     display: flex;
     justify-content: center;
     align-items: center;
 
     height: 100%;
+}
+
+.MediaPlayer_Container_Request img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    transform: scale(1.2);
+    opacity: .5;
+
+    filter: blur(5px);
+}
+
+.MediaPlayer_Container_Request button {
+    z-index: 10;
 }

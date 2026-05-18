@@ -9,16 +9,38 @@ import "./episodeList.css"
 
 interface Props {
     episodes: EpisodeInfo[] | undefined,
+    upcomingEpisode: number | null,
 
     selectedItem: number | undefined,
     setSelectedItem: Dispatch<SetStateAction<number | undefined>>,
 }
 
 export default function (props: Props) {
+    const [timeUntil, setTimeUntil] = useState("")
+
+    useEffect(() => {
+        if (props.upcomingEpisode == null) return;
+
+        const update = () => {
+            const ms = props.upcomingEpisode! * 1000 - Date.now();
+
+            const seconds = Math.floor(ms / 1000) % 60;
+            const minutes = Math.floor(ms / (1000 * 60)) % 60;
+            const hours = Math.floor(ms / (1000 * 60 * 60)) % 24;
+            const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+
+            setTimeUntil(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+        };
+
+        update();
+
+        const interval = setInterval(update, 1000);
+        return () => clearInterval(interval);
+    }, [props.upcomingEpisode])
+
     const onSelectEpisode = (pos: number) => {
         props.setSelectedItem(props.episodes![pos].episode.number);
     }
-
 
     const drawEpisode = (ep: EpisodeInfo, pos: number): React.ReactNode => {
         const watchPercentage = (ep.watchData?.watchPercentage ?? 0) * 100;
@@ -56,6 +78,13 @@ export default function (props: Props) {
             <div className="EpisodeList_Entries">
                 {props.episodes?.map(drawEpisode)}
             </div>
+            {
+                props.upcomingEpisode != null && (
+                    <div className="EpisodeList_Upcoming">
+                        {timeUntil}
+                    </div>
+                )
+            }
         </div>
     )
 }

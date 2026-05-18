@@ -3,7 +3,7 @@
 import * as api from "./api.shared";
 import { cookies } from "next/headers";
 
-import { MediaInfo, SonarrEpisodeInfo, User } from "@shared/types";
+import { MediaInfo, User } from "@shared/types";
 
 async function postWithAuth<T>(uri: string, obj?: any, nextCaching: NextFetchRequestConfig | undefined = undefined): Promise<T | undefined> {
     const cookieStore = cookies();
@@ -31,6 +31,12 @@ export async function catalog_GetInfo(aniListId: number): Promise<MediaInfo> {
         revalidate: 60
     }))!;
 }
+
+export async function catalog_EpisodeUpcomingTime(seriesId: number): Promise<number | null> {
+    return (await getWithAuth<number | null>(`catalog/${seriesId}/UpcomingEpisode`))!;
+}
+
+
 
 export async function media_SyncWatchTime(aniListId: number): Promise<void> {
     return (await postWithAuth(`media/${aniListId}/SyncWatchHistory`, {

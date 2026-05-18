@@ -7,6 +7,7 @@ public class MediaCard
 {
     public required int aniListId { get; set; }
     public string? Title { get; set; }
+    public string? type { get; set; }
 
     public long? nextReleaseDate { get; set; }
 
@@ -14,6 +15,7 @@ public class MediaCard
     public string? cardImg { get; set; }
 
     public int? watchEpisode { get; set; }
+    public long? watchLastTime { get; set; }
     public float? watchPercentage { get; set; }
 
     public static MediaCard Map(Model_Media dbData)
@@ -24,7 +26,8 @@ public class MediaCard
             Title = dbData.Title,
 
             colour = dbData.Colour,
-            cardImg = dbData.CardImageLarge
+            cardImg = dbData.CardImageLarge,
+            type = dbData.MediaFormat,
         };
     }
 
@@ -41,6 +44,7 @@ public class MediaCard
 
         watchPercentage = ep.WatchPercentage;
         watchEpisode = ep.EpisodeNumber;
+        watchLastTime = ep.LastWatched?.Ticks;
 
         return this;
     }

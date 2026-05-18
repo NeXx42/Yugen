@@ -18,7 +18,7 @@ export interface EpisodeInfo {
     downloadedData: SonarrEpisodeInfo | undefined;
 }
 
-export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
+export default function ({ mediaInfo, upcomingEpisode }: { mediaInfo: MediaInfo, upcomingEpisode: number | null }) {
     const { showToast } = useToast();
 
     const [episodeInfo, setEpisodeInfo] = useState<EpisodeInfo[]>()
@@ -88,8 +88,8 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
     return (
         <div className="MediaContainer">
             <div className="MediaContainer_Media">
-                <MediaPlayer itemId={selectedEpisode !== undefined ? episodeInfo?.find(e => e.episode.number == selectedEpisode)?.downloadedData?.jellyfinId : undefined} bookmarkNode={drawBookmark()} />
-                <EpisodeList selectedItem={selectedEpisode} setSelectedItem={setSelectedEpisode} episodes={episodeInfo} />
+                <MediaPlayer mediaInfo={mediaInfo} episode={selectedEpisode !== undefined ? episodeInfo?.find(e => e.episode.number == selectedEpisode) : undefined} bookmarkNode={drawBookmark()} />
+                <EpisodeList selectedItem={selectedEpisode} setSelectedItem={setSelectedEpisode} episodes={episodeInfo} upcomingEpisode={upcomingEpisode} />
             </div>
 
             <div className="MediaContainer_EpisodeInfo ViewPageContainer">

@@ -1,25 +1,43 @@
-import { ReactNode } from "react"
+import { ReactNode, useEffect, useState } from "react"
 
 import "./mediaPlayer.css"
+import { MediaInfo } from "@/app/shared/types"
+import { EpisodeInfo } from "./mediaContainer"
 
 interface Props {
-    itemId: string | undefined,
+    mediaInfo: MediaInfo
+    episode: EpisodeInfo | undefined
     bookmarkNode: ReactNode
 }
 
 export default function (props: Props) {
+    const thumbnail = props.episode?.episode.thumbnail ?? props.mediaInfo.thumbnailImage;
+    const [playingId, setPlayingId] = useState<string | undefined>(undefined)
+
+    useEffect(() => setPlayingId(undefined), [props.mediaInfo, props.episode])
+
+    const playMedia = (to: string | undefined) => {
+        setPlayingId(to);
+    }
+
+    const requestMedia = () => {
+
+    }
+
+
     return (
         <div className="MediaPlayer">
             <div className="MediaPlayer_Container">
-                {props.itemId != undefined ? (
+                {playingId != undefined ? (
                     <iframe
-                        src={`https://jellyfin.local/web/index.html#!/details?id=${props.itemId}`}
+                        src={`https://jellyfin.local/web/index.html#!/details?id=${playingId!}`}
                         allow="autoplay; fullscreen"
                     ></iframe>
                 ) :
                     (
                         <div className="MediaPlayer_Container_Request">
-                            <button>Request</button>
+                            {thumbnail != undefined && <img src={thumbnail ?? ""} />}
+                            {props.episode?.downloadedData?.jellyfinId != undefined ? (<button onClick={() => playMedia(props.episode?.downloadedData?.jellyfinId)}>play</button>) : (<button>Request</button>)}
                         </div>
                     )
                 }

@@ -50,6 +50,10 @@ export default function ({ Card }: { Card: MediaCardInfo }) {
             </div>
             <div className="MediaCard_Content">
                 <h3>{Card.title}</h3>
+                <div className="MediaCard_Content_Items">
+
+                    {Card.type != undefined && <a>{Card.type}</a>}
+                </div>
             </div>
         </div>
     </div>)

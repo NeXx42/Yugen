@@ -11,4 +11,6 @@ public interface IMetaDataProvider
 
     public Task<Model_Media[]> GetMediaInfo(ICollection<int> aniListIds);
     public Task<Model_MediaEpisode[]> GetEpisodeData(int malId);
+
+    public Task<long?> GetTimeOfNextEpisode(int id);
 }

@@ -1,6 +1,8 @@
 :root {
   --foreground: #171717;
 
+  --global-text-muted: #696969;
+
   --global-primary-bg: #080808;
   --global-div-tr: #0e0e0e;
   --global-div: #141414;

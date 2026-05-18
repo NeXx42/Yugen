@@ -17,6 +17,7 @@ export interface User {
 export interface MediaCardInfo {
     aniListId: string,
     title: string,
+    type: string,
 
     colour: string,
     cardImg: string,
@@ -24,13 +25,16 @@ export interface MediaCardInfo {
     nextReleaseDate: number | undefined,
 
     watchEpisode: number | undefined,
+    watchLastTime: number | undefined,
     watchPercentage: number | undefined,
 }
 
 export interface MediaInfo {
     id: number,
     title: string,
+    description: string | null;
 
+    thumbnailImage: string | null;
     bannerImage: string | null,
     cardImage: string | null,
     colour: string | null,
@@ -43,6 +47,7 @@ export interface MediaInfo {
 
 export interface MediaEpisodeInfo {
     title: string | null,
+    thumbnail: string | null,
     number: number,
 
     isRecap: boolean,

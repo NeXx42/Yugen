@@ -104,10 +104,12 @@ public class CatalogService
             connectedMedia = connections.Select(l => (l.tvdb_season, l.type, connectionCards.Single(c => c.aniListId == l.anilist_id))).ToArray();
         }
 
-        await _hydrationService.HydrateMedia(dbEntry, link);
+        bool didHydrate = await _hydrationService.HydrateMedia(dbEntry, link);
         info = MediaInfo.Map(dbEntry).RegisterConnectedMedia(connectedMedia);
 
-        _cache.Set(cacheId, info);
+        if (didHydrate) // if hydration failed, do not cache it
+            _cache.Set(cacheId, info);
+
         return info;
     }
 
@@ -161,6 +163,20 @@ public class CatalogService
             _cache.Set(GetCardCacheId(newCard.aniListId), newCard);
 
         return [.. results, .. newCards];
+    }
+
+    public async Task<long?> GetTimeOfNextEpisode(int id)
+    {
+        string cacheKey = $"{nameof(GetTimeOfNextEpisode)}_{id}";
+
+        if (_cache.TryGetValue(cacheKey, out long? unixTime))
+            return unixTime;
+
+        unixTime = await _currentProvider.GetTimeOfNextEpisode(id);
+        TimeSpan cacheDuration = unixTime.HasValue ? DateTimeOffset.FromUnixTimeSeconds(unixTime.Value) - DateTime.UtcNow : new TimeSpan(12, 0, 0);
+
+        _cache.Set(cacheKey, unixTime, cacheDuration);
+        return unixTime;
     }
 
     public async Task RedownloadLinks()

@@ -6,6 +6,7 @@ public class EpisodeInfo
 {
     public string? title { get; set; }
     public int number { get; set; }
+    public string? thumbnail { get; set; }
 
     public bool isRecap { get; set; }
     public bool isFiller { get; set; }
@@ -18,6 +19,7 @@ public class EpisodeInfo
         {
             title = episode.EpisodeTitle,
             number = episode.EpisodeNumber,
+            thumbnail = episode.EpisodeIcon,
 
             isFiller = episode.IsFiller,
             isRecap = episode.IsRecap,

@@ -13,12 +13,21 @@ public class Model_Media
     public required int Id { get; set; }
 
     public string? Title { get; set; }
+    public string? MediaFormat { get; set; }
 
     public string? BannerImage { get; set; }
     public string? CardImageSmall { get; set; }
     public string? CardImageLarge { get; set; }
     public string? Colour { get; set; }
+    public string? thumbnailIcon { get; set; }
     public int EpisodeCount { get; set; }
+
+    public string? Description { get; set; }
+    public string? Status { get; set; }
+    public string? SiteUrl { get; set; }
+
+    public int? AverageScore { get; set; }
+    public int? MeanScore { get; set; }
 
     public bool? Hydrated { get; set; }
 
