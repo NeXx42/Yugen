@@ -1,6 +1,10 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Yugen.Api.Helpers;
 using Yugen.Core.Services;
+using Yugen.Domain.Data;
+using Yugen.Domain.Data.Users;
 using Yugen.Domain.Enums;
 
 namespace Yugen.Api.Controllers;
@@ -54,5 +58,21 @@ public class NotificationController : ControllerBase
         }
 
         await _notificationService.SaveNotification(eventType, msg?.series?.tvdbId, msg?.series?.tmdbId);
+    }
+
+    [HttpGet("Count")]
+    [Authorize]
+    public async Task<int> GetNotificationCount()
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        return await _notificationService.GetNotificationCount(usr);
+    }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<Notification[]> GetNotifications()
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        return await _notificationService.GetNotifications(usr);
     }
 }

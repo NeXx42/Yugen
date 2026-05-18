@@ -1,7 +1,7 @@
 "use client"
 
-import { ConfigSetting, MediaCardInfo, PageResponse, SonarrEpisodeInfo, User, WatchHistory } from "@shared/types";
 import { post, get, upload } from "./api.shared";
+import { ConfigSetting, MediaCardInfo, PageResponse, SonarrEpisodeInfo, User, WatchHistory, UserNotification } from "@shared/types";
 
 export async function auth_Login(username: string, password: string) {
     return (await post<User>("auth/login", { username, password }))!;
@@ -20,8 +20,8 @@ export async function settings_Save(key: string, value: string | undefined) {
     return (await post(`Settings/${key}`, { value: value }))!;
 }
 
-export async function library_sync() {
-    await post("Library/Sync/Library");
+export async function library_sync(): Promise<number | undefined> {
+    return (await post<Promise<number | undefined>>("Library/Sync/Library"));
 }
 
 export async function library_SyncWatchHistory() {
@@ -79,3 +79,12 @@ export async function media_PlayItem(itemId: string): Promise<string> {
     return (await get<string>("media/play"))!
 }
 
+
+
+export async function notification_Count(): Promise<number> {
+    return (await get<number>("Notifications/Count"))!;
+}
+
+export async function notification_Get(): Promise<UserNotification[]> {
+    return (await get<UserNotification[]>("Notifications"))!;
+}

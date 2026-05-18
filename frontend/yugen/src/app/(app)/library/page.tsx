@@ -30,7 +30,7 @@ export default function () {
     }
 
     const drawCard = (inp: MediaCardInfo): ReactNode => {
-        return <MediaCard Card={inp} />
+        return <MediaCard key={inp.aniListId} Card={inp} />
     }
 
     return (

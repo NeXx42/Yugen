@@ -7,8 +7,45 @@
     height: 100%;
 
     right: 0px;
+    overflow: scroll;
 }
 
 .Notifications_Header {
     padding: 15px;
+}
+
+.Notifications_Notifs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    margin: 15px;
+
+}
+
+.Notifications_Notifs div {
+    height: 70px;
+    background-color: var(--global-div);
+    outline: 1px solid var(--schedule-card-base-outline-color, var(--global-border-color));
+    border-radius: 8px;
+
+    display: flex;
+
+    overflow: hidden;
+}
+
+.Notifications_Notifs div img {
+    height: 100%;
+}
+
+.Notifications_Notifs div div {
+    margin: 5px;
+
+    background: transparent;
+    border: none;
+    outline: none;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }

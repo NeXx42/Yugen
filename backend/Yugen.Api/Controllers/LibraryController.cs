@@ -51,10 +51,10 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost("Sync/Library")]
-    public async Task SyncExternalLibraries()
+    public async Task<int?> SyncExternalLibraries()
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        await _libraryService.ResyncLibrary(usr);
+        return await _libraryService.ResyncLibrary(usr);
     }
 
     public class SearchLibraryFilter

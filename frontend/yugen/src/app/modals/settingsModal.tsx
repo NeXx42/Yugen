@@ -33,7 +33,7 @@ export default function () {
     const tryToImportLibrary = async () => {
         setFilePickerCallback(() => () => {
             if (filePicker?.current?.files?.[0] == undefined) {
-                showToast("Invalid file", "error")
+                showToast("Invalid file", "Error")
                 return;
             }
 
@@ -41,14 +41,14 @@ export default function () {
             formData.append("file", filePicker!.current!.files![0]!);
 
             api.library_Upload(formData).then(() => {
-
+                showToast("Imported");
             }).catch(() => {
-                showToast("Failed");
+                showToast("Failed", "Error");
             });
         })
 
         if (filePicker?.current == undefined) {
-            showToast("File picked doesnt exist", "error")
+            showToast("File picked doesnt exist", "Error")
             return;
         }
 
@@ -70,8 +70,17 @@ export default function () {
                 </>)
 
             case "Sonarr":
+                const librarySyncCallback = async () => {
+                    try {
+                        const importCount = await api.library_sync();
+                        showToast(`Imported ${importCount}`);
+                    } catch {
+                        showToast("Failed import", "Error");
+                    }
+                }
+
                 return (<>
-                    {renderSetting_Button("Sync Library", "Sync", api.library_sync)}
+                    {renderSetting_Button("Sync Library", "Sync", librarySyncCallback)}
                     {renderSetting_ApiGroup("Sonarr API", "Sonarr_Url", "Sonarr_ApiKey")}
                 </>)
 

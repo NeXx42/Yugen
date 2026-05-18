@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Yugen.Data;
+using Yugen.Domain.Data;
+using Yugen.Domain.Data.Users;
 using Yugen.Domain.Enums;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.Linking;
@@ -40,4 +42,34 @@ public class NotificationService
         await _db.AddRangeAsync(toAdd);
         await _db.SaveChangesAsync();
     }
+
+    public async Task<Notification[]> GetNotifications(UserSession usr)
+    {
+        var notifis = await (
+            from n in _db.notifications
+            join m in _db.media
+                on n.MediaId equals m.Id into mediaJoin
+            from m in mediaJoin.DefaultIfEmpty()
+            select new
+            {
+                notification = n,
+                media = m
+            }
+        ).ToArrayAsync();
+
+        return notifis.Select(n => new Notification()
+        {
+            id = n.notification.Id,
+            time = n.notification.Date.Ticks,
+
+            eventName = n.notification.EventType.ToString(),
+            title = n.media.Title,
+            reason = n.notification.Message,
+            icon = n.media.CardImageLarge,
+
+            hasBeenSeen = !n.notification.HasInteracted
+        }).ToArray();
+    }
+
+    public async Task<int> GetNotificationCount(UserSession usr) => await _db.notifications.Where(n => n.UserId == usr.User.Id && n.HasInteracted != true).CountAsync();
 }

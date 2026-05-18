@@ -79,3 +79,14 @@ export interface ConfigSetting {
     key: string;
     value: string | undefined;
 }
+
+
+export interface UserNotification {
+    id: number;
+    order: number;
+    eventName: string;
+    title: string | undefined;
+    reason: string | undefined;
+    icon: string | undefined,
+    hasBeenSeen: boolean;
+}

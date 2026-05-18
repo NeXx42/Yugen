@@ -126,24 +126,30 @@ public class LibraryService
             await _mediaService.SyncWatchHistoryWithJellyfin(usr, i, true);
     }
 
-    public async Task ResyncLibrary(UserSession __)
+    public async Task<int?> ResyncLibrary(UserSession __)
     {
         List<int>? ids = await _libraryProvider.GetDownloadedMedia();
 
         if (ids == null)
-            return;
+            return null;
 
         _db.sonarrEpisodes.RemoveRange(_db.sonarrEpisodes);
         _db.downloadedMedia.RemoveRange(_db.downloadedMedia);
         await _db.SaveChangesAsync();
 
-        List<int> links = await _db.links.Where(l => l.tvdb_id.HasValue && l.anilist_id.HasValue).Where(l => ids.Contains(l.tvdb_id!.Value)).Select(l => l.anilist_id!.Value).ToListAsync();
+        int importCount = 0;
+        List<int?> links = await _db.links.Where(l => ids.Contains(l.tvdb_id ?? -1)).Select(l => l.anilist_id).ToListAsync();
 
-        // the recheck downloads doesnt fetch previously unseen media
-        _ = await _catalogService.GetOrCreateMediaCardsFromIds(links);
+        foreach (int? link in links)
+        {
+            if (link == null)
+                continue;
 
-        foreach (int link in links)
-            await RecheckDownloads(link, true);
+            importCount++;
+            await RecheckDownloads(link.Value, true);
+        }
+
+        return importCount;
     }
 
     public async Task<WatchHistoryContainer?> GetEpisodeWatchHistory(UserSession _, int seriesId)
