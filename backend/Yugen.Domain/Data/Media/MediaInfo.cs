@@ -34,7 +34,7 @@ public class MediaInfo
         };
     }
 
-    public MediaInfo RegisterConnectedMedia((int? season, string type, Model_Media media)[]? media)
+    public MediaInfo RegisterConnectedMedia((int? season, string? type, MediaCard media)[]? media)
     {
         if (media == null)
             return this;
@@ -44,7 +44,7 @@ public class MediaInfo
             season = m.season,
             type = m.type,
 
-            card = MediaCard.Map(m.media),
+            card = m.media,
         }).ToArray();
         return this;
     }

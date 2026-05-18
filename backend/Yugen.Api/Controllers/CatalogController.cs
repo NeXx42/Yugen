@@ -45,7 +45,7 @@ public class CatalogController : ControllerBase
     public async Task<MediaInfo?> GetMediaInfo(int id)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        return await _catalogService.GetMediaInfo(usr, id);
+        return await _catalogService.GetMediaInfoForUser(usr, id);
     }
 
     [HttpPost("RedownloadLinking")]

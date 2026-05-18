@@ -28,10 +28,14 @@ export default function () {
         api.notification_Count().then(setNotificationCount);
     }, [])
 
+    const toggleFoldout = (to: FoldoutType) => {
+        setCurrentFoldout(to);
+    }
+
     const renderFoldout = (): ReactNode => {
         switch (currentFoldout) {
             case "Notifications": return <NotificationFoldout />
-            case "Settings": return <SettingsFoldout requestClose={() => setCurrentFoldout("None")} />
+            case "Settings": return <SettingsFoldout requestClose={() => toggleFoldout("None")} />
             case "Profile": return <ProfileFoldout />
         }
 
@@ -40,7 +44,7 @@ export default function () {
 
     return (<div className="Topbar">
         <div className="Topbar_Left">
-            <button className="Topbar_Left_Foldout Topbar_btn" onClick={() => setCurrentFoldout("Settings")}>
+            <button className="Topbar_Left_Foldout Topbar_btn" onClick={() => toggleFoldout("Settings")}>
                 <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
                     <path fill="none" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="48" d="M88 152h336M88 256h336M88 360h336" />
                 </svg>
@@ -60,7 +64,7 @@ export default function () {
             </button>
         </div>
         <div className="Topbar_Right">
-            <button className="Topbar_Right_Notifications Topbar_btn" onClick={() => setCurrentFoldout("Notifications")}>
+            <button className="Topbar_Right_Notifications Topbar_btn" onClick={() => toggleFoldout("Notifications")}>
                 <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 576 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
                     <path d="M567.938 243.908L462.25 85.374A48.003 48.003 0 0 0 422.311 64H153.689a48 48 0 0 0-39.938 21.374L8.062 243.908A47.994 47.994 0 0 0 0 270.533V400c0 26.51 21.49 48 48 48h480c26.51 0 48-21.49 48-48V270.533a47.994 47.994 0 0 0-8.062-26.625zM162.252 128h251.497l85.333 128H376l-32 64H232l-32-64H76.918l85.334-128z" />
                 </svg>
@@ -70,7 +74,7 @@ export default function () {
                 )}
             </button>
 
-            <button className="Topbar_Right_Profile Topbar_btn" onClick={() => setCurrentFoldout("Profile")}>
+            <button className="Topbar_Right_Profile Topbar_btn" onClick={() => toggleFoldout("Profile")}>
                 <img loading="lazy" decoding="async" data-loaded="true" src="https://s4.anilist.co/file/anilistcdn/user/avatar/large/default.png"></img>
             </button>
         </div>
@@ -78,7 +82,7 @@ export default function () {
 
         {
             currentFoldout !== "None" && createPortal((
-                <div className="Foldout" onClick={() => setCurrentFoldout("None")}>
+                <div className="Foldout" onClick={() => toggleFoldout("None")}>
                     {renderFoldout()}
                 </div>
             ), document.body)

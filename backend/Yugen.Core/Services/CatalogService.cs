@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Xml;
+using Azure;
 using EFCore.BulkExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,8 @@ public class CatalogService
     private readonly CacheService _cache;
     private readonly HydrationService _hydrationService;
 
+    public string GetCardCacheId(int id) => $"CardCache_{id}";
+    public string GetInfoCacheId(int id) => $"Info_{id}";
 
     public CatalogService(YugenContext db, HydrationService hydrationService, CacheService cache)
     {
@@ -63,8 +66,21 @@ public class CatalogService
         return pageResponse;
     }
 
-    public async Task<MediaInfo> GetMediaInfo(UserSession usr, int aniListId)
+    public async Task<MediaInfo> GetMediaInfoForUser(UserSession usr, int aniListId)
     {
+        MediaInfo info = await GetMediaInfo(aniListId);
+        Model_UserBookmark? bookmark = await _db.userBookmarks.FirstOrDefaultAsync(b => b.UserId == usr.User.Id && b.MediaId == aniListId);
+
+        return info.RegisterBookmark(bookmark);
+    }
+
+    public async Task<MediaInfo> GetMediaInfo(int aniListId)
+    {
+        string cacheId = GetInfoCacheId(aniListId);
+
+        if (_cache.TryGetValue(cacheId, out MediaInfo? info) && info != null)
+            return info;
+
         Model_Media? dbEntry = await _db.media.Include(m => m.Episodes).FirstOrDefaultAsync(m => m.Id == aniListId);
 
         if (dbEntry == null)
@@ -75,37 +91,22 @@ public class CatalogService
                 throw new FileNotFoundException();
         }
 
-        (int? season, string type, Model_Media model)[]? connectedMedia = null;
+        (int? season, string? type, MediaCard model)[]? connectedMedia = null;
         Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == aniListId);
 
         if (link != null && link.tvdb_id.HasValue)
         {
-            connectedMedia = (await
-            (
-                from l in _db.links
-                join m in _db.media
-                    on l.anilist_id equals m.Id into mediaJoin
-                from m in mediaJoin.DefaultIfEmpty()
-                where l.tvdb_id == link.tvdb_id
-                select new
-                {
-                    l.tvdb_season,
-                    l.type,
-                    model = m
-                }
-            ).ToArrayAsync()).Select(r => (r.tvdb_season, r.type, r.model)).ToArray();
+            var connections = await _db.links.Where(l => l.tvdb_id == link.tvdb_id).ToArrayAsync();
+            MediaCard[] connectionCards = await GetOrCreateMediaCardsFromIds(connections.Where(c => c.anilist_id.HasValue).Select(c => c.anilist_id!.Value).ToList());
+
+            connectedMedia = connections.Select(l => (l.tvdb_season, l.type, connectionCards.Single(c => c.aniListId == l.anilist_id))).ToArray();
         }
 
-        Model_UserBookmark? bookmark = await _db.userBookmarks.FirstOrDefaultAsync(b => b.UserId == usr.User.Id && b.MediaId == aniListId);
-
         await _hydrationService.HydrateMedia(dbEntry, link);
-        return MediaInfo.Map(dbEntry).RegisterConnectedMedia(connectedMedia).RegisterBookmark(bookmark);
-    }
+        info = MediaInfo.Map(dbEntry).RegisterConnectedMedia(connectedMedia);
 
-    public async Task UpdateMetadata(Guid internalId)
-    {
-
-
+        _cache.Set(cacheId, info);
+        return info;
     }
 
     public async Task<MediaCard[]> Upcoming(int take)
@@ -117,7 +118,7 @@ public class CatalogService
             upcoming = await _currentProvider.UpcomingMedia();
 
             _cache.Remove(CACHE_KEY);
-            _cache.SetIfNotExists(CACHE_KEY, upcoming);
+            _cache.SetIfNotExists(CACHE_KEY, upcoming, new TimeSpan(0, 30, 0));
         }
 
         MediaCard[] media = await GetOrCreateMediaCardsFromIds(upcoming.Keys.ToList());
@@ -126,19 +127,38 @@ public class CatalogService
 
     public async Task<MediaCard[]> GetOrCreateMediaCardsFromIds(List<int> ids)
     {
-        Model_Media[] cachedMedia = await _db.media.Where(m => ids.Contains(m.Id)).ToArrayAsync();
-
-        List<int> uncached = new List<int>();
+        MediaCard? card;
         List<MediaCard> results = new List<MediaCard>();
 
-        foreach (Model_Media media in cachedMedia)
+        for (int i = ids.Count - 1; i >= 0; i--)
         {
-            ids.Remove(media.Id);
-            results.Add(MediaCard.Map(media));
+            if (_cache.TryGetValue(GetCardCacheId(ids[i]), out card) && card != null)
+            {
+                results.Add(card);
+                ids.RemoveAt(i);
+            }
         }
 
-        Model_Media[] newMedia = await _hydrationService.SaveMedia(ids);
-        return [.. results, .. newMedia.Select(MediaCard.Map)];
+        if (ids.Count == 0)
+            return results.ToArray();
+
+        Model_Media[] existingDbEntries = await _db.media.Where(m => ids.Contains(m.Id)).ToArrayAsync();
+
+        foreach (Model_Media media in existingDbEntries)
+        {
+            card = MediaCard.Map(media);
+            _cache.Set(GetCardCacheId(card.aniListId), card);
+
+            ids.Remove(media.Id);
+            results.Add(card);
+        }
+
+        IEnumerable<MediaCard> newCards = (await _hydrationService.SaveMedia(ids)).Select(MediaCard.Map);
+
+        foreach (MediaCard newCard in newCards)
+            _cache.Set(GetCardCacheId(newCard.aniListId), newCard);
+
+        return [.. results, .. newCards];
     }
 
     public async Task RedownloadLinks()
