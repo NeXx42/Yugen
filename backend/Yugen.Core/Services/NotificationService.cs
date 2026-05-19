@@ -71,7 +71,7 @@ public class NotificationService
 
                 hasBeenSeen = n.HasInteracted,
 
-                url = $"{n.Id}"
+                url = $"{n.MediaId}"
             };
         }
 

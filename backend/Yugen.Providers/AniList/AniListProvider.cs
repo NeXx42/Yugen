@@ -268,6 +268,38 @@ public class AniListProvider : IMetaDataProvider
         return results;
     }
 
+    public async Task<long?> GetTimeOfNextEpisode(int id)
+    {
+        string query = @"query Media($mediaId: Int) {
+            Media(id: $mediaId) {
+                nextAiringEpisode {
+                airingAt
+                }
+            }
+        }";
+
+        AniListResponse_AiringEpisode? res = await SendRequest<AniListResponse_AiringEpisode>(query, new { mediaId = id });
+        return res?.data?.media?.nextAiringEpisode?.airingAt;
+    }
+
+    public async Task<List<int>> GetTrending(int limit)
+    {
+        string query = @$"query {{
+            trending: Page(page: 1, perPage: {limit}) {{
+                media(sort: TRENDING_DESC, type: ANIME, isAdult: false) {{
+                    id
+                }}
+            }}
+        }}";
+
+        AniListResponse_Trending? res = await SendRequest<AniListResponse_Trending>(query, new { });
+
+        if (res == null)
+            return [];
+
+        return res.data.trending.media.Select(m => m.id).ToList();
+    }
+
     // not possible with AniList
     public Task<Model_MediaEpisode[]> GetEpisodeData(int malId) => _episodeProvider.GetEpisodeData(malId);
 
@@ -289,17 +321,4 @@ public class AniListProvider : IMetaDataProvider
         }
     }
 
-    public async Task<long?> GetTimeOfNextEpisode(int id)
-    {
-        string query = @"query Media($mediaId: Int) {
-            Media(id: $mediaId) {
-                nextAiringEpisode {
-                airingAt
-                }
-            }
-        }";
-
-        AniListResponse_AiringEpisode? res = await SendRequest<AniListResponse_AiringEpisode>(query, new { mediaId = id });
-        return res?.data?.media?.nextAiringEpisode?.airingAt;
-    }
 }

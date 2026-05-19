@@ -1,0 +1,80 @@
+.Trending {
+    position: relative;
+    width: 100%;
+    height: 450px;
+
+    border-radius: 15px;
+
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.Trending img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.Trending_ImgOverlay {
+    position: absolute;
+    inset: 0px;
+    background: linear-gradient(45deg, var(--global-primary-bg) 5%, transparent 60%), linear-gradient(0deg, var(--global-primary-bg) 1%, transparent 60%), linear-gradient(-45deg, var(--global-primary-bg) 5%, transparent 60%);
+}
+
+.Trending_Navigation {
+    position: absolute;
+
+    right: 10px;
+    top: 10px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 5px;
+}
+
+.Trending_Navigation button {
+    border: 1px solid var(--global-border-color);
+    backdrop-filter: blur(10px) contrast(125%);
+    background: rgba(14, 14, 14, .3);
+    padding: 5px;
+    border-radius: 8px;
+
+    cursor: pointer;
+}
+
+
+.Trending_Navigation a {
+    border: 1px solid var(--global-border-color);
+    backdrop-filter: blur(10px) contrast(125%);
+    background: rgba(14, 14, 14, .3);
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+
+.Trending_Info {
+    position: absolute;
+
+    left: 10px;
+    bottom: 20px;
+
+    width: 50%;
+
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.Trending_Info h1 {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.Trending_Info p {
+    font-size: 14px;
+    text-align: center;
+
+    max-height: 50px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

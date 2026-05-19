@@ -26,9 +26,6 @@ export async function library_sync(): Promise<number | undefined> {
 export async function library_SyncWatchHistory() {
     await post(`Library/Sync/History`);
 }
-export async function library_CurrentWatching(page: number, pageSize: number): Promise<PageResponse<MediaCardInfo>> {
-    return (await get<PageResponse<MediaCardInfo>>(`library/WatchHistory?page=${page}&pageSize=${pageSize}`))!;
-}
 export async function library_Search(page: number, pageSize: number, group: string): Promise<PageResponse<MediaCardInfo>> {
     return (await post<PageResponse<MediaCardInfo>>("library/Search", {
         page,
@@ -51,13 +48,13 @@ export async function library_Request(aniListId: number, rootPath: string, quali
 export async function library_GetEpisodes(mediaId: number, refetch: boolean): Promise<MediaEpisodeInfo[]> {
     return (await get<MediaEpisodeInfo[]>(`library/${mediaId}/Episodes?refetch=${refetch}`))!
 }
+export async function library_CurrentWatching(page: number, pageSize: number): Promise<PageResponse<MediaCardInfo>> {
+    return (await get<PageResponse<MediaCardInfo>>(`library/WatchHistory?page=${page}&pageSize=${pageSize}`))!;
+}
 
 
 export async function catalog_ReloadLinks() {
     await post(`catalog/RedownloadLinking`)
-}
-export async function catalog_Upcoming(): Promise<MediaCardInfo[]> {
-    return (await get<MediaCardInfo[]>("catalog/Upcoming"))!;
 }
 export async function catalog_Search(text: string, page: number, pageSize: number): Promise<PageResponse<MediaCardInfo>> {
     return (await post<PageResponse<MediaCardInfo>>("catalog/Search", {

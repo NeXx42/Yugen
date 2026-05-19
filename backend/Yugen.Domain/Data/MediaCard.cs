@@ -13,6 +13,7 @@ public class MediaCard
 
     public string? colour { get; set; }
     public string? cardImg { get; set; }
+    public string? banner { get; set; }
 
     public int? watchEpisode { get; set; }
     public long? watchLastTime { get; set; }
@@ -27,6 +28,8 @@ public class MediaCard
 
             colour = dbData.Colour,
             cardImg = dbData.CardImageLarge,
+            banner = dbData.BannerImage,
+
             type = dbData.MediaFormat,
         };
     }

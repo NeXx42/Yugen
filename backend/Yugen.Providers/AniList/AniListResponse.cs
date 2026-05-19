@@ -145,3 +145,23 @@ public class AniListResponse_AiringEpisode
         }
     }
 }
+
+public class AniListResponse_Trending
+{
+    public required Data data { get; set; }
+
+    public class Data
+    {
+        public required Trending trending { get; set; }
+
+        public class Trending
+        {
+            public required Media[] media { get; set; }
+
+            public class Media
+            {
+                public required int id { get; set; }
+            }
+        }
+    }
+}

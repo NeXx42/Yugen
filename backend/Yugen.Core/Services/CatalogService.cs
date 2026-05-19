@@ -176,6 +176,27 @@ public class CatalogService
         return unixTime;
     }
 
+    public async Task<MediaInfo[]> GetTrending(int limit)
+    {
+        string cacheKey = $"{nameof(GetTrending)}_{limit}";
+
+        if (_cache.TryGetValue(cacheKey, out MediaInfo[]? cards))
+            return cards ?? [];
+
+        List<int>? ids = await _currentProvider.GetTrending(limit);
+
+        if (ids == null)
+            return [];
+
+        cards = new MediaInfo[ids.Count];
+
+        for (int i = 0; i < ids.Count; i++)
+            cards[i] = await GetMediaInfo(ids[i]);
+
+        _cache.Set(cacheKey, cards);
+        return cards;
+    }
+
     public async Task ClearDatabaseCache()
     {
         _db.RemoveRange(await _db.mediaEpisodes.ToListAsync());

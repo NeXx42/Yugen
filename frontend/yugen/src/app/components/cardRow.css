@@ -4,4 +4,7 @@
     gap: 10px;
     overflow-x: auto;
     white-space: nowrap;
+
+    box-sizing: border-box;
+    overflow: hidden;
 }

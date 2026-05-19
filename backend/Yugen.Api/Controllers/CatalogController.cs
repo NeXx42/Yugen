@@ -27,6 +27,12 @@ public class CatalogController : ControllerBase
         return await _catalogService.Upcoming(take ?? 10);
     }
 
+    [HttpGet("Trending")]
+    public async Task<MediaInfo[]> GetTrending([FromQuery] int? take)
+    {
+        return await _catalogService.GetTrending(take ?? 10);
+    }
+
     public class Search_Query
     {
         public int? page { get; set; }

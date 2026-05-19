@@ -5,6 +5,7 @@ import MediaContainer from "./mediaContainer";
 import CardRow from "@comps/cardRow";
 
 import "./page.css";
+import MediaRequester from "./mediaRequester";
 
 export default async function ({ params }: { params: { id: number } }) {
     const { id } = await params;
@@ -17,7 +18,12 @@ export default async function ({ params }: { params: { id: number } }) {
             <MediaContainer mediaInfo={media} />
 
             <div className="ViewPage_Info ViewPageContainer">
-                <img src={media.cardImage ?? ""} />
+                <div>
+                    <img src={media.cardImage ?? ""} />
+                    <div className="ViewPage_Info_Controls">
+                        <MediaRequester mediaInfo={media} />
+                    </div>
+                </div>
                 <div className="ViewPage_Info_Info">
                     <h2>{media.title}</h2>
                     <span>{media.description}</span>

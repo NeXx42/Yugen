@@ -1,4 +1,6 @@
 .HomePage {
+    margin: 15px 80px 800px;
+
     display: flex;
     flex-direction: column;
     gap: 25px;

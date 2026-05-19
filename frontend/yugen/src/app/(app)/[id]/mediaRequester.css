@@ -1,0 +1,26 @@
+.MediaRequest {
+    position: fixed;
+    inset: 0px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    height: 100%;
+    backdrop-filter: blur(16px);
+}
+
+.MediaRequest_Menu {
+    position: relative;
+
+    width: 700px;
+    height: 400px;
+
+    border: 1px solid var(--global-border-color);
+    background-color: var(--global-div-tr);
+    border-radius: 15px;
+
+    display: grid;
+    grid-template-rows: 70px auto;
+    overflow: hidden;
+}

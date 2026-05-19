@@ -3,7 +3,7 @@
 import * as api from "./api.shared";
 import { cookies } from "next/headers";
 
-import { MediaInfo, User } from "@shared/types";
+import { MediaCardInfo, MediaInfo, PageResponse, User } from "@shared/types";
 
 async function postWithAuth<T>(uri: string, obj?: any, nextCaching: NextFetchRequestConfig | undefined = undefined): Promise<T | undefined> {
     const cookieStore = cookies();
@@ -31,7 +31,16 @@ export async function catalog_GetInfo(aniListId: number): Promise<MediaInfo> {
         revalidate: 60
     }))!;
 }
+export async function library_CurrentWatching(page: number, pageSize: number): Promise<PageResponse<MediaCardInfo>> {
+    return (await getWithAuth<PageResponse<MediaCardInfo>>(`library/WatchHistory?page=${page}&pageSize=${pageSize}`))!;
+}
 
+export async function catalog_Upcoming(): Promise<MediaCardInfo[]> {
+    return (await getWithAuth<MediaCardInfo[]>("catalog/Upcoming"))!;
+}
+export async function catalog_Trending(): Promise<MediaInfo[]> {
+    return (await getWithAuth<MediaInfo[]>("catalog/Trending"))!;
+}
 
 
 export async function media_SyncWatchTime(aniListId: number): Promise<void> {
