@@ -28,11 +28,11 @@ public class JellyfinUserService : IUserProvider
 
     public async Task<string?> LoginUser(string username, string password)
     {
-        JellyfinResponse_Session? session = await _http.SendRequest<JellyfinResponse_Session>("Users/AuthenticateByName", JsonSerializer.Serialize(new
+        JellyfinResponse_Session? session = await _http.SendRequest<JellyfinResponse_Session>("Users/AuthenticateByName", new
         {
             Username = username,
             Pw = password
-        }));
+        });
 
         if (session == null)
             return null;

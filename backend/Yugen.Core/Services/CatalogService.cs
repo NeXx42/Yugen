@@ -179,6 +179,17 @@ public class CatalogService
         return unixTime;
     }
 
+    public async Task ClearDatabaseCache()
+    {
+        _db.RemoveRange(await _db.mediaEpisodes.ToListAsync());
+        _db.RemoveRange(await _db.media.ToListAsync());
+        await _db.SaveChangesAsync();
+
+        await ClearCache();
+    }
+
+    public async Task ClearCache() => _cache.Clear();
+
     public async Task RedownloadLinks()
     {
         const string url = "https://raw.githubusercontent.com/Fribb/anime-lists/refs/heads/master/anime-list-full.json";

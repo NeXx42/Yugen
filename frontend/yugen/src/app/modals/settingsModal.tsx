@@ -60,13 +60,16 @@ export default function () {
         switch (selectedSettingsGroup) {
             case "App":
                 return (<>
-                    {renderSetting_Button("Import Library", "Import", tryToImportLibrary)}
+                    {renderSetting_Button("Import Library", "Import", "", tryToImportLibrary)}
                     {renderSetting_Toggle("Allow adult content", "AdultContent")}
+
+                    {renderSetting_Button("Clear cache", "Clear", "Negative", api.catalog_ClearCache)}
+                    {renderSetting_Button("Clear database cache", "Clear", "Negative", api.catalog_ClearDatabase)}
                 </>)
 
             case "Jellyfin":
                 return (<>
-                    {renderSetting_Button("Sync watch history", "Sync", api.library_SyncWatchHistory)}
+                    {renderSetting_Button("Sync watch history", "Sync", "", api.library_SyncWatchHistory)}
                     {renderSetting_ApiGroup("Jellyfin API", "Jellyfin_Url", "Jellyfin_ApiKey")}
                 </>)
 
@@ -81,13 +84,13 @@ export default function () {
                 }
 
                 return (<>
-                    {renderSetting_Button("Sync Library", "Sync", librarySyncCallback)}
+                    {renderSetting_Button("Sync Library", "Sync", "", librarySyncCallback)}
                     {renderSetting_ApiGroup("Sonarr API", "Sonarr_Url", "Sonarr_ApiKey")}
                 </>)
 
             case "Providers":
                 return (<>
-                    {renderSetting_Button("Download links", "Download", api.catalog_ReloadLinks)}
+                    {renderSetting_Button("Download links", "Download", "", api.catalog_ReloadLinks)}
                     {renderSetting_ApiGroup("Jikan API", "Jikan_Url", "Jikan_ApiKey")}
                     {renderSetting_ApiGroup("Id Moe API", "IdMoe_Url", "IdMoe_ApiKey")}
                 </>)
@@ -131,7 +134,7 @@ export default function () {
         )
     }
 
-    const renderSetting_Button = (label: string, btnLabel: string, action: () => Promise<void>, suppressToast: boolean = false): ReactNode => {
+    const renderSetting_Button = (label: string, btnLabel: string, btnClass: string, action: () => Promise<void>, suppressToast: boolean = false): ReactNode => {
         const btnIntercept = async () => {
             try {
                 await action();
@@ -147,7 +150,7 @@ export default function () {
         return (
             <div className="Settings_Setting_Button">
                 <p>{label}</p>
-                <button onClick={btnIntercept}>{btnLabel}</button>
+                <button className={btnClass} onClick={btnIntercept}>{btnLabel}</button>
             </div>
         )
     }

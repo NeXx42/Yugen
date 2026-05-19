@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace Yugen.Providers.Helpers;
 
@@ -17,27 +18,39 @@ public class RestfulHelper
         _defaultHeaders = defaultHeaders;
     }
 
-    public async Task<T?> SendRequest<T>(string uri, string? body = null)
+    public async Task<T?> SendRequest<T>(string uri, object? body = null)
     {
-        HttpRequestMessage req = new HttpRequestMessage(string.IsNullOrEmpty(body) ? HttpMethod.Get : HttpMethod.Post, Path.Combine(_url, uri));
+        HttpRequestMessage req = new HttpRequestMessage(body == null ? HttpMethod.Get : HttpMethod.Post, Path.Combine(_url, uri));
 
         if (_defaultHeaders != null)
             foreach (KeyValuePair<string, string> cookie in _defaultHeaders)
                 req.Headers.Add(cookie.Key, cookie.Value);
 
-        if (!string.IsNullOrEmpty(body))
+        if (body != null)
         {
-            req.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+            string json = JsonSerializer.Serialize(body);
+            req.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         }
 
-        var res = await _http.SendAsync(req);
+        var httpRes = await _http.SendAsync(req);
+        string response = await httpRes.Content.ReadAsStringAsync();
 
-        if (!res.IsSuccessStatusCode)
+        if (!httpRes.IsSuccessStatusCode)
         {
-            Console.Write(await res.Content.ReadAsStringAsync());
-            throw new Exception("Invalid request - " + res.ReasonPhrase);
+            Console.Write(response);
+            throw new Exception("Invalid request - " + httpRes.ReasonPhrase);
         }
 
-        return await res.Content.ReadFromJsonAsync<T>();
+        try
+        {
+            T? res = JsonSerializer.Deserialize<T>(response);
+            return res;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            Console.WriteLine(response);
+            return default;
+        }
     }
 }

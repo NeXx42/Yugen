@@ -98,4 +98,22 @@ public class LibraryController : ControllerBase
 
         return Results.Ok();
     }
+
+    public class SeriesRequest
+    {
+        public required string rootPath { get; set; }
+        public required int quality { get; set; }
+    }
+
+    [HttpPost("{mediaId}/Request")]
+    public async Task<IResult> RequestSeries(int mediaId, [FromBody] SeriesRequest request)
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        bool res = await _libraryService.RequestSeries(usr, mediaId, request.rootPath, request.quality);
+
+        if (res)
+            return Results.Ok();
+
+        return Results.BadRequest();
+    }
 }

@@ -2,6 +2,7 @@ using Azure;
 using EFCore.BulkExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Yugen.Core.Data;
 using Yugen.Data;
 using Yugen.Domain.Data;
@@ -286,5 +287,26 @@ public class LibraryService
         _db.RemoveRange(_db.userBookmarks.Where(b => b.UserId == usr.User.Id));
         await _db.SaveChangesAsync();
         await _db.BulkInsertAsync(allBookmarks);
+    }
+
+    public async Task<bool> RequestSeries(UserSession usr, int aniListId, string rootpath, int quality)
+    {
+        Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == aniListId);
+
+        if (link == null)
+            return false;
+
+        if (link.tvdb_id.HasValue)
+        {
+            if (!link.tmdb_season.HasValue)
+            {
+                return false;
+            }
+
+            await _libraryProvider.RequestSeries(link.tvdb_id.Value, [link.tmdb_season.Value], rootpath, quality);
+            return true;
+        }
+
+        return false;
     }
 }

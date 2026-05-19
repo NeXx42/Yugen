@@ -43,3 +43,12 @@ public class SonarrLibrary_Response_EpisodeFile
         public string? name { get; set; }
     }
 }
+
+public class SonarrLibrary_Response_AddRequest
+{
+    public int id { get; set; }
+    public string? path { get; set; }
+
+    public int? tvdbId { get; set; }
+    public int? tmdbId { get; set; }
+}

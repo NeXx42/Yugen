@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Yugen.Core.Data;
 using Yugen.Data;
 using Yugen.Domain.Data;
 using Yugen.Domain.Data.Users;
@@ -11,10 +12,12 @@ namespace Yugen.Core.Services;
 public class NotificationService
 {
     private readonly YugenContext _db;
+    private readonly CatalogService _catalog;
 
-    public NotificationService(YugenContext db)
+    public NotificationService(YugenContext db, CatalogService catalog)
     {
         _db = db;
+        _catalog = catalog;
     }
 
     public async Task SaveNotification(SonarrWebhookEventType type, int? tvdbId, int? tmdbId)
@@ -45,32 +48,34 @@ public class NotificationService
 
     public async Task<Notification[]> GetNotifications(UserSession usr)
     {
-        var notifis = await (
-            from n in _db.notifications
-            join m in _db.media
-                on n.MediaId equals m.Id into mediaJoin
-            from m in mediaJoin.DefaultIfEmpty()
-            select new
-            {
-                notification = n,
-                media = m
-            }
-        ).ToArrayAsync();
+        Model_Notification[] notifis = await _db.notifications.Where(n => n.UserId == usr.User.Id).Take(99).ToArrayAsync();
+        MediaCard[] cards = await _catalog.GetOrCreateMediaCardsFromIds(notifis.Select(n => n.Id).Distinct().ToList());
 
-        return notifis.Select(n => new Notification()
+        Notification[] results = new Notification[notifis.Length];
+
+        for (int i = 0; i < notifis.Length; i++)
         {
-            id = n.notification.Id,
-            time = n.notification.Date.Ticks,
+            Model_Notification n = notifis[i];
+            MediaCard? media = cards.FirstOrDefault(c => c.aniListId == n.MediaId);
 
-            eventName = n.notification.EventType.ToString(),
-            title = n.media.Title,
-            reason = n.notification.Message,
-            icon = n.media.CardImageLarge,
+            results[i] = new Notification()
+            {
+                id = n.Id,
+                time = n.Date.Ticks,
 
-            hasBeenSeen = n.notification.HasInteracted,
+                eventName = n.EventType.ToString(),
+                reason = n.Message,
 
-            url = $"{n.media.Id}"
-        }).ToArray();
+                title = media?.Title,
+                icon = media?.cardImg,
+
+                hasBeenSeen = n.HasInteracted,
+
+                url = $"{n.Id}"
+            };
+        }
+
+        return results.ToArray();
     }
 
     public async Task<int> GetNotificationCount(UserSession usr) => await _db.notifications.Where(n => n.UserId == usr.User.Id && n.HasInteracted != true).CountAsync();

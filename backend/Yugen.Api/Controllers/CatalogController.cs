@@ -64,4 +64,11 @@ public class CatalogController : ControllerBase
 
     [HttpGet("{id}/UpcomingEpisode")]
     public async Task<long?> GetTimeOfNextEpisode(int id) => await _catalogService.GetTimeOfNextEpisode(id);
+
+
+    [HttpPost("Cache/DatabaseClear")]
+    public async Task ClearDatabaseCache() => await _catalogService.ClearDatabaseCache();
+
+    [HttpPost("Cache/Clear")]
+    public async Task ClearCache() => await _catalogService.ClearCache();
 }

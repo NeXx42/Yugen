@@ -94,4 +94,30 @@ public class SonarrLibraryProvider : ILibraryProvider
 
         return series.Where(s => s.tvdbId.HasValue).Select(s => s.tvdbId!.Value).Distinct().ToList();
     }
+
+    public async Task RequestSeries(int tvdbId, int[] seasons, string rootFolder, int quality)
+    {
+        SonarrRequest_FetchLibrary request = new SonarrRequest_FetchLibrary()
+        {
+            tvdbId = tvdbId,
+            title = Guid.NewGuid().ToString(),
+            rootFolderPath = rootFolder,
+            monitored = true,
+            qualityProfileId = quality,
+            seasonFolder = true,
+
+            seasons = seasons.Select(s => new SonarrRequest_FetchLibrary.Season()
+            {
+                seasonNumber = s,
+                monitored = true,
+            }).ToArray(),
+
+            addOptions = new SonarrRequest_FetchLibrary.AddOptions()
+            {
+                searchForMissingEpisodes = true
+            }
+        };
+
+        SonarrLibrary_Response_Series? series = await _http.SendRequest<SonarrLibrary_Response_Series>("series", request);
+    }
 }
