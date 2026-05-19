@@ -41,7 +41,6 @@ export interface MediaInfo {
 
     bookmark: number | undefined,
 
-    episodes: MediaEpisodeInfo[]
     connectedMedia: MediaConnection[]
 }
 
@@ -54,6 +53,11 @@ export interface MediaEpisodeInfo {
     isFiller: boolean,
 
     score: number,
+
+    jellyfinId: string | null
+
+    watchDate: number | null,
+    watchPercentage: number | null,
 }
 
 export interface MediaConnection {
@@ -61,16 +65,6 @@ export interface MediaConnection {
     type: string,
 
     card: MediaCardInfo,
-}
-
-export interface SonarrEpisodeInfo {
-    episode: number,
-    jellyfinId: string,
-}
-
-export interface WatchHistory {
-    lastWatchedEpisode: number | undefined,
-    episodes: WatchHistoryEpisode[],
 }
 
 export interface WatchHistoryEpisode {

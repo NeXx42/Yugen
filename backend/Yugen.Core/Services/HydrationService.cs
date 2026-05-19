@@ -49,34 +49,14 @@ public class HydrationService
         return media[0];
     }
 
-    public async Task<bool> HydrateMedia(Model_Media media, Model_Link? links, bool forceRehydration = false)
+    public async Task HydrateEpisodes(Model_Media media)
     {
-        if ((media.Hydrated ?? false) && !forceRehydration)
-            return true;
+        Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == media.Id);
 
-        media.Hydrated = true;
-        try
-        {
-            await HydrateEpisodes(media, links, forceRehydration);
-            await _db.SaveChangesAsync();
-
-            return true;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.Message);
-            Console.WriteLine($"Failed to hydrate - {media.Id}");
-
-            return false;
-        }
-    }
-
-    private async Task HydrateEpisodes(Model_Media media, Model_Link? links, bool _)
-    {
-        if (links?.mal_id == null)
+        if (link?.mal_id == null)
             return;
 
-        Model_MediaEpisode[] providedEpisodes = await _metaDataProvider.GetEpisodeData(links!.mal_id.Value);
+        Model_MediaEpisode[] providedEpisodes = await _metaDataProvider.GetEpisodeData(link!.mal_id.Value);
         Model_MediaEpisode[] existingEpisodes = await _db.mediaEpisodes.Where(e => e.MediaId == media.Id).ToArrayAsync();
 
         List<Model_MediaEpisode> toAdd = [.. providedEpisodes];
@@ -95,10 +75,13 @@ public class HydrationService
             }
         }
 
-        foreach (Model_MediaEpisode newEp in providedEpisodes)
+        foreach (Model_MediaEpisode newEp in toAdd)
             newEp.MediaId = media.Id;
 
-        await _db.AddRangeAsync(toAdd);
+        if (toAdd.Count > 0)
+            await _db.AddRangeAsync(toAdd);
+
+        media.Hydrated = true;
         await _db.SaveChangesAsync();
     }
 }

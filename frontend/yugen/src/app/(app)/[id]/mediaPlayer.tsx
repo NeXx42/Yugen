@@ -1,17 +1,16 @@
 import { ReactNode, useEffect, useState } from "react"
 
 import "./mediaPlayer.css"
-import { MediaInfo } from "@/app/shared/types"
-import { EpisodeInfo } from "./mediaContainer"
+import { MediaEpisodeInfo, MediaInfo } from "@/app/shared/types"
 
 interface Props {
     mediaInfo: MediaInfo
-    episode: EpisodeInfo | undefined
+    episode: MediaEpisodeInfo | undefined
     bookmarkNode: ReactNode
 }
 
 export default function (props: Props) {
-    const thumbnail = props.episode?.episode.thumbnail ?? props.mediaInfo.thumbnailImage;
+    const thumbnail = props.episode?.thumbnail ?? props.mediaInfo.thumbnailImage;
     const [playingId, setPlayingId] = useState<string | undefined>(undefined)
 
     useEffect(() => setPlayingId(undefined), [props.mediaInfo, props.episode])
@@ -37,7 +36,7 @@ export default function (props: Props) {
                     (
                         <div className="MediaPlayer_Container_Request">
                             {thumbnail != undefined && <img src={thumbnail ?? ""} />}
-                            {props.episode?.downloadedData?.jellyfinId != undefined ? (<button onClick={() => playMedia(props.episode?.downloadedData?.jellyfinId)}>play</button>) : (<button>Request</button>)}
+                            {props.episode?.jellyfinId != null ? (<button onClick={() => playMedia(props.episode!.jellyfinId!)}>play</button>) : (<button>Request</button>)}
                         </div>
                     )
                 }

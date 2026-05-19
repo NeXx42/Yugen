@@ -6,6 +6,7 @@ using Yugen.Domain.Data.Users;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.History;
 using Yugen.Domain.Models.Library;
+using Yugen.Domain.Models.Media;
 using Yugen.Providers;
 using Yugen.Providers.Jellyfin;
 
@@ -27,18 +28,7 @@ public class MediaService
         return await _mediaProvider.Play();
     }
 
-    public async Task<bool> LinkSonarrToJellyfin(Model_DownloadedMedia media)
-    {
-        string?[]? jellyfinIds = await _mediaProvider.MapPathToJellyfinId(media.downloadedEpisodes);
-
-        if (jellyfinIds == null)
-            return false;
-
-        for (int i = 0; i < jellyfinIds.Length; i++)
-            media.downloadedEpisodes.ElementAt(i).JellyfinId = jellyfinIds[i];
-
-        return true;
-    }
+    public async Task<string?[]?> GetJellyfinIdsForEpisodes(List<Model_DownloadedEpisode> episodes) => await _mediaProvider.MapPathToJellyfinId(episodes);
 
     public async Task SyncWatchHistoryWithJellyfin(UserSession usr, int AniListId, bool force = false)
     {

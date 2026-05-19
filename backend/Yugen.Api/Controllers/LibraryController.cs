@@ -7,6 +7,7 @@ using Yugen.Core.Services;
 using Yugen.Domain.Data;
 using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.History;
+using Yugen.Domain.Data.Media;
 using Yugen.Domain.Data.Users;
 using Yugen.Domain.Models;
 
@@ -28,19 +29,6 @@ public class LibraryController : ControllerBase
     public async Task<PageResponse<MediaCard>> GetWatchHistory([FromQuery] int? page, [FromQuery] int? pageSize)
     {
         return await _libraryService.GetWatchHistory(page ?? 0, pageSize ?? 10);
-    }
-
-    [HttpGet("{id}")]
-    public async Task<DownloadedEpisode[]> GetDownloadedEpisodes(int id)
-    {
-        return await _libraryService.GetDownloadedEpisodes(id);
-    }
-
-    [HttpGet("{seriesId}/WatchHistory")]
-    public async Task<WatchHistoryContainer?> GetEpisodeWatchHistory(int seriesId)
-    {
-        HttpContext.GetUserFromSession(out UserSession usr);
-        return await _libraryService.GetEpisodeWatchHistory(usr, seriesId);
     }
 
     [HttpPost("Sync/History")]
@@ -115,5 +103,12 @@ public class LibraryController : ControllerBase
             return Results.Ok();
 
         return Results.BadRequest();
+    }
+
+    [HttpGet("{id}/Episodes")]
+    public async Task<EpisodeInfo[]> GetMediaEpisodes(int id, [FromQuery] bool refetch = false)
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        return await _libraryService.GetMediaEpisodesForUser(usr, id, refetch);
     }
 }

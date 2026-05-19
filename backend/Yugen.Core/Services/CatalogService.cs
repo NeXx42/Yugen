@@ -83,7 +83,7 @@ public class CatalogService
         if (_cache.TryGetValue(cacheId, out MediaInfo? info) && info != null)
             return info;
 
-        Model_Media? dbEntry = await _db.media.Include(m => m.Episodes).FirstOrDefaultAsync(m => m.Id == aniListId);
+        Model_Media? dbEntry = await _db.media.FirstOrDefaultAsync(m => m.Id == aniListId);
 
         if (dbEntry == null)
         {
@@ -104,12 +104,9 @@ public class CatalogService
             connectedMedia = connections.Select(l => (l.tvdb_season, l.type, connectionCards.Single(c => c.aniListId == l.anilist_id))).ToArray();
         }
 
-        bool didHydrate = await _hydrationService.HydrateMedia(dbEntry, link);
         info = MediaInfo.Map(dbEntry).RegisterConnectedMedia(connectedMedia);
 
-        if (didHydrate) // if hydration failed, do not cache it
-            _cache.Set(cacheId, info);
-
+        _cache.Set(cacheId, info);
         return info;
     }
 

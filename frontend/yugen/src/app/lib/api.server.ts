@@ -32,10 +32,6 @@ export async function catalog_GetInfo(aniListId: number): Promise<MediaInfo> {
     }))!;
 }
 
-export async function catalog_EpisodeUpcomingTime(seriesId: number): Promise<number | null> {
-    return (await getWithAuth<number | null>(`catalog/${seriesId}/UpcomingEpisode`))!;
-}
-
 
 
 export async function media_SyncWatchTime(aniListId: number): Promise<void> {

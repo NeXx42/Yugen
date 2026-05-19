@@ -8,12 +8,14 @@ using Yugen.Data;
 using Yugen.Domain.Data;
 using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.History;
+using Yugen.Domain.Data.Media;
 using Yugen.Domain.Data.Users;
 using Yugen.Domain.Enums;
 using Yugen.Domain.Models.Bookmarks;
 using Yugen.Domain.Models.History;
 using Yugen.Domain.Models.Library;
 using Yugen.Domain.Models.Linking;
+using Yugen.Domain.Models.Media;
 using Yugen.Providers;
 using Yugen.Providers.Sonarr;
 
@@ -26,16 +28,18 @@ public class LibraryService
     private readonly CacheService _cache;
     private readonly MediaService _mediaService;
     private readonly CatalogService _catalogService;
+    private readonly HydrationService _hydrationService;
 
     private readonly ILibraryProvider _libraryProvider;
 
-    public LibraryService(YugenContext db, SettingsCache settings, CatalogService catalogService, MediaService mediaService, CacheService cache)
+    public LibraryService(YugenContext db, SettingsCache settings, CatalogService catalogService, MediaService mediaService, CacheService cache, HydrationService hydrationService)
     {
         _db = db;
 
         _cache = cache;
         _mediaService = mediaService;
         _catalogService = catalogService;
+        _hydrationService = hydrationService;
 
         _libraryProvider = new SonarrLibraryProvider(settings.Get(ConfigKeys.Sonarr_Url), settings.Get(ConfigKeys.Sonarr_ApiKey));
     }
@@ -58,9 +62,9 @@ public class LibraryService
             return null;
 
         Model_DownloadedMedia? media = await _db.downloadedMedia.Include(m => m.downloadedEpisodes).FirstOrDefaultAsync(m => m.MediaId == aniListId);
-        Model_DownloadedEpisode[]? episodes = await _libraryProvider.GetDownloadedEpisodes(aniListId, link!);
+        List<Model_DownloadedEpisode>? episodes = await _libraryProvider.GetDownloadedEpisodes(aniListId, link!);
 
-        if ((episodes?.Length ?? 0) == 0)
+        if ((episodes?.Count ?? 0) == 0)
         {
             if (media != null)
             {
@@ -87,14 +91,16 @@ public class LibraryService
 
         media.LastChecked = DateTime.UtcNow;
 
-        _db.sonarrEpisodes.RemoveRange(media.downloadedEpisodes);
+        string?[]? jellyfinIds = await _mediaService.GetJellyfinIdsForEpisodes(episodes!);
 
-        media.downloadedEpisodes.Clear();
+        if (jellyfinIds != null)
+            for (int i = 0; i < jellyfinIds.Length; i++)
+                episodes![i].JellyfinId = jellyfinIds[i];
+
+        _db.sonarrEpisodes.RemoveRange(media.downloadedEpisodes);
         media.downloadedEpisodes = episodes!;
 
-        await _mediaService.LinkSonarrToJellyfin(media);
         await _db.SaveChangesAsync();
-
         return media;
     }
 
@@ -153,19 +159,47 @@ public class LibraryService
         return importCount;
     }
 
-    public async Task<WatchHistoryContainer?> GetEpisodeWatchHistory(UserSession _, int seriesId)
+    public async Task<EpisodeInfo[]> GetMediaEpisodesForUser(UserSession usr, int aniListId, bool refetch)
     {
-        // this should be scoped to user...
-        Model_WatchHistory? history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(m => m.MediaId == seriesId);
+        Model_Media? media = await _db.media.FirstOrDefaultAsync(m => m.Id == aniListId);
 
-        if (history == null)
-            return null;
+        if (media == null)
+            return [];
 
-        return new WatchHistoryContainer()
+        if (refetch || !(media.Hydrated ?? false))
         {
-            lastWatchedEpisode = history.WatchedEpisode,
-            episodes = history.WatchedEpisodes.Select(EpisodeHistory.Map).ToArray()
-        };
+            await _hydrationService.HydrateEpisodes(media);
+
+            await RecheckDownloads(aniListId, true);
+            await _mediaService.SyncWatchHistoryWithJellyfin(usr, aniListId, true);
+        }
+
+        var results = await (
+            from m in _db.mediaEpisodes
+
+            join de in _db.sonarrEpisodes
+                on new { m.MediaId, m.EpisodeNumber }
+                equals new { de.MediaId, de.EpisodeNumber }
+                into downloads
+            from de in downloads.DefaultIfEmpty()
+
+            join wh in _db.watchedEpisodes
+                on new { m.MediaId, m.EpisodeNumber }
+                equals new { wh.MediaId, wh.EpisodeNumber }
+                into watch
+            from wh in watch.DefaultIfEmpty()
+
+            where m.MediaId == aniListId
+
+            select new
+            {
+                Episode = m,
+                DownloadData = de,
+                WatchHistory = wh,
+            }
+        ).ToArrayAsync();
+
+        return results.Select(r => EpisodeInfo.Map(r.Episode, r.DownloadData, r.WatchHistory)).ToArray();
     }
 
     public async Task<PageResponse<MediaCard>> SearchLibrary(UserSession session, int page, int pageSize, string group)

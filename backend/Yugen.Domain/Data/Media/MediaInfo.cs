@@ -18,7 +18,6 @@ public class MediaInfo
 
     public int? bookmark { get; set; }
 
-    public EpisodeInfo[]? episodes { get; set; }
     public Connection[]? connectedMedia { get; set; }
 
     public static MediaInfo Map(Model_Media media)
@@ -33,8 +32,6 @@ public class MediaInfo
             bannerImage = media.BannerImage,
             cardImage = media.CardImageLarge,
             colour = media.Colour,
-
-            episodes = media.Episodes.Select(EpisodeInfo.Map).ToArray()
         };
     }
 

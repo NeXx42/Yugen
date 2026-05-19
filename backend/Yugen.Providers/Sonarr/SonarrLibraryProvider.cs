@@ -17,7 +17,7 @@ public class SonarrLibraryProvider : ILibraryProvider
         });
     }
 
-    public async Task<Model_DownloadedEpisode[]?> GetDownloadedEpisodes(int mediaId, Model_Link link)
+    public async Task<List<Model_DownloadedEpisode>?> GetDownloadedEpisodes(int mediaId, Model_Link link)
     {
         SonarrLibrary_Response_Series[]? series = await _http.SendRequest<SonarrLibrary_Response_Series[]>("series");
 
@@ -82,7 +82,7 @@ public class SonarrLibraryProvider : ILibraryProvider
             episode.Key.filePath = file.path;
         }
 
-        return foundEpisodes.Keys.ToArray();
+        return foundEpisodes.Keys.ToList();
     }
 
     public async Task<List<int>?> GetDownloadedMedia()

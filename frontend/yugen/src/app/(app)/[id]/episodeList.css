@@ -21,15 +21,14 @@
     display: flex;
 
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    padding: 0px 15px;
 
     width: 100%;
 }
 
 .EpisodeList_Titlebar h2 {
-    position: absolute;
     font-size: 16px;
-    margin: 0px;
 }
 
 

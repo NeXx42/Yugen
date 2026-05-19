@@ -8,15 +8,13 @@ import "./page.css";
 
 export default async function ({ params }: { params: { id: number } }) {
     const { id } = await params;
-
     const media: MediaInfo = await api.catalog_GetInfo(id);
-    const upcomingEpisode = await api.catalog_EpisodeUpcomingTime(id);
 
     void api.media_SyncWatchTime(id);
 
     return (
         <div className="ViewPage">
-            <MediaContainer mediaInfo={media} upcomingEpisode={upcomingEpisode} />
+            <MediaContainer mediaInfo={media} />
 
             <div className="ViewPage_Info ViewPageContainer">
                 <img src={media.cardImage ?? ""} />

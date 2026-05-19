@@ -1,7 +1,7 @@
 "use client"
 
 import { post, get, upload } from "./api.shared";
-import { ConfigSetting, MediaCardInfo, PageResponse, SonarrEpisodeInfo, User, WatchHistory, UserNotification } from "@shared/types";
+import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo } from "@shared/types";
 
 export async function auth_Login(username: string, password: string) {
     return (await post<User>("auth/login", { username, password }))!;
@@ -29,12 +29,6 @@ export async function library_SyncWatchHistory() {
 export async function library_CurrentWatching(page: number, pageSize: number): Promise<PageResponse<MediaCardInfo>> {
     return (await get<PageResponse<MediaCardInfo>>(`library/WatchHistory?page=${page}&pageSize=${pageSize}`))!;
 }
-export async function library_GetSonarrEpisodes(aniListId: number): Promise<SonarrEpisodeInfo[]> {
-    return (await get<SonarrEpisodeInfo[]>(`library/${aniListId}`))!;
-}
-export async function library_GetWatchHistoryForSeries(aniListId: number): Promise<WatchHistory> {
-    return (await get<WatchHistory>(`library/${aniListId}/WatchHistory`))!;
-}
 export async function library_Search(page: number, pageSize: number, group: string): Promise<PageResponse<MediaCardInfo>> {
     return (await post<PageResponse<MediaCardInfo>>("library/Search", {
         page,
@@ -54,7 +48,9 @@ export async function library_Request(aniListId: number, rootPath: string, quali
         quality
     }))!
 }
-
+export async function library_GetEpisodes(mediaId: number, refetch: boolean): Promise<MediaEpisodeInfo[]> {
+    return (await get<MediaEpisodeInfo[]>(`library/${mediaId}/Episodes?refetch=${refetch}`))!
+}
 
 
 export async function catalog_ReloadLinks() {
@@ -76,6 +72,10 @@ export async function catalog_ClearDatabase() {
 export async function catalog_ClearCache() {
     await post("catalog/Cache/Clear");
 }
+export async function catalog_EpisodeUpcomingTime(seriesId: number): Promise<number | null> {
+    return (await get<number | null>(`catalog/${seriesId}/UpcomingEpisode`))!;
+}
+
 
 
 export async function media_PlayItem(itemId: string): Promise<string> {

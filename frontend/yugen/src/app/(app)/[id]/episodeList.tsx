@@ -1,28 +1,35 @@
 "use client"
 
 import * as api from "@lib/api.local"
-
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { EpisodeInfo } from "./mediaContainer"
 
 import "./episodeList.css"
+import { MediaEpisodeInfo, MediaInfo } from "@/app/shared/types";
 
 interface Props {
-    episodes: EpisodeInfo[] | undefined,
-    upcomingEpisode: number | null,
-
-    selectedItem: number | undefined,
-    setSelectedItem: Dispatch<SetStateAction<number | undefined>>,
+    mediaInfo: MediaInfo,
+    setSelectedItem: Dispatch<SetStateAction<MediaEpisodeInfo | undefined>>,
 }
 
 export default function (props: Props) {
+    const [episodes, setEpisodes] = useState<MediaEpisodeInfo[]>([]);
+    const [episodeReleaseTime, setEpisodeReleaseTime] = useState<number | null>(null);
+
     const [timeUntil, setTimeUntil] = useState("")
+    const [selectedEpisodeIndex, setSelectedEpisodeIndex] = useState<number | null>(null);
+
 
     useEffect(() => {
-        if (props.upcomingEpisode == null) return;
+        fetchEpisodes(false);
+        api.catalog_EpisodeUpcomingTime(props.mediaInfo.id).then(setEpisodeReleaseTime);
+
+    }, [props.mediaInfo])
+
+    useEffect(() => {
+        if (episodeReleaseTime == null) return;
 
         const update = () => {
-            const ms = props.upcomingEpisode! * 1000 - Date.now();
+            const ms = episodeReleaseTime! * 1000 - Date.now();
 
             const seconds = Math.floor(ms / 1000) % 60;
             const minutes = Math.floor(ms / (1000 * 60)) % 60;
@@ -36,23 +43,51 @@ export default function (props: Props) {
 
         const interval = setInterval(update, 1000);
         return () => clearInterval(interval);
-    }, [props.upcomingEpisode])
+    }, [episodeReleaseTime])
 
-    const onSelectEpisode = (pos: number) => {
-        props.setSelectedItem(props.episodes![pos].episode.number);
+    useEffect(() => {
+        var bestTime = 0;
+        var bestIndex = null;
+
+        episodes.forEach((e, i) => {
+            if ((e.watchDate ?? -1) > bestTime) {
+                bestTime = e.watchDate!;
+                bestIndex = i;
+            }
+        })
+
+        if (bestIndex != null) {
+            if (episodes[bestIndex].watchPercentage! >= .95 && episodes.length > bestIndex - 1)
+                bestIndex++;
+        }
+        else if (episodes.length > 0) {
+            bestIndex = 0;
+        }
+
+        onSelectEpisode(bestIndex);
+
+    }, [episodes])
+
+    const onSelectEpisode = (pos: number | null) => {
+        setSelectedEpisodeIndex(pos);
+        props.setSelectedItem(pos == null ? undefined : episodes[pos]);
     }
 
-    const drawEpisode = (ep: EpisodeInfo, pos: number): React.ReactNode => {
-        const watchPercentage = (ep.watchData?.watchPercentage ?? 0) * 100;
+    const fetchEpisodes = (recache: boolean) => {
+        api.library_GetEpisodes(props.mediaInfo.id, recache).then(setEpisodes);
+    }
+
+    const drawEpisode = (ep: MediaEpisodeInfo, pos: number): React.ReactNode => {
+        const watchPercentage = (ep?.watchPercentage ?? 0) * 100;
 
         return (
-            <div className="Episode" key={ep.episode.number} >
-                <button className={ep.episode.number === props.selectedItem ? "Selected" : ""} onClick={() => onSelectEpisode(pos)}>
+            <div className="Episode" key={ep.number} >
+                <button className={selectedEpisodeIndex == pos ? "Selected" : ""} onClick={() => onSelectEpisode(pos)}>
                     <div style={{ width: `${watchPercentage}%` }} className="Episode_WatchPercentage" />
-                    <a>{`${ep.episode.number}. ${ep.episode.title}`}</a>
+                    <a>{`${ep.number}. ${ep.title}`}</a>
                 </button>
                 {
-                    (ep.downloadedData !== undefined) ? (
+                    (ep.jellyfinId !== undefined) ? (
                         (<></>)
                     ) : (
                         <button >
@@ -74,12 +109,13 @@ export default function (props: Props) {
         <div className="EpisodeList">
             <div className="EpisodeList_Titlebar">
                 <h2>Episodes</h2>
+                <button onClick={() => fetchEpisodes(true)}>refetch</button>
             </div>
             <div className="EpisodeList_Entries">
-                {props.episodes?.map(drawEpisode)}
+                {episodes?.map(drawEpisode)}
             </div>
             {
-                props.upcomingEpisode != null && (
+                episodeReleaseTime != null && (
                     <div className="EpisodeList_Upcoming">
                         {timeUntil}
                     </div>

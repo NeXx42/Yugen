@@ -43,7 +43,11 @@ public class RestfulHelper
 
         try
         {
-            T? res = JsonSerializer.Deserialize<T>(response);
+            T? res = JsonSerializer.Deserialize<T>(response, new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
             return res;
         }
         catch (Exception e)
