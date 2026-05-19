@@ -49,7 +49,7 @@ public class NotificationService
     public async Task<Notification[]> GetNotifications(UserSession usr)
     {
         Model_Notification[] notifis = await _db.notifications.Where(n => n.UserId == usr.User.Id).Take(99).ToArrayAsync();
-        MediaCard[] cards = await _catalog.GetOrCreateMediaCardsFromIds(notifis.Select(n => n.Id).Distinct().ToList());
+        MediaCard[] cards = await _catalog.GetOrCreateMediaCardsFromIds(notifis.Select(n => n.MediaId).Distinct().ToList());
 
         Notification[] results = new Notification[notifis.Length];
 
