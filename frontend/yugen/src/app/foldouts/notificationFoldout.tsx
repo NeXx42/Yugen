@@ -24,14 +24,38 @@ export default function () {
             navigate.push(n.url);
         }
 
-        return (<div className={n.hasBeenSeen ? "Seen" : ""} key={n.id} onClick={redirect}>
+        return (<div className={`Notifications_Notifs_Notification ${n.hasBeenSeen ? "Seen" : ""}`} key={n.id} onClick={redirect}>
+            {n.bannerIcon &&
+                <div className="Notifications_Notifs_Notification_BG">
+                    <img src={n.bannerIcon} />
+                    <div />
+                </div>
+            }
+
             <img src={n.icon} />
-            <div>
+
+            <div className="Notifications_Notifs_Notification_Info">
                 <a>{n.title}</a>
-                <p>{n.eventName}</p>
-                <a>{n.time}</a>
+                <div>
+                    <p>{n.eventName}</p>
+                    <a>{formatUnixToDayMonth(n.time)}</a>
+                </div>
             </div>
+
         </div>)
+    }
+
+    function formatUnixToDayMonth(unixMilliSeconds: number) {
+        const date = new Date(unixMilliSeconds);
+
+        const day = date.getDate();
+        const monthNames = [
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        ];
+
+        const month = monthNames[date.getMonth()];
+        return `${day} ${month}`;
     }
 
     const clearRead = () => {

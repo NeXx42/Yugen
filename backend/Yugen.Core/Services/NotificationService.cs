@@ -61,7 +61,7 @@ public class NotificationService
             results[i] = new Notification()
             {
                 id = n.Id,
-                time = n.Date.Ticks,
+                time = new DateTimeOffset(n.Date).ToUnixTimeMilliseconds(),
 
                 eventName = n.EventType.ToString(),
                 reason = n.Message,
