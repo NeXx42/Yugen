@@ -165,3 +165,27 @@ public class AniListResponse_Trending
         }
     }
 }
+
+public class AniListResponse_Criteria
+{
+    public required Data data { get; set; }
+
+    public class Data
+    {
+        public required string[] genreCollection { get; set; }
+        public required MediaTag[] mediaTagCollection { get; set; }
+
+        public class MediaTag
+        {
+            public required int id { get; set; }
+
+            public bool isAdult { get; set; }
+            public bool isGeneralSpoiler { get; set; }
+            public bool isMediaSpoiler { get; set; }
+
+            public string? name { get; set; }
+            public string? category { get; set; }
+            public string? description { get; set; }
+        }
+    }
+}

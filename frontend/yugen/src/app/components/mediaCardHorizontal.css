@@ -1,0 +1,40 @@
+.MediaCardHorizontal {
+    height: 96px;
+    border-radius: 8px;
+
+    background-color: var(--global-div);
+
+    overflow: hidden;
+}
+
+.MediaCardHorizontal_Content {
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 10px;
+}
+
+.MediaCardHorizontal_Content img {
+    height: 100%;
+    aspect-ratio: 2 / 3;
+}
+
+.MediaCardHorizontal_Info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.MediaCardHorizontal_Info a {
+    padding: 2px 5px;
+    border-radius: 8px;
+    font-size: 12px;
+
+    text-align: center;
+    color: var(--global-text-muted);
+    background-color: rgba(85, 85, 85, .1);
+
+    width: min-content;
+}

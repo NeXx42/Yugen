@@ -6,6 +6,7 @@ using Yugen.Core.Services;
 using Yugen.Domain.Data;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Data.Users;
+using Yugen.Domain.Enums;
 
 namespace Yugen.Api.Controllers;
 
@@ -33,19 +34,8 @@ public class CatalogController : ControllerBase
         return await _catalogService.GetTrending(take ?? 10);
     }
 
-    public class Search_Query
-    {
-        public int? page { get; set; }
-        public int? pageSize { get; set; }
-
-        public string? text { get; set; }
-    }
-
     [HttpPost("Search")]
-    public async Task<PageResponse<MediaCard>> Search([FromBody] Search_Query query)
-    {
-        return await _catalogService.Search(query.text!, query.page ?? 0, query.pageSize ?? 10);
-    }
+    public async Task<PageResponse<MediaCard>> Search([FromBody] MediaSearchQuery query) => await _catalogService.Search(query);
 
     [HttpGet("{id}")]
     public async Task<MediaInfo?> GetMediaInfo(int id)
@@ -67,6 +57,9 @@ public class CatalogController : ControllerBase
             return false;
         }
     }
+
+    [HttpGet("SearchCriteria")]
+    public async Task<SearchCriteria> GetSearchCriteria() => await _catalogService.GetSearchCriteria();
 
     [HttpGet("{id}/UpcomingEpisode")]
     public async Task<long?> GetTimeOfNextEpisode(int id) => await _catalogService.GetTimeOfNextEpisode(id);

@@ -78,3 +78,29 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+.Trending_PlayButton {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+
+    border: 1px solid var(--global-border-color);
+    background: var(--global-div-tr-2);
+
+    padding: 10px 25px;
+    border-radius: 25px;
+
+    font-size: 20px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+
+    transition: all .1s;
+    cursor: pointer;
+}
+
+.Trending_PlayButton:hover {
+    border-color: white;
+}

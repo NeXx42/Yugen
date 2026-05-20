@@ -74,7 +74,7 @@ export default function (props: Props) {
     }
 
     const fetchEpisodes = (recache: boolean) => {
-        api.library_GetEpisodes(props.mediaInfo.id, recache).then(setEpisodes);
+        api.library_GetEpisodes(props.mediaInfo.id, recache).then(r => setEpisodes(r.sort((a, b) => a.number - b.number)));
     }
 
     const drawEpisode = (ep: MediaEpisodeInfo, pos: number): React.ReactNode => {

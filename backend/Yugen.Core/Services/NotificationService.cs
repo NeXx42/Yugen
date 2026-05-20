@@ -68,6 +68,7 @@ public class NotificationService
 
                 title = media?.Title,
                 icon = media?.cardImg,
+                bannerIcon = media?.banner,
 
                 hasBeenSeen = n.HasInteracted,
 

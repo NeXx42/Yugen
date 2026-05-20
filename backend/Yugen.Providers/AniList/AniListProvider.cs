@@ -3,7 +3,9 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Yugen.Core.Data;
+using Yugen.Domain.Data;
 using Yugen.Domain.Enums;
+using Yugen.Domain.Models;
 using Yugen.Domain.Models.Media;
 using Yugen.Providers.Jikan;
 
@@ -191,12 +193,12 @@ public class AniListProvider : IMetaDataProvider
         return results.ToArray();
     }
 
-    public async Task<(int, int[])> SearchMedia(string textFilter, int page, int pageSize, bool allowAdult)
+    public async Task<(int, int[])> SearchMedia(MediaSearchQuery searchQuery, bool allowAdult)
     {
         string inputs = "";
         string vars = "type: $type";
 
-        if (!string.IsNullOrEmpty(textFilter))
+        if (!string.IsNullOrEmpty(searchQuery.text))
         {
             inputs += ", $search: String!";
             vars += ", search: $search";
@@ -206,6 +208,12 @@ public class AniListProvider : IMetaDataProvider
         {
             inputs += ", $isAdult: Boolean";
             vars += ", isAdult: $isAdult";
+        }
+
+        if (searchQuery.sort.HasValue)
+        {
+            inputs += ", $sort: [MediaSort]";
+            vars += ", sort: $sort";
         }
 
         string query = @$"query Page($perPage: Int, $page: Int, $type: MediaType{inputs}) {{
@@ -221,11 +229,12 @@ public class AniListProvider : IMetaDataProvider
 
         AniListResponse_Search? res = await SendRequest<AniListResponse_Search>(query, new
         {
-            search = textFilter,
-            perPage = pageSize,
-            page = page,
+            search = searchQuery.text,
+            perPage = searchQuery.pageSize ?? 10,
+            page = searchQuery.page ?? 1,
             type = "ANIME",
             isAdult = false,
+            sort = searchQuery.sort?.ToString() ?? ""
         });
 
         if (res == null)
@@ -300,8 +309,57 @@ public class AniListProvider : IMetaDataProvider
         return res.data.trending.media.Select(m => m.id).ToList();
     }
 
+
+    public async Task<(List<Model_Tag>, List<Model_Genre>)> GetSearchCriteria()
+    {
+        string query = @"query Query {
+            GenreCollection
+            MediaTagCollection {
+                name
+                id
+                isAdult
+                isMediaSpoiler
+                category
+                rank
+                description
+            }
+        }";
+
+        AniListResponse_Criteria? res = await SendRequest<AniListResponse_Criteria>(query, new { });
+
+        if (res == null)
+            return ([], []);
+
+        return (
+            res.data.mediaTagCollection.Select(x => new Model_Tag()
+            {
+                Id = x.id,
+
+                IsAdult = x.isAdult,
+                IsMediaSpoiler = x.isMediaSpoiler,
+                IsGeneralSpoiler = x.isGeneralSpoiler,
+
+                Name = x.name,
+                Category = x.category,
+                Description = x.description
+
+            }).ToList(),
+
+            res.data.genreCollection.Select(x => new Model_Genre()
+            {
+                Genre = x
+            }).ToList()
+        );
+    }
+
     // not possible with AniList
     public Task<Model_MediaEpisode[]> GetEpisodeData(int malId) => _episodeProvider.GetEpisodeData(malId);
+
+
+
+
+
+
 
     public async Task<T?> SendRequest<T>(string query, object variables)
     {
@@ -320,5 +378,4 @@ public class AniListProvider : IMetaDataProvider
             return default;
         }
     }
-
 }

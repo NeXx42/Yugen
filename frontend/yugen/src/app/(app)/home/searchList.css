@@ -1,0 +1,41 @@
+.SearchList_Sort {
+    background: var(--global-border-color);
+    padding: 1px;
+
+    display: flex;
+
+    border-radius: 10px;
+    gap: 1px;
+
+    width: max-content;
+    overflow: hidden;
+}
+
+.SearchList_Sort button {
+    background: var(--global-div);
+    padding: 10px 15px;
+    border: none;
+    border-radius: 0px;
+
+    cursor: pointer;
+    transition: all .1s;
+}
+
+.SearchList_Sort button:hover {
+    color: var(--primary-accent);
+}
+
+.SearchList_Sort button.Selected {
+    background-color: var(--primary-accent-tr);
+    color: var(--primary-accent);
+}
+
+.SearchList_Content {
+    margin-top: 20px;
+
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    row-gap: 25px;
+
+    align-items: flex-start;
+}

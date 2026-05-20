@@ -14,7 +14,13 @@ export default function ({ searchQuery }: { searchQuery: string }) {
     const pageSize = 54;
 
     const [currentPage, setCurrentPage] = useState(0);
-    const search = (): Promise<PageResponse<MediaCardInfo>> => api.catalog_Search(searchQuery, currentPage, pageSize);
+    const search = (): Promise<PageResponse<MediaCardInfo>> => api.catalog_Search({
+        page: currentPage,
+        pageSize,
+
+        text: searchQuery,
+        sort: null
+    });
 
     return (
         <div className="SearchContainer">

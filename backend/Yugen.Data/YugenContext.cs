@@ -15,6 +15,11 @@ public class YugenContext : DbContext
 
     public DbSet<Model_Config> config { get; set; }
 
+    // Site
+    public DbSet<Model_Tag> tags { get; set; }
+    public DbSet<Model_Genre> genres { get; set; }
+
+    // from sonnar
     public DbSet<Model_Media> media { get; set; }
     public DbSet<Model_MediaEpisode> mediaEpisodes { get; set; }
     public DbSet<Model_Link> links { get; set; }

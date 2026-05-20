@@ -19,12 +19,15 @@ public enum ConfigKeys
     Sonarr_ApiKey,
 
     AdultContent,
+    HasSearchCriteriaCached,
 }
 
 public class SettingsService
 {
     private readonly YugenContext _db;
     private readonly SettingsCache _cache;
+
+    public SettingsCache getCache => _cache;
 
     public static string GetCacheKey(ConfigKeys key) => $"SETTINGSCACHE_{key}";
 

@@ -3,7 +3,7 @@
 import * as api from "./api.shared";
 import { cookies } from "next/headers";
 
-import { MediaCardInfo, MediaInfo, PageResponse, User } from "@shared/types";
+import { MediaCardInfo, MediaInfo, PageResponse, SearchCriteria, User } from "@shared/types";
 
 async function postWithAuth<T>(uri: string, obj?: any, nextCaching: NextFetchRequestConfig | undefined = undefined): Promise<T | undefined> {
     const cookieStore = cookies();
@@ -40,6 +40,9 @@ export async function catalog_Upcoming(): Promise<MediaCardInfo[]> {
 }
 export async function catalog_Trending(): Promise<MediaInfo[]> {
     return (await getWithAuth<MediaInfo[]>("catalog/Trending"))!;
+}
+export async function catalog_SearchCriteria(): Promise<SearchCriteria> {
+    return (await getWithAuth<SearchCriteria>("catalog/SearchCriteria"))!;
 }
 
 

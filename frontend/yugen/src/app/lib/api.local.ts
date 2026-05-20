@@ -1,7 +1,7 @@
 "use client"
 
 import { post, get, upload } from "./api.shared";
-import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo } from "@shared/types";
+import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo, SearchRequest } from "@shared/types";
 
 export async function auth_Login(username: string, password: string) {
     return (await post<User>("auth/login", { username, password }))!;
@@ -56,12 +56,8 @@ export async function library_CurrentWatching(page: number, pageSize: number): P
 export async function catalog_ReloadLinks() {
     await post(`catalog/RedownloadLinking`)
 }
-export async function catalog_Search(text: string, page: number, pageSize: number): Promise<PageResponse<MediaCardInfo>> {
-    return (await post<PageResponse<MediaCardInfo>>("catalog/Search", {
-        text: text,
-        page,
-        pageSize
-    }))!;
+export async function catalog_Search(req: SearchRequest): Promise<PageResponse<MediaCardInfo>> {
+    return (await post<PageResponse<MediaCardInfo>>("catalog/Search", req))!;
 }
 export async function catalog_ClearDatabase() {
     await post("catalog/Cache/DatabaseClear");

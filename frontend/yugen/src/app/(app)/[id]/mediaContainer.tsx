@@ -23,7 +23,7 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
             return (<></>);
 
         return (<>
-            <h2>{`${selectedEpisode}. ${selectedEpisode.title}`}</h2>
+            <h2>{`${selectedEpisode.number}. ${selectedEpisode.title}`}</h2>
             <a>{selectedEpisode.score}</a>
         </>)
     }

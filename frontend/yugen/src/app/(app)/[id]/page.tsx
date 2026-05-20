@@ -26,7 +26,7 @@ export default async function ({ params }: { params: { id: number } }) {
                 </div>
                 <div className="ViewPage_Info_Info">
                     <h2>{media.title}</h2>
-                    <span>{media.description}</span>
+                    <p dangerouslySetInnerHTML={{ __html: media.description ?? "" }} />
                 </div>
             </div>
 

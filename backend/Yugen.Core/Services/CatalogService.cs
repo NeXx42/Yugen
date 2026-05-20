@@ -9,6 +9,8 @@ using Yugen.Data;
 using Yugen.Domain.Data;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Data.Users;
+using Yugen.Domain.Enums;
+using Yugen.Domain.Models;
 using Yugen.Domain.Models.Bookmarks;
 using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
@@ -24,13 +26,13 @@ public class CatalogService
     private readonly IMetaDataProvider _currentProvider;
 
     private readonly CacheService _cache;
-    private readonly SettingsCache _settings;
+    private readonly SettingsService _settings;
     private readonly HydrationService _hydrationService;
 
     public string GetCardCacheId(int id) => $"CardCache_{id}";
     public string GetInfoCacheId(int id) => $"Info_{id}";
 
-    public CatalogService(YugenContext db, HydrationService hydrationService, CacheService cache, SettingsCache settings)
+    public CatalogService(YugenContext db, HydrationService hydrationService, CacheService cache, SettingsService settings)
     {
         _db = db;
 
@@ -41,12 +43,12 @@ public class CatalogService
         _hydrationService = hydrationService;
     }
 
-    public async Task<PageResponse<MediaCard>> Search(string textFilter, int page, int pageSize)
+    public async Task<PageResponse<MediaCard>> Search(MediaSearchQuery query)
     {
         const string CACHE_KEY = "SearchResults";
         const string SEARCH_CACHE = $"SearchFilter";
 
-        string searchCacheValue = $"{textFilter}_{page}_{pageSize}";
+        string searchCacheValue = query.GetCacheKey();
 
         PageResponse<MediaCard>? pageResponse;
 
@@ -59,8 +61,8 @@ public class CatalogService
             }
         }
 
-        (int total, int[] media) = await _currentProvider.SearchMedia(textFilter, page, pageSize, _settings.Get(ConfigKeys.AdultContent, false));
-        pageResponse = new PageResponse<MediaCard>(await GetOrCreateMediaCardsFromIds(media.ToList()), page, pageSize, total);
+        (int total, int[] media) = await _currentProvider.SearchMedia(query, _settings.getCache.Get(ConfigKeys.AdultContent, false));
+        pageResponse = new PageResponse<MediaCard>(await GetOrCreateMediaCardsFromIds(media.ToList()), query.page ?? 1, query.pageSize ?? 10, total);
 
         _cache.Set(CACHE_KEY, pageResponse);
         _cache.Set(SEARCH_CACHE, searchCacheValue);
@@ -285,5 +287,39 @@ public class CatalogService
             public int? tvdb { get; set; }
             public int? tmdb { get; set; }
         }
+    }
+
+    public async Task<SearchCriteria> GetSearchCriteria()
+    {
+        if (!_settings.getCache.Get(ConfigKeys.HasSearchCriteriaCached, false))
+        {
+            await RedownloadCriteria();
+            await _settings.SetConfigValue(ConfigKeys.HasSearchCriteriaCached, true);
+        }
+
+        string[] genres = await _db.genres.Select(g => g.Genre).ToArrayAsync();
+        SearchCriteria.LookupPair[] tags = (await _db.tags.ToArrayAsync()).Select(t => new SearchCriteria.LookupPair()
+        {
+            id = t.Id,
+            name = t.Name ?? "ERROR",
+        }).ToArray();
+
+        return new SearchCriteria()
+        {
+            genres = genres,
+            tags = tags,
+        };
+    }
+
+    public async Task RedownloadCriteria()
+    {
+        (List<Model_Tag> tags, List<Model_Genre> genres) = await _currentProvider.GetSearchCriteria();
+
+        _db.RemoveRange(_db.tags);
+        _db.RemoveRange(_db.genres);
+        await _db.SaveChangesAsync();
+
+        await _db.BulkInsertAsync(tags);
+        await _db.BulkInsertAsync(genres);
     }
 }

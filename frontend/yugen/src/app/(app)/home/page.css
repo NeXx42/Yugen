@@ -5,3 +5,60 @@
     flex-direction: column;
     gap: 25px;
 }
+
+
+.HomePage_Trending_Genres {
+    margin-top: 15px;
+    width: 100%;
+    overflow: scroll;
+}
+
+.HomePage_Trending_Genres_Scroll {
+    display: flex;
+    gap: 5px;
+
+    overflow: hidden;
+    overflow-x: scroll;
+    height: 35px;
+    width: max-content;
+}
+
+
+.HomePage_Trending_Genres a {
+    display: inline-block;
+    background: var(--global-div);
+    border-radius: 8px;
+    text-align: center;
+    padding: .5rem 1.75rem;
+    align-content: center;
+    font-size: .8rem;
+
+    cursor: pointer;
+}
+
+
+
+.HomePage_Body {
+    display: grid;
+    grid-template-columns: auto 400px;
+}
+
+.HomePage_Right {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.HomePage_UpcomingEpisodes {
+    background: var(--global-div-tr);
+    border: 1px solid var(--global-border-color);
+    border-radius: 15px;
+
+    padding: 15px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    height: min-content;
+}

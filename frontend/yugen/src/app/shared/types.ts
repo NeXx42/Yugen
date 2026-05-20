@@ -92,3 +92,22 @@ export interface UserNotification {
 
     url: string | undefined;
 }
+
+
+export interface SearchCriteria {
+    genres: string[],
+    tags: SearchCriteria_LookupPair[],
+}
+
+export interface SearchCriteria_LookupPair {
+    id: number,
+    name: string
+}
+
+export interface SearchRequest {
+    page: number,
+    pageSize: number,
+
+    text: string | null,
+    sort: number | null,
+}

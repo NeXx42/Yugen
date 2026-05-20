@@ -1,4 +1,6 @@
 using Yugen.Core.Data;
+using Yugen.Domain.Data;
+using Yugen.Domain.Models;
 using Yugen.Domain.Models.Media;
 using Yugen.Providers.Helpers;
 
@@ -37,6 +39,11 @@ public class JikanMetadataProvider : IMetaDataProvider
         throw new NotImplementedException();
     }
 
+    public Task<(List<Model_Tag>, List<Model_Genre>)> GetSearchCriteria()
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<long?> GetTimeOfNextEpisode(int id)
     {
         throw new NotImplementedException();
@@ -47,7 +54,7 @@ public class JikanMetadataProvider : IMetaDataProvider
         throw new NotImplementedException();
     }
 
-    public Task<(int, int[])> SearchMedia(string textFilter, int page, int pageSize, bool allowAdult)
+    public Task<(int, int[])> SearchMedia(MediaSearchQuery query, bool allowAdult)
     {
         throw new NotImplementedException();
     }
