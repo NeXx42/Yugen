@@ -1,15 +1,22 @@
 .MediCard {
-    width: 170px;
-
     cursor: pointer;
-
     position: relative;
-
-    transition: all .1s;
 }
 
-.MediCard:hover {
-    transform: scale(1.01);
+.MediCard:hover .MediaCard_Img {
+    transform: translateY(-5px);
+}
+
+.MediCard:hover .MediaCard_Img img {
+    filter: brightness(60%)
+}
+
+.MediCard:hover .MediaCard_Content {
+    color: var(--hover-color);
+}
+
+.MediCard:hover .MediaCard_Img svg {
+    transform: scale(2);
 }
 
 .MediaCard_Content {
@@ -22,21 +29,34 @@
 
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: all .2s;
 }
 
 .MediaCard_Img {
+    width: 100%;
+    position: relative;
     overflow: hidden;
     border-radius: 8px;
-    position: relative;
+
+    transition: all .3s;
 }
 
 .MediaCard_Img img {
-    width: 170px;
-    height: 240px;
+    width: 100%;
+    aspect-ratio: 318/450;
 
     object-fit: cover;
     display: block;
 
+}
+
+.MediaCard_Img svg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    transform: scale(0);
+    transition: all .2s;
 }
 
 .MediCard_WatchPercentage {

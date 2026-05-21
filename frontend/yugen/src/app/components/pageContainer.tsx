@@ -29,52 +29,6 @@ export default function <T>(props: Props<T>) {
 
     }, [...(props.track ?? []), props.currentPage, props.pageSize])
 
-    const getVisiblePages = (currentPage: number, totalPages: number, maxVisible: number = 4): number[] => {
-        const half = Math.floor(maxVisible / 2)
-
-        let start = currentPage - half
-        let end = currentPage + half
-
-        if (maxVisible % 2 === 0) {
-            end -= 1 // keeps even window balanced
-        }
-
-        if (start < 0) {
-            start = 0
-            end = maxVisible - 1
-        }
-
-        if (end >= totalPages) {
-            end = totalPages - 1
-            start = Math.max(0, end - maxVisible + 1)
-        }
-
-        const pages: number[] = []
-        for (let i = start; i <= end; i++) {
-            pages.push(i)
-        }
-
-        return pages
-    }
-
-    const drawPageControls = (): ReactNode => {
-        const totalPages = Math.ceil((content?.totalResults ?? 0) / props.pageSize)
-        const pages = getVisiblePages(props.currentPage, totalPages, 4)
-
-        return (
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                <button onClick={() => props.setCurrentPage(0)} disabled={props.currentPage === 0}>{"<<"}</button>
-                <button onClick={() => props.setCurrentPage((p) => Math.max(0, p - 1))} disabled={props.currentPage === 0}>{"<"}</button>
-
-                {pages.map((p) => (
-                    <button key={p} onClick={() => props.setCurrentPage(p)} className={p == props.currentPage ? "Selected" : ""}>{p + 1} </button>
-                ))}
-
-                <button onClick={() => props.setCurrentPage((p) => Math.min(totalPages - 1, p + 1))} disabled={props.currentPage === totalPages - 1}> {">"}</button>
-                <button onClick={() => props.setCurrentPage(totalPages - 1)} disabled={props.currentPage === totalPages - 1} > {">>"} </button>
-            </div>
-        );
-    }
 
     const drawContent = (): ReactNode => {
         if (error) {
@@ -89,13 +43,20 @@ export default function <T>(props: Props<T>) {
 
     return (<div className="Paginator">
         <div className="Page_Top">
-            <a>Results {content?.totalResults ?? 0}</a>
+            <button disabled={props.currentPage <= 1} onClick={() => props.setCurrentPage(props.currentPage - 1)}>
+                <svg stroke="currentColor" fill="currentColor" viewBox="0 0 320 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z" />
+                </svg>
+            </button>
+            <a>{props.currentPage}</a>
+            <button disabled={(props.currentPage * (content?.pageSize ?? 0)) > (content?.totalResults ?? 0)} onClick={() => props.setCurrentPage(props.currentPage + 1)}>
+                <svg stroke="currentColor" fill="currentColor" viewBox="0 0 320 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z" />
+                </svg>
+            </button>
         </div>
         <div className="Page_Content">
             {drawContent()}
-        </div>
-        <div className="Page_Pages">
-            {drawPageControls()}
         </div>
     </div>)
 }

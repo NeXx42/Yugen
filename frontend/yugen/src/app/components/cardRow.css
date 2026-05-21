@@ -1,7 +1,8 @@
 .CardRow_Cards {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 200px));
+    gap: 25px;
 
-    gap: 10px;
     overflow-x: auto;
     white-space: nowrap;
 

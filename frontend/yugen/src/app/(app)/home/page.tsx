@@ -24,7 +24,7 @@ export default async function () {
 
                 <div className="HomePage_Trending_Genres">
                     <div className="HomePage_Trending_Genres_Scroll">
-                        {searchCriteria.genres.map(g => (<a>{g}</a>))}
+                        {searchCriteria.genres.map(g => (<a key={g}>{g}</a>))}
                     </div>
                 </div>
             </div>
@@ -40,12 +40,7 @@ export default async function () {
                 <div className="HomePage_Right">
                     <div className="HomePage_UpcomingEpisodes">
                         <h2>Airing</h2>
-                        {upcoming.slice(0, 5).map(u => <MediaCardHorizontal Card={u} />)}
-                    </div>
-
-                    <div className="HomePage_UpcomingEpisodes">
-                        <h2>Upcoming</h2>
-                        {upcoming.slice(0, 5).map(u => <MediaCardHorizontal Card={u} />)}
+                        {upcoming.slice(0, 10).map(u => <MediaCardHorizontal key={u.aniListId} Card={u} />)}
                     </div>
                 </div>
             </div>

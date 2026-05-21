@@ -41,6 +41,7 @@
 .HomePage_Body {
     display: grid;
     grid-template-columns: auto 400px;
+    gap: 25px;
 }
 
 .HomePage_Right {

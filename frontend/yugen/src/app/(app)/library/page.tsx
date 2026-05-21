@@ -13,16 +13,16 @@ import "./page.css"
 type LibraryGroup = "Downloaded" | "Watching" | "OnHold" | "Planning" | "Completed" | "Dropped";
 
 export default function () {
-    const pageSize = 54;
+    const pageSize = 56;
 
     const [selectedGroup, setSelectedGroup] = useState<LibraryGroup>("Downloaded");
-    const [currentPage, setCurrentPage] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
 
-    const search = (): Promise<PageResponse<MediaCardInfo>> => api.library_Search(currentPage, pageSize, selectedGroup);
+    const search = (): Promise<PageResponse<MediaCardInfo>> => api.library_Search(currentPage - 1, pageSize, selectedGroup);
 
     const drawGroupBtn = (group: LibraryGroup, label: string | undefined = undefined): ReactNode => {
         const callback = () => {
-            setCurrentPage(0);
+            setCurrentPage(1);
             setSelectedGroup(group);
         }
 
