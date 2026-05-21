@@ -228,7 +228,7 @@ public class LibraryService
         int totalCount = await query.CountAsync();
         List<int> results = await query.Skip(page * pageSize).Take(pageSize).ToListAsync();
 
-        return new PageResponse<MediaCard>(await _catalogService.GetOrCreateMediaCardsFromIds(results), page, pageSize, totalCount);
+        return new PageResponse<MediaCard>((await _catalogService.GetOrCreateMediaCardsFromIds(results)).OrderBy(c => c.Title).ToArray(), page, pageSize, totalCount);
     }
 
     public async Task UpdateBookmark(UserSession usr, int mediaId, int bookmarkId)

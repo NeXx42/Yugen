@@ -51,6 +51,15 @@ export async function library_GetEpisodes(mediaId: number, refetch: boolean): Pr
 export async function library_CurrentWatching(page: number, pageSize: number): Promise<PageResponse<MediaCardInfo>> {
     return (await get<PageResponse<MediaCardInfo>>(`library/WatchHistory?page=${page}&pageSize=${pageSize}`))!;
 }
+export async function library_RequestSeries(seriesId: number, quality: number, rootPath: string) {
+    return (await post(`library/${seriesId}/Request`, {
+        quality,
+        rootPath
+    }))!;
+}
+export async function library_GetSeriesRequest(seriesId: number) {
+    return (await get(`library/${seriesId}/Request`))!
+}
 
 
 export async function catalog_ReloadLinks() {

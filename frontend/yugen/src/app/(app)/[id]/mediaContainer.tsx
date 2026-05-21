@@ -24,10 +24,10 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
         if (selectedEpisode == undefined)
             return (<></>);
 
-        return (<>
+        return (<div className="ViewPageContainer">
             <h2>{`${selectedEpisode.number}. ${selectedEpisode.title}`}</h2>
             <a>{selectedEpisode.score}</a>
-        </>)
+        </div>)
     }
 
     useEffect(() => setEpisodeContainer(document.getElementById("ViewPage_EpisodeInfo")), [])
@@ -39,7 +39,7 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
                 <EpisodeList mediaInfo={mediaInfo} setSelectedItem={setSelectedEpisode} />
             </div>
 
-            {episodeContainer && createPortal(drawEpisodeInfo(), episodeContainer)}
+            {selectedEpisode && episodeContainer && createPortal(drawEpisodeInfo(), episodeContainer)}
         </div>
     )
 }

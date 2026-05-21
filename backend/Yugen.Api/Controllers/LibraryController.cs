@@ -105,6 +105,13 @@ public class LibraryController : ControllerBase
         return Results.BadRequest();
     }
 
+    [HttpGet("{mediaId}/Request")]
+    public async Task GetSeriesRequestInfo(int mediaId)
+    {
+
+    }
+
+
     [HttpGet("{id}/Episodes")]
     public async Task<EpisodeInfo[]> GetMediaEpisodes(int id, [FromQuery] bool refetch = false)
     {

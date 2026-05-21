@@ -50,19 +50,26 @@
     flex-direction: column;
     padding: 5px;
     gap: 5px;
+
 }
 
 .Settings_Foldout_Navigation button {
     height: 50px;
     background-color: transparent;
     border: none;
-    text-align: left;
     padding: 15px;
     border-radius: 8px;
     border-right: 3px solid transparent;
 
     cursor: pointer;
     transition: all .1s;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    font-size: 15px;
+    transition: all .2s;
 }
 
 .Settings_Foldout_Navigation button:nth-child(even) {
