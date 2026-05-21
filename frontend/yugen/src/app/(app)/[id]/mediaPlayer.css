@@ -1,15 +1,15 @@
 .MediaPlayer {
     display: flex;
     flex-direction: column;
-    gap: 5px;
 }
 
 .MediaPlayer_Container {
     aspect-ratio: 16/ 9;
 
-    background-color: var(--global-div-tr);
     border: 1px solid var(--global-border-color);
-    border-radius: 5px;
+    border-radius: 8px 8px 0px 0px;
+
+    border-bottom: 0px;
 
     overflow: hidden;
 }
@@ -31,10 +31,7 @@ iframe {
 }
 
 .MediaPlayer_Controls {
-    background-color: var(--global-div-tr);
-    border: 1px solid var(--global-border-color);
-    border-radius: 5px;
-
+    border-radius: 0px 0px 8px 8px !important;
     height: 40px;
 }
 
@@ -53,12 +50,27 @@ iframe {
     width: 100%;
     height: 100%;
 
-    transform: scale(1.2);
+    transform: scale(1.5);
     opacity: .5;
 
     filter: blur(5px);
+    transition: all .3s;
+
+    cursor: pointer;
 }
 
-.MediaPlayer_Container_Request button {
-    z-index: 10;
+.MediaPlayer_Container_Request:hover img {
+    transform: scale(1.52);
+    filter: blur(2px);
+}
+
+.MediaPlayer_Container_Request svg {
+    transform: scale(3);
+    transition: all .3s;
+
+    cursor: pointer;
+}
+
+.MediaPlayer_Container_Request:hover svg {
+    transform: scale(3.3);
 }

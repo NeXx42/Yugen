@@ -106,7 +106,7 @@
     margin-top: 5px;
 }
 
-.MediaCard_Content_Items a {
+.MediaCard_Content_Items p {
     padding: 2px 5px;
     border-radius: 8px;
     font-size: 12px;
@@ -115,5 +115,5 @@
     color: var(--global-text-muted);
     background-color: var(--global-div);
 
-    width: auto;
+    width: min-content;
 }

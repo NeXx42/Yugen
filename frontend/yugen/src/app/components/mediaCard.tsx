@@ -8,10 +8,6 @@ import "./mediaCard.css"
 export default function ({ Card }: { Card: MediaCardInfo }) {
     const navigate = useRouter();
 
-    const navigateToPage = () => {
-        navigate.push(`${Card.aniListId}`)
-    };
-
     const getNextReleaseText = (): string => {
         const diff = Card.nextReleaseDate! * 1000; // convert seconds → ms
 
@@ -32,7 +28,7 @@ export default function ({ Card }: { Card: MediaCardInfo }) {
         return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
     }
 
-    return (<div key={Card.aniListId} className="MediCard" onClick={navigateToPage} style={{ "--hover-color": Card.colour } as React.CSSProperties}>
+    return (<a key={Card.aniListId} className="MediCard" href={`${Card.aniListId}`} style={{ "--hover-color": Card.colour } as React.CSSProperties}>
         <div className="MediaCard_Container">
             <div className="MediaCard_Img">
                 <img src={Card.cardImg} />
@@ -56,9 +52,9 @@ export default function ({ Card }: { Card: MediaCardInfo }) {
                 <h3 >{Card.title}</h3>
                 <div className="MediaCard_Content_Items">
 
-                    {Card.type != undefined && <a>{Card.type}</a>}
+                    {Card.type != undefined && <p>{Card.type}</p>}
                 </div>
             </div>
         </div>
-    </div>)
+    </a>)
 }

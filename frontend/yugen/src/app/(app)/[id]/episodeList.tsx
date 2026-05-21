@@ -57,7 +57,7 @@ export default function (props: Props) {
         })
 
         if (bestIndex != null) {
-            if (episodes[bestIndex].watchPercentage! >= .95 && episodes.length > bestIndex - 1)
+            if (episodes[bestIndex].watchPercentage! >= .95 && bestIndex + 1 < episodes.length)
                 bestIndex++;
         }
         else if (episodes.length > 0) {
@@ -87,26 +87,21 @@ export default function (props: Props) {
                     <a>{`${ep.number}. ${ep.title}`}</a>
                 </button>
                 {
-                    (ep.jellyfinId !== undefined) ? (
-                        (<></>)
-                    ) : (
-                        <button >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                <path d="M7 10l5 5 5-5" />
-                                <path d="M12 15V3" />
+                    ep.jellyfinId !== undefined && (
+                        <button className="Episode_Downloaded">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <path d="M14 2v6h6" />
+                                <path d="M9 15l2 2 4-4" />
                             </svg>
-                        </button>
-                    )
+                        </button>)
                 }
             </div>
         )
     }
 
     return (
-        <div className="EpisodeList">
+        <div className="EpisodeList ViewPageContainer">
             <div className="EpisodeList_Titlebar">
                 <h2>Episodes</h2>
                 <button onClick={() => fetchEpisodes(true)}>refetch</button>

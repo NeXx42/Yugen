@@ -6,7 +6,6 @@ import "./page.css";
 import CardRow from "@/app/components/cardRow";
 import TrendingList from "./trendingList";
 import SearchList from "./searchList";
-import MediaCard from "@/app/components/mediaCard";
 import MediaCardHorizontal from "@/app/components/mediaCardHorizontal";
 
 export default async function () {
@@ -40,7 +39,7 @@ export default async function () {
                 <div className="HomePage_Right">
                     <div className="HomePage_UpcomingEpisodes">
                         <h2>Airing</h2>
-                        {upcoming.slice(0, 10).map(u => <MediaCardHorizontal key={u.aniListId} Card={u} />)}
+                        {upcoming.slice(0, 10).map(u => <MediaCardHorizontal key={u.aniListId} card={u} season={undefined} />)}
                     </div>
                 </div>
             </div>

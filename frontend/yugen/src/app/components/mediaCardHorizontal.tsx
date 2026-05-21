@@ -5,24 +5,29 @@ import { useRouter } from "next/navigation";
 
 import "./mediaCardHorizontal.css"
 
-export default function ({ Card }: { Card: MediaCardInfo }) {
+interface Props {
+    card: MediaCardInfo,
+    season: number | undefined
+}
+
+export default function ({ card, season = undefined }: Props) {
     const navigate = useRouter();
 
     const navigateToPage = () => {
-        navigate.push(`${Card.aniListId}`)
+        navigate.push(`${card.aniListId}`)
     };
 
 
-    return (<div key={Card.aniListId} className="MediaCardHorizontal" onClick={navigateToPage}>
+    return (<div key={card.aniListId} className="MediaCardHorizontal" onClick={navigateToPage}>
         <div className="MediaCardHorizontal_Content">
-            <img src={Card.cardImg} />
+            {card.cardImg && <img src={card.cardImg} />}
 
             <div className="MediaCardHorizontal_Info">
-                <h2>{Card.title}</h2>
-                <a>{Card.type}</a>
+                <h2>{season ? `Season ${season}` : card.title}</h2>
+                <a>{card.type}</a>
             </div>
         </div>
 
-        {Card.bannerImage && <img src={Card.bannerImage} />}
+        {card.bannerImage && <img src={card.bannerImage} />}
     </div>)
 }

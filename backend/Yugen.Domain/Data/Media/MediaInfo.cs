@@ -10,6 +10,7 @@ public class MediaInfo
 
     public string? title { get; set; }
     public string? description { get; set; }
+    public string? type { get; set; }
 
     public string? thumbnailImage { get; set; }
     public string? bannerImage { get; set; }
@@ -27,6 +28,7 @@ public class MediaInfo
             id = media.Id,
             title = media.Title,
             description = media.Description,
+            type = media.MediaFormat,
 
             thumbnailImage = media.thumbnailIcon,
             bannerImage = media.BannerImage,

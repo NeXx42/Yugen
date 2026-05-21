@@ -15,9 +15,9 @@ export interface User {
 }
 
 export interface MediaCardInfo {
-    aniListId: string,
+    aniListId: number,
     title: string,
-    type: string,
+    type: string | null,
 
     colour: string,
     cardImg: string,
@@ -34,6 +34,7 @@ export interface MediaInfo {
     id: number,
     title: string,
     description: string | null;
+    type: string | null,
 
     thumbnailImage: string | null;
     bannerImage: string | null,
