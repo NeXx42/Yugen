@@ -5,7 +5,14 @@
     background-color: var(--global-div);
 
     overflow: hidden;
+    cursor: pointer;
+    transition: all .2s;
 }
+
+.MediaCardHorizontal:hover {
+    transform: scaleX(1.01);
+}
+
 
 .MediaCardHorizontal_Content {
     height: 100%;

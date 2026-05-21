@@ -97,4 +97,14 @@ public class NotificationService
         _db.RemoveRange(_db.notifications.Where(n => n.UserId == usr.User.Id && n.HasInteracted));
         await _db.SaveChangesAsync();
     }
+
+    public async Task MarkAllAsRead(UserSession usr)
+    {
+        Model_Notification[] notifications = await _db.notifications.Where(n => n.UserId == usr.User.Id && !n.HasInteracted).ToArrayAsync();
+
+        foreach (Model_Notification notification in notifications)
+            notification.HasInteracted = true;
+
+        await _db.SaveChangesAsync();
+    }
 }

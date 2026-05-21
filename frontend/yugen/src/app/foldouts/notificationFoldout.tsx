@@ -62,12 +62,19 @@ export default function () {
         api.notification_ClearRead().then(refreshNotifications);
     }
 
+    const readAll = () => {
+        api.notification_MarkAllAsRead().then(refreshNotifications);
+    }
+
     const refreshNotifications = () => api.notification_Get().then(r => setNotifications(r.sort((a, b) => b.time - a.time)));
 
-    return (<div className="Notifications">
+    return (<div className="Notifications" onClick={e => e.stopPropagation()}>
         <div className="Notifications_Header">
             <h1>Notifications</h1>
-            <button onClick={clearRead}>Clear read</button>
+            <div>
+                <button onClick={readAll}>Mark All as Read</button>
+                <button onClick={clearRead}>Clear read</button>
+            </div>
         </div>
         <div className="Notifications_Filter">
         </div>

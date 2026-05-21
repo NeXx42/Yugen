@@ -32,6 +32,11 @@
     justify-content: space-between;
 }
 
+.Notifications_Header div {
+    display: flex;
+    gap: 5px;
+}
+
 .Notifications_Header button {
     padding: 5px 15px;
     border-radius: 15px;

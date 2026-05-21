@@ -91,4 +91,11 @@ public class NotificationController : ControllerBase
         HttpContext.GetUserFromSession(out UserSession usr);
         await _notificationService.ClearReadNotifications(usr);
     }
+
+    [HttpPost("ReadAll")]
+    public async Task ReadAllNotifications()
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        await _notificationService.MarkAllAsRead(usr);
+    }
 }
