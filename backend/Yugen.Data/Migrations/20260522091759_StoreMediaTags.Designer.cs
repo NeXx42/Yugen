@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Yugen.Data;
@@ -11,9 +12,11 @@ using Yugen.Data;
 namespace Yugen.Data.Migrations
 {
     [DbContext(typeof(YugenContext))]
-    partial class YugenContextModelSnapshot : ModelSnapshot
+    [Migration("20260522091759_StoreMediaTags")]
+    partial class StoreMediaTags
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -250,13 +253,7 @@ namespace Yugen.Data.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<int?>("Duration")
-                        .HasColumnType("integer");
-
-                    b.Property<long?>("EndDate")
-                        .HasColumnType("bigint");
-
-                    b.Property<int?>("EpisodeCount")
+                    b.Property<int>("EpisodeCount")
                         .HasColumnType("integer");
 
                     b.Property<bool?>("Hydrated")
@@ -268,23 +265,14 @@ namespace Yugen.Data.Migrations
                     b.Property<string>("MediaFormat")
                         .HasColumnType("text");
 
-                    b.Property<string>("Season")
-                        .HasColumnType("text");
-
                     b.Property<string>("SiteUrl")
                         .HasColumnType("text");
-
-                    b.Property<long?>("StartDate")
-                        .HasColumnType("bigint");
 
                     b.Property<string>("Status")
                         .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .HasColumnType("text");
-
-                    b.Property<int?>("Year")
-                        .HasColumnType("integer");
 
                     b.Property<string>("thumbnailIcon")
                         .HasColumnType("text");
@@ -342,7 +330,7 @@ namespace Yugen.Data.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("mediaTags");
+                    b.ToTable("Model_MediaTag");
                 });
 
             modelBuilder.Entity("Yugen.Domain.Models.Model_Config", b =>

@@ -23,13 +23,27 @@
     margin-top: 5px;
 }
 
-.MediaCard_Content h3 {
+.MediaCard_Content_Title {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.MediaCard_Content_Title h3 {
     font-size: .83rem;
     white-space: nowrap;
 
     overflow: hidden;
     text-overflow: ellipsis;
     transition: all .2s;
+}
+
+.MediaCard_Content_Title>div {
+    background-color: #aaff00;
+    border-radius: 100%;
+
+    min-width: 5px;
+    height: 5px;
 }
 
 .MediaCard_Img {
@@ -65,6 +79,7 @@
     bottom: 0px;
     height: 5px;
     width: 100%;
+    font-size: 12px;
 }
 
 .MediCard_WatchPercentage div {
@@ -79,7 +94,7 @@
 
     padding: 2px 5px;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 12px;
 
     text-align: center;
 
@@ -103,6 +118,8 @@
 }
 
 .MediaCard_Content_Items {
+    display: flex;
+    gap: 5px;
     margin-top: 5px;
 }
 

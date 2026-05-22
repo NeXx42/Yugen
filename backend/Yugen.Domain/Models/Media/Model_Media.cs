@@ -20,7 +20,13 @@ public class Model_Media
     public string? CardImageLarge { get; set; }
     public string? Colour { get; set; }
     public string? thumbnailIcon { get; set; }
-    public int EpisodeCount { get; set; }
+
+    public int? Duration { get; set; }
+    public int? EpisodeCount { get; set; }
+    public long? StartDate { get; set; }
+    public long? EndDate { get; set; }
+    public string? Season { get; set; }
+    public int? Year { get; set; }
 
     public string? Description { get; set; }
     public string? Status { get; set; }
@@ -31,5 +37,6 @@ public class Model_Media
 
     public bool? Hydrated { get; set; }
 
+    public Collection<Model_MediaTag> Tags { get; set; } = new Collection<Model_MediaTag>();
     public Collection<Model_MediaEpisode> Episodes { get; set; } = new Collection<Model_MediaEpisode>();
 }

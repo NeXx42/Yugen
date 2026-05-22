@@ -1,4 +1,5 @@
 using Yugen.Core.Data;
+using Yugen.Domain.Models;
 using Yugen.Domain.Models.Bookmarks;
 using Yugen.Domain.Models.Media;
 
@@ -17,8 +18,16 @@ public class MediaInfo
     public string? cardImage { get; set; }
     public string? colour { get; set; }
 
+    public string? status { get; set; }
+    public long? startDate { get; set; }
+    public long? endDate { get; set; }
+    public int? episodeCount { get; set; }
+    public int? duration { get; set; }
+    public string? season { get; set; }
+
     public int? bookmark { get; set; }
 
+    public MediaTag[]? tags { get; set; }
     public Connection[]? connectedMedia { get; set; }
 
     public static MediaInfo Map(Model_Media media)
@@ -29,6 +38,13 @@ public class MediaInfo
             title = media.Title,
             description = media.Description,
             type = media.MediaFormat,
+
+            status = media.Status,
+            startDate = media.StartDate,
+            endDate = media.EndDate,
+            episodeCount = media.EpisodeCount,
+            duration = media.Duration,
+            season = media.Season,
 
             thumbnailImage = media.thumbnailIcon,
             bannerImage = media.BannerImage,
@@ -55,6 +71,17 @@ public class MediaInfo
     public MediaInfo RegisterBookmark(Model_UserBookmark? bookmark)
     {
         this.bookmark = bookmark?.BookmarkId;
+        return this;
+    }
+
+    public MediaInfo RegisterTags(Model_Tag[] tags)
+    {
+        this.tags = tags.Select(t => new MediaTag()
+        {
+            id = t.Id,
+            title = t.Name ?? ""
+        }).ToArray();
+
         return this;
     }
 

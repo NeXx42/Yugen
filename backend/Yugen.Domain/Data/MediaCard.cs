@@ -9,6 +9,8 @@ public class MediaCard
     public string? Title { get; set; }
     public string? type { get; set; }
 
+    public bool releasing { get; set; }
+    public int? year { get; set; }
     public long? nextReleaseDate { get; set; }
 
     public string? colour { get; set; }
@@ -25,6 +27,9 @@ public class MediaCard
         {
             aniListId = dbData.Id,
             Title = dbData.Title,
+
+            year = dbData.Year,
+            releasing = dbData.Status == "RELEASING",
 
             colour = dbData.Colour,
             cardImg = dbData.CardImageLarge,

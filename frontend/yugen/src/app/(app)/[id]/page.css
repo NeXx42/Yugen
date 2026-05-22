@@ -57,6 +57,56 @@
     border-radius: 5px;
 }
 
+.ViewPage_Info_Info {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.ViewPage_Info_Info_Tags {
+    display: flex;
+    gap: 5px;
+}
+
+.ViewPage_Info_Info_Tags a {
+    color: color-mix(in srgb, #e4d6ae, black 55%);
+    padding: 5px 10px;
+    border-radius: 15px;
+
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.ViewPage_Info_Info p {
+
+    background: var(--global-div);
+    border: 1px solid var(--global-border-color);
+    border-radius: 8px;
+    color: var(--global-text-muted);
+    padding: 8px;
+    font-size: 13px;
+
+    width: 100%;
+}
+
+.ViewPage_Info_Info_MetaData {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    color: var(--global-text-muted);
+}
+
+.ViewPage_Info_Info_MetaData>div>div {
+    padding: 5px 0px;
+}
+
+.ViewPage_Info_Info_MetaData strong {
+    margin-left: 5px;
+    color: white;
+}
+
 
 .ViewPage_Seasons {
     display: flex;

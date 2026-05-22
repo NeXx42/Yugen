@@ -71,6 +71,7 @@ export default function ({ data }: { data: MediaInfo[] }) {
 
         <div className="Trending_Info">
             <h1>{data[selectedItem].title}</h1>
+            <a>{data[selectedItem].tags.slice(0, 5).map(t => t.title).join(" · ")}</a>
             <p dangerouslySetInnerHTML={{ __html: data[selectedItem].description ?? "" }} />
         </div>
 

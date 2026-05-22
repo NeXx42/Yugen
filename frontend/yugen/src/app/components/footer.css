@@ -1,0 +1,30 @@
+.Footer {
+    margin: 25px auto;
+    width: 95%;
+
+    display: flex;
+
+    border-top: .125rem solid var(--global-secondary-bg);
+}
+
+.Footer div {
+    margin-top: 25px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    font-size: 13px;
+}
+
+.Footer div a {
+    text-decoration: underline;
+}
+
+.Footer div p {
+    border: 1px solid var(--global-border-color);
+    background-color: var(--global-secondary-bg);
+    padding: 2px 5px;
+
+    border-radius: 8px;
+}

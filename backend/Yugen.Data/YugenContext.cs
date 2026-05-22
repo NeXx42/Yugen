@@ -22,6 +22,7 @@ public class YugenContext : DbContext
     // from sonnar
     public DbSet<Model_Media> media { get; set; }
     public DbSet<Model_MediaEpisode> mediaEpisodes { get; set; }
+    public DbSet<Model_MediaTag> mediaTags { get; set; }
     public DbSet<Model_Link> links { get; set; }
 
     // from sonnar
@@ -44,7 +45,7 @@ public class YugenContext : DbContext
         modelBuilder.Entity<Model_Config>().HasKey(m => m.Key);
 
         modelBuilder.Entity<Model_MediaEpisode>().HasKey(e => new { e.MediaId, e.EpisodeNumber });
-        modelBuilder.Entity<Model_MediaEpisode>().HasOne(e => e.Media).WithMany(e => e.Episodes);
+        modelBuilder.Entity<Model_MediaEpisode>().HasOne(e => e.Media).WithMany(e => e.Episodes).HasForeignKey(e => e.MediaId);
 
         modelBuilder.Entity<Model_DownloadedEpisode>().HasKey(e => new { e.MediaId, e.EpisodeNumber });
         modelBuilder.Entity<Model_DownloadedEpisode>().HasOne(e => e.DownloadedMedia).WithMany(e => e.downloadedEpisodes);
@@ -61,5 +62,9 @@ public class YugenContext : DbContext
             new Model_Bookmark { Id = (int)BookmarkType.Completed, Title = "Completed" },
             new Model_Bookmark { Id = (int)BookmarkType.Dropped, Title = "Dropped" }
         );
+
+        modelBuilder.Entity<Model_MediaTag>().HasKey(t => new { t.MediaId, t.TagId });
+        modelBuilder.Entity<Model_MediaTag>().HasOne(t => t.Media).WithMany(m => m.Tags).HasForeignKey(m => m.MediaId);
+        modelBuilder.Entity<Model_MediaTag>().HasOne(t => t.Tag).WithMany().HasForeignKey(m => m.TagId);
     }
 }

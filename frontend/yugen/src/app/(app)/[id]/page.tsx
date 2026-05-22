@@ -36,7 +36,24 @@ export default async function ({ params }: { params: { id: number } }) {
                         </div>
                         <div className="ViewPage_Info_Info">
                             <h2>{media.title}</h2>
+                            <div className="ViewPage_Info_Info_Tags">
+                                {media.tags?.map(t => <a key={t.id} style={{ backgroundColor: media.colour ?? "" }}>{t.title}</a>)}
+                            </div>
                             <p dangerouslySetInnerHTML={{ __html: media.description ?? "" }} />
+
+                            <div className="ViewPage_Info_Info_MetaData">
+                                <div>
+                                    <div>Format:<strong>{media.type}</strong></div>
+                                    <div>Status:<strong>{media.status}</strong></div>
+                                    <div>Episodes:<strong>{media.episodeCount ?? "-"}</strong></div>
+                                    <div>Duration:<strong>{media.duration ?? "-"}</strong></div>
+                                    <div>Season:<strong>{media.season ?? "-"}</strong></div>
+                                </div>
+                                <div>
+                                    <div>Start Date:<strong>{media.startDate}</strong></div>
+                                    <div>End Date:<strong>{media.endDate}</strong></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

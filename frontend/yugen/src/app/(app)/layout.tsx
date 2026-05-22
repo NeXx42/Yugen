@@ -1,5 +1,6 @@
 import Topbar from "@comps/topbar";
 import { ToastProvider } from "../context/toast";
+import Footer from "../components/footer";
 
 export default function AppLayout({ children }: any) {
     return (
@@ -7,6 +8,7 @@ export default function AppLayout({ children }: any) {
             <ToastProvider>
                 <Topbar />
                 {children}
+                <Footer />
             </ToastProvider>
         </div>
     );

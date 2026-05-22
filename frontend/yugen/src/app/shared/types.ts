@@ -19,6 +19,9 @@ export interface MediaCardInfo {
     title: string,
     type: string | null,
 
+    releasing: boolean,
+    year: number | null,
+
     colour: string,
     cardImg: string,
     bannerImage: string | null,
@@ -36,6 +39,13 @@ export interface MediaInfo {
     description: string | null;
     type: string | null,
 
+    status: string | null,
+    startDate: number | null,
+    endDate: number | null,
+    episodeCount: number | null,
+    duration: number | null,
+    season: string | null,
+
     thumbnailImage: string | null;
     bannerImage: string | null,
     cardImage: string | null,
@@ -43,6 +53,7 @@ export interface MediaInfo {
 
     bookmark: number | undefined,
 
+    tags: MediaTag[],
     connectedMedia: MediaConnection[]
 }
 
@@ -60,6 +71,11 @@ export interface MediaEpisodeInfo {
 
     watchDate: number | null,
     watchPercentage: number | null,
+}
+
+export interface MediaTag {
+    id: number,
+    title: string
 }
 
 export interface MediaConnection {

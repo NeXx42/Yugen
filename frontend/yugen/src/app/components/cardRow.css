@@ -3,9 +3,7 @@
     grid-template-columns: repeat(auto-fit, minmax(190px, 200px));
     gap: 25px;
 
-    overflow-x: auto;
     white-space: nowrap;
 
     box-sizing: border-box;
-    overflow: hidden;
 }

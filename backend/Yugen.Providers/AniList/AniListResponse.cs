@@ -48,6 +48,12 @@ public class AniListResponse_Media
     public int? meanScore { get; set; }
     public int? popularity { get; set; }
 
+    public int? duration { get; set; }
+    public int? seasonYear { get; set; }
+    public string? season { get; set; }
+    public Date? startDate { get; set; }
+    public Date? endDate { get; set; }
+
     public string? bannerImage { get; set; }
     public CoverImage? coverImage { get; set; }
     public Trailer? trailer { get; set; }
@@ -79,7 +85,6 @@ public class AniListResponse_Media
     public class Tag
     {
         public required int id { get; set; }
-        public int rank { get; set; }
     }
 
     public class NodeList
@@ -101,6 +106,15 @@ public class AniListResponse_Media
     {
         public string? title { get; set; }
         public string? thumbnail { get; set; }
+    }
+
+    public class Date
+    {
+        public int? day { get; set; }
+        public int? month { get; set; }
+        public int? year { get; set; }
+
+        public long? ToUnix() => (day.HasValue && month.HasValue && year.HasValue) ? new DateTimeOffset(year.Value, month.Value, day.Value, 0, 0, 0, TimeSpan.Zero).ToUnixTimeSeconds() : null;
     }
 }
 

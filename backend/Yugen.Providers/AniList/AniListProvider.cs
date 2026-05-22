@@ -58,7 +58,6 @@ public class AniListProvider : IMetaDataProvider
                     }
                     season
                     seasonYear
-                    seasonInt
                     episodes
                     duration
                     chapters
@@ -90,14 +89,6 @@ public class AniListProvider : IMetaDataProvider
                     favourites
                     tags {
                         id
-                        name
-                        description
-                        category
-                        rank
-                        isGeneralSpoiler
-                        isMediaSpoiler
-                        isAdult
-                        userId
                     }
                     isFavourite
                     isFavouriteBlocked
@@ -156,7 +147,6 @@ public class AniListProvider : IMetaDataProvider
             Model_Media result = new Model_Media()
             {
                 Id = media.id,
-                EpisodeCount = media.episodes ?? 0,
 
                 Title = media.title?.getBestMatch ?? "",
                 Description = media.description,
@@ -164,8 +154,14 @@ public class AniListProvider : IMetaDataProvider
                 MediaFormat = media.format,
                 SiteUrl = media.siteUrl,
 
+                Duration = media.duration,
+                EpisodeCount = media.episodes,
+                Season = media.season,
+                Year = media.seasonYear,
                 AverageScore = media.averageScore,
                 MeanScore = media.meanScore,
+                StartDate = media.startDate?.ToUnix(),
+                EndDate = media.endDate?.ToUnix(),
 
                 BannerImage = media.bannerImage,
                 CardImageLarge = media.coverImage?.extraLarge,
@@ -174,6 +170,14 @@ public class AniListProvider : IMetaDataProvider
                 thumbnailIcon = media.trailer?.thumbnail,
             };
 
+            for (int i = 0; i < (media.tags?.Length ?? 0); i++)
+            {
+                result.Tags.Add(new Model_MediaTag()
+                {
+                    MediaId = media.id,
+                    TagId = media.tags![i].id
+                });
+            }
 
             for (int i = 0; i < (media.streamingEpisodes?.Length ?? 0); i++)
             {
