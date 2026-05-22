@@ -10,7 +10,7 @@ import MediaCardHorizontal from "@/app/components/mediaCardHorizontal";
 
 export default async function ({ params }: { params: { id: number } }) {
     const { id } = await params;
-    const media: MediaInfo = await api.catalog_GetInfo(id);
+    const media: MediaInfo = (await api.catalog_GetInfo(id)).data!;
 
     void api.media_SyncWatchTime(id);
 

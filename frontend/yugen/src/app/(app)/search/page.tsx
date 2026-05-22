@@ -13,11 +13,11 @@ export default async function ({ searchParams }: { searchParams: { query?: strin
     return (<div style={{ marginTop: "35px" }}>
         <div className="Search_Criteria">
             <select>
-                {criteria.genres.map(g => (<option key={g} value={g}>{g}</option>))}
+                {criteria.data?.genres.map(g => (<option key={g} value={g}>{g}</option>))}
             </select>
 
             <select>
-                {criteria.tags.map(t => (<option key={t.id} value={t.id}>{t.name}</option>))}
+                {criteria.data?.tags.map(t => (<option key={t.id} value={t.id}>{t.name}</option>))}
             </select>
         </div>
         <SearchContainer searchQuery={query} />

@@ -19,18 +19,18 @@ export default async function () {
     return (
         <div className="HomePage" >
             <div className="HomePage_Trending">
-                <TrendingList data={trending} />
+                <TrendingList data={trending.data ?? []} />
 
                 <div className="HomePage_Trending_Genres">
                     <div className="HomePage_Trending_Genres_Scroll">
-                        {searchCriteria.genres.map(g => (<a key={g}>{g}</a>))}
+                        {searchCriteria.data?.genres.map(g => (<a key={g}>{g}</a>))}
                     </div>
                 </div>
             </div>
 
             <div>
                 <h1 style={{ marginBottom: "5px" }}>Continue Watching</h1>
-                <CardRow cards={watching.data.sort((a, b) => (b.watchLastTime ?? 0) - (a.watchLastTime ?? 0))} />
+                <CardRow cards={watching.data?.data.sort((a, b) => (b.watchLastTime ?? 0) - (a.watchLastTime ?? 0)) ?? []} />
             </div>
 
             <div className="HomePage_Body">
@@ -39,7 +39,7 @@ export default async function () {
                 <div className="HomePage_Right">
                     <div className="HomePage_UpcomingEpisodes">
                         <h2>Airing</h2>
-                        {upcoming.slice(0, 10).map(u => <MediaCardHorizontal key={u.aniListId} card={u} season={undefined} />)}
+                        {upcoming.data?.slice(0, 10).map(u => <MediaCardHorizontal key={u.aniListId} card={u} season={undefined} />)}
                     </div>
                 </div>
             </div>

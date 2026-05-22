@@ -8,6 +8,12 @@ export interface PageResponse<T> {
     data: T[]
 }
 
+export interface CaughtResponse<T> {
+    data: T | null,
+    error: string | null
+}
+
+
 
 export interface User {
     name: string,

@@ -3,20 +3,44 @@
 import * as api from "./api.shared";
 import { cookies } from "next/headers";
 
-import { MediaCardInfo, MediaInfo, PageResponse, SearchCriteria, User } from "@shared/types";
+import { MediaCardInfo, MediaInfo, PageResponse, SearchCriteria, User, CaughtResponse } from "@shared/types";
 
-async function postWithAuth<T>(uri: string, obj?: any, nextCaching: NextFetchRequestConfig | undefined = undefined): Promise<T | undefined> {
+async function postWithAuth<T>(uri: string, obj?: any, nextCaching: NextFetchRequestConfig | undefined = undefined): Promise<CaughtResponse<T>> {
     const cookieStore = cookies();
     const authToken: string | undefined = (await cookieStore).get("AuthToken")?.value;
 
-    return await api.post<T>(uri, obj, nextCaching, authToken)
+    try {
+        const res: T = (await api.post<T>(uri, obj, nextCaching, authToken))!;
+        return {
+            data: res,
+            error: null
+        }
+    }
+    catch {
+        return {
+            data: null,
+            error: "test"
+        }
+    }
 }
 
-async function getWithAuth<T>(uri: string, nextCaching: NextFetchRequestConfig | undefined = undefined): Promise<T | undefined> {
+async function getWithAuth<T>(uri: string, nextCaching: NextFetchRequestConfig | undefined = undefined): Promise<CaughtResponse<T>> {
     const cookieStore = cookies();
     const authToken: string | undefined = (await cookieStore).get("AuthToken")?.value;
 
-    return await api.get<T>(uri, nextCaching, authToken)
+    try {
+        const res: T = (await api.get<T>(uri, nextCaching, authToken))!;
+        return {
+            data: res,
+            error: null
+        }
+    }
+    catch {
+        return {
+            data: null,
+            error: "test"
+        }
+    }
 }
 
 
@@ -26,28 +50,28 @@ export async function getAllUsers(): Promise<User[]> {
     }))!;
 }
 
-export async function catalog_GetInfo(aniListId: number): Promise<MediaInfo> {
-    return (await getWithAuth<MediaInfo>(`catalog/${aniListId}`, {
+export async function catalog_GetInfo(aniListId: number): Promise<CaughtResponse<MediaInfo>> {
+    return await getWithAuth<MediaInfo>(`catalog/${aniListId}`, {
         revalidate: 60
-    }))!;
+    });
 }
-export async function library_CurrentWatching(page: number, pageSize: number): Promise<PageResponse<MediaCardInfo>> {
-    return (await getWithAuth<PageResponse<MediaCardInfo>>(`library/WatchHistory?page=${page}&pageSize=${pageSize}`))!;
-}
-
-export async function catalog_Upcoming(): Promise<MediaCardInfo[]> {
-    return (await getWithAuth<MediaCardInfo[]>("catalog/Upcoming"))!;
-}
-export async function catalog_Trending(): Promise<MediaInfo[]> {
-    return (await getWithAuth<MediaInfo[]>("catalog/Trending"))!;
-}
-export async function catalog_SearchCriteria(): Promise<SearchCriteria> {
-    return (await getWithAuth<SearchCriteria>("catalog/SearchCriteria"))!;
+export async function library_CurrentWatching(page: number, pageSize: number): Promise<CaughtResponse<PageResponse<MediaCardInfo>>> {
+    return await getWithAuth<PageResponse<MediaCardInfo>>(`library/WatchHistory?page=${page}&pageSize=${pageSize}`);
 }
 
+export async function catalog_Upcoming(): Promise<CaughtResponse<MediaCardInfo[]>> {
+    return await getWithAuth<MediaCardInfo[]>("catalog/Upcoming");
+}
+export async function catalog_Trending(): Promise<CaughtResponse<MediaInfo[]>> {
+    return await getWithAuth<MediaInfo[]>("catalog/Trending");
+}
+export async function catalog_SearchCriteria(): Promise<CaughtResponse<SearchCriteria>> {
+    return await getWithAuth<SearchCriteria>("catalog/SearchCriteria");
+}
 
-export async function media_SyncWatchTime(aniListId: number): Promise<void> {
-    return (await postWithAuth(`media/${aniListId}/SyncWatchHistory`, {
+
+export async function media_SyncWatchTime(aniListId: number): Promise<CaughtResponse<void>> {
+    return await postWithAuth(`media/${aniListId}/SyncWatchHistory`, {
         revalidate: 60
-    }))!;
+    });
 }
