@@ -4,9 +4,16 @@ public class SonarrLibrary_Response_Series
 {
     public int id { get; set; }
     public string? path { get; set; }
+    public string? title { get; set; }
 
-    public int? tvdbId { get; set; }
-    public int? tmdbId { get; set; }
+    public required int qualityProfileId { get; set; }
+    public required string rootFolderPath { get; set; }
+
+    public int tvdbId { get; set; }
+    public int tmdbId { get; set; }
+
+    public bool monitored { get; set; }
+    public bool seasonFolder { get; set; }
 
     public Seasons[]? seasons { get; set; }
 
@@ -51,4 +58,16 @@ public class SonarrLibrary_Response_AddRequest
 
     public int? tvdbId { get; set; }
     public int? tmdbId { get; set; }
+}
+
+public class SonarrLibrary_Response_Roots
+{
+    public required string path { get; set; }
+    public long? freeSpace { get; set; }
+}
+
+public class SonarrLibrary_Response_Qualities
+{
+    public required int id { get; set; }
+    public string? title { get; set; }
 }

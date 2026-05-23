@@ -23,7 +23,7 @@ public class IdMoeLinkingProvider : ILinkingProvider
         if (string.IsNullOrEmpty(aniListId))
             throw new ArgumentException("Invalid anilist id");
 
-        IdMoe_Responses_Ids? res = await _http.SendRequest<IdMoe_Responses_Ids>($"ids/{aniListId}?platform=anilist");
+        IdMoe_Responses_Ids? res = await _http.SendRequest<IdMoe_Responses_Ids>($"ids/{aniListId}?platform=anilist", HttpMethod.Get);
 
         if (res == null)
             return null;

@@ -1,13 +1,12 @@
-using Azure;
 using EFCore.BulkExtensions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Yugen.Core.Data;
+using Yugen.Core.Helpers;
 using Yugen.Data;
 using Yugen.Domain.Data;
 using Yugen.Domain.Data.Downloads;
-using Yugen.Domain.Data.History;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Data.Users;
 using Yugen.Domain.Enums;
@@ -30,9 +29,17 @@ public class LibraryService
     private readonly CatalogService _catalogService;
     private readonly HydrationService _hydrationService;
 
+    private readonly EndpointDeduplicator _endpointDeduplicator;
+
     private readonly ILibraryProvider _libraryProvider;
 
-    public LibraryService(YugenContext db, SettingsCache settings, CatalogService catalogService, MediaService mediaService, CacheService cache, HydrationService hydrationService)
+    public LibraryService(YugenContext db,
+                        SettingsCache settings,
+                        CatalogService catalogService,
+                        MediaService mediaService,
+                        CacheService cache,
+                        HydrationService hydrationService,
+                        EndpointDeduplicator endpointDeduplicator)
     {
         _db = db;
 
@@ -41,12 +48,14 @@ public class LibraryService
         _catalogService = catalogService;
         _hydrationService = hydrationService;
 
+        _endpointDeduplicator = endpointDeduplicator;
+
         _libraryProvider = new SonarrLibraryProvider(settings.Get(ConfigKeys.Sonarr_Url), settings.Get(ConfigKeys.Sonarr_ApiKey));
     }
 
-    public async Task<DownloadedEpisode[]> GetDownloadedEpisodes(int aniListId)
+    public async Task<DownloadedEpisode[]> GetDownloadedEpisodes(UserSession usr, int aniListId)
     {
-        Model_DownloadedMedia? media = await RecheckDownloads(aniListId);
+        Model_DownloadedMedia? media = await RecheckDownloads(usr, aniListId);
 
         if (media == null)
             return [];
@@ -54,54 +63,45 @@ public class LibraryService
         return media.downloadedEpisodes.Select(DownloadedEpisode.Map).ToArray();
     }
 
-    public async Task<Model_DownloadedMedia?> RecheckDownloads(int aniListId, bool force = false)
+    public async Task<Model_DownloadedMedia?> RecheckDownloads(UserSession usr, int aniListId, bool force = false)
     {
+        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(RecheckDownloads), aniListId.ToString());
+
         Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == aniListId);
 
         if (link == null)
             return null;
 
-        Model_DownloadedMedia? media = await _db.downloadedMedia.Include(m => m.downloadedEpisodes).FirstOrDefaultAsync(m => m.MediaId == aniListId);
-        List<Model_DownloadedEpisode>? episodes = await _libraryProvider.GetDownloadedEpisodes(aniListId, link!);
+        Model_DownloadedMedia? downloadedMedia = await _db.downloadedMedia.FirstOrDefaultAsync(d => d.MediaId == aniListId);
 
-        if ((episodes?.Count ?? 0) == 0)
+        if (downloadedMedia != null)
         {
-            if (media != null)
+            try
             {
-                _db.RemoveRange(media.downloadedEpisodes);
-                _db.Remove(media);
-
+                _db.Remove(downloadedMedia);
                 await _db.SaveChangesAsync();
             }
-
-            return null;
-        }
-
-        if (media == null)
-        {
-            media = new Model_DownloadedMedia()
+            catch (DbUpdateConcurrencyException)
             {
-                MediaId = aniListId
-            };
-
-            await _db.downloadedMedia.AddAsync(media);
+                return null;
+            }
         }
-        else if (!force)
-            return media;
 
-        media.LastChecked = DateTime.UtcNow;
+        downloadedMedia = await _libraryProvider.GetDownloadedEpisodes(aniListId, link!);
 
-        string?[]? jellyfinIds = await _mediaService.GetJellyfinIdsForEpisodes(episodes!);
+        if (downloadedMedia == null)
+            return null;
+
+        string?[]? jellyfinIds = await _mediaService.GetJellyfinIdsForEpisodes(downloadedMedia.downloadedEpisodes);
 
         if (jellyfinIds != null)
             for (int i = 0; i < jellyfinIds.Length; i++)
-                episodes![i].JellyfinId = jellyfinIds[i];
+                downloadedMedia.downloadedEpisodes.ElementAt(i).JellyfinId = jellyfinIds[i];
 
-        _db.sonarrEpisodes.RemoveRange(media.downloadedEpisodes);
-        media.downloadedEpisodes = episodes!;
-
+        await _db.AddAsync(downloadedMedia);
         await _db.SaveChangesAsync();
-        return media;
+
+        return downloadedMedia;
     }
 
     public async Task<PageResponse<MediaCard>> GetWatchHistory(int page, int pageSize)
@@ -127,14 +127,18 @@ public class LibraryService
 
     public async Task SyncWatchHistory(UserSession usr)
     {
+        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(SyncWatchHistory));
+
         int[] downloadedMedia = await _db.downloadedMedia.Select(m => m.MediaId).ToArrayAsync();
 
         foreach (int i in downloadedMedia)
             await _mediaService.SyncWatchHistoryWithJellyfin(usr, i, true);
     }
 
-    public async Task<int?> ResyncLibrary(UserSession __)
+    public async Task<int?> ResyncLibrary(UserSession usr)
     {
+        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(ResyncLibrary));
+
         List<int>? ids = await _libraryProvider.GetDownloadedMedia();
 
         if (ids == null)
@@ -153,7 +157,7 @@ public class LibraryService
                 continue;
 
             importCount++;
-            await RecheckDownloads(link.Value, true);
+            await RecheckDownloads(usr, link.Value, true);
         }
 
         return importCount;
@@ -170,7 +174,7 @@ public class LibraryService
         {
             await _hydrationService.HydrateEpisodes(media);
 
-            await RecheckDownloads(aniListId, true);
+            await RecheckDownloads(usr, aniListId, true);
             await _mediaService.SyncWatchHistoryWithJellyfin(usr, aniListId, true);
         }
 
@@ -209,7 +213,7 @@ public class LibraryService
         switch (group.ToLower())
         {
             case "downloaded":
-                query = _db.downloadedMedia.Select(m => m.MediaId);
+                query = _db.downloadedMedia.Include(m => m.downloadedEpisodes).Where(m => m.downloadedEpisodes.Any(e => e.fileId.HasValue)).Select(m => m.MediaId);
                 break;
 
             default:
@@ -233,6 +237,8 @@ public class LibraryService
 
     public async Task UpdateBookmark(UserSession usr, int mediaId, int bookmarkId)
     {
+        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(UpdateBookmark), mediaId.ToString());
+
         _db.RemoveRange(_db.userBookmarks.Where(b => b.UserId == usr.User.Id && b.MediaId == mediaId));
 
         if (bookmarkId <= 0 || bookmarkId > (int)BookmarkType.Dropped)
@@ -250,6 +256,8 @@ public class LibraryService
 
     public async Task UploadLibrary(UserSession usr, IFormFile file)
     {
+        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(UploadLibrary));
+
         DateTime dateAdded = DateTime.UtcNow;
         List<Model_UserBookmark> allBookmarks = new List<Model_UserBookmark>();
 
@@ -323,24 +331,97 @@ public class LibraryService
         await _db.BulkInsertAsync(allBookmarks);
     }
 
-    public async Task<bool> RequestSeries(UserSession usr, int aniListId, string rootpath, int quality)
+    public async Task<bool> RequestSeries(UserSession usr, int mediaId, DownloadRequest request)
     {
-        Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == aniListId);
+        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(RequestSeries), mediaId.ToString());
 
-        if (link == null)
+        Model_DownloadedMedia? existingDownload = await _db.downloadedMedia.FirstOrDefaultAsync(m => m.MediaId == mediaId);
+        Model_DownloadedMedia? newDownload = await _libraryProvider.RequestSeries(mediaId, existingDownload, request);
+
+        if (newDownload == null)
             return false;
 
-        if (link.tvdb_id.HasValue)
+        if (existingDownload == null)
         {
-            if (!link.tmdb_season.HasValue)
-            {
-                return false;
-            }
+            await _db.AddAsync(newDownload);
+            await _db.SaveChangesAsync();
 
-            await _libraryProvider.RequestSeries(link.tvdb_id.Value, [link.tmdb_season.Value], rootpath, quality);
             return true;
         }
 
+        _db.Remove(existingDownload);
+        await _db.AddAsync(newDownload);
+        await _db.SaveChangesAsync();
+
         return false;
+    }
+
+    public async Task ResearchDownloads(UserSession usr, int aniListId)
+    {
+        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(GetSeriesRequestInfo), aniListId.ToString());
+
+        Model_DownloadedMedia? media = await _db.downloadedMedia.FirstOrDefaultAsync(d => d.MediaId == aniListId);
+        if (media != null) await _libraryProvider.ResearchMedia(media);
+    }
+
+    public async Task<DownloadRequestInfo> GetSeriesRequestInfo(UserSession usr, int aniListId)
+    {
+        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(GetSeriesRequestInfo), aniListId.ToString());
+
+        Model_DownloadedMedia? existingData = await _db.downloadedMedia.Include(d => d.downloadedEpisodes).FirstOrDefaultAsync(d => d.MediaId == aniListId);
+
+        DownloadRequestInfo requestInfo = await _libraryProvider.GetRequestInfo(existingData?.ProviderId);
+        Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == aniListId);
+
+        requestInfo.sonarrRequestId = link?.tvdb_id;
+        requestInfo.sonarrSeasonId = link?.tvdb_season;
+
+        if (existingData == null)
+            existingData = await RecheckDownloads(usr, aniListId);
+
+        if (existingData == null)
+            return requestInfo;
+
+        requestInfo.monitored = existingData.IsMonitored;
+        requestInfo.downloadedEpisodes = existingData.downloadedEpisodes.Select(e => new DownloadRequestInfo.Episode()
+        {
+            providerId = e.Id,
+            episodeNumber = e.EpisodeNumber,
+            monitored = e.monitored,
+
+            jellyfinId = e.JellyfinId
+        }).ToArray();
+
+        for (int i = 0; i < requestInfo.qualities.Length; i++)
+            if (requestInfo.qualities[i].id == existingData.ExternalQuality)
+            {
+                requestInfo.selectedQuality = i;
+                break;
+            }
+
+        for (int i = 0; i < requestInfo.roots.Length; i++)
+            if (requestInfo.roots[i].path == existingData.ExternalRoot)
+            {
+                requestInfo.selectedRoot = i;
+                break;
+            }
+
+        return requestInfo;
+    }
+
+    public async Task DeleteMedia(UserSession usr, int aniListId)
+    {
+        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(DeleteMedia), aniListId.ToString());
+
+        Model_DownloadedMedia? media = await RecheckDownloads(usr, aniListId, true);
+
+        if (media != null)
+        {
+            if (media.downloadedEpisodes.Any(e => e.monitored))
+                throw new Exception("Cannot delete with monitored episodes");
+
+            await _libraryProvider.DeleteMedia(media);
+            await RecheckDownloads(usr, aniListId, true);
+        }
     }
 }

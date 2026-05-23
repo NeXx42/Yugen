@@ -17,7 +17,7 @@ public class JikanMetadataProvider : IMetaDataProvider
 
     public async Task<Model_MediaEpisode[]> GetEpisodeData(int malId)
     {
-        JikanReponse_Episodes? episodes = await _http.SendRequest<JikanReponse_Episodes>(Path.Combine("anime", malId.ToString(), "episodes"));
+        JikanReponse_Episodes? episodes = await _http.SendRequest<JikanReponse_Episodes>(Path.Combine("anime", malId.ToString(), "episodes"), HttpMethod.Get);
 
         if (episodes?.data == null)
             return [];

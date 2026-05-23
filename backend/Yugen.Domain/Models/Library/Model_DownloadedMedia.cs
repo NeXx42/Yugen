@@ -9,6 +9,15 @@ public class Model_DownloadedMedia
     [Required]
     public required int MediaId { get; set; }
 
+    [Required]
+    public required int ProviderId { get; set; }
+
+    [Required]
+    public required int SeasonId { get; set; }
+
+    public string? ExternalRoot { get; set; }
+    public int? ExternalQuality { get; set; }
+
     public bool IsMonitored { get; set; }
     public DateTime LastChecked { get; set; }
 

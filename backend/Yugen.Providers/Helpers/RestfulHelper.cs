@@ -18,9 +18,34 @@ public class RestfulHelper
         _defaultHeaders = defaultHeaders;
     }
 
-    public async Task<T?> SendRequest<T>(string uri, object? body = null)
+    public async Task SendRequest(string uri, HttpMethod method, object? body = null)
     {
-        HttpRequestMessage req = new HttpRequestMessage(body == null ? HttpMethod.Get : HttpMethod.Post, Path.Combine(_url, uri));
+        HttpRequestMessage req = new HttpRequestMessage(method, Path.Combine(_url, uri));
+
+        if (_defaultHeaders != null)
+            foreach (KeyValuePair<string, string> cookie in _defaultHeaders)
+                req.Headers.Add(cookie.Key, cookie.Value);
+
+        if (body != null)
+        {
+            string json = JsonSerializer.Serialize(body);
+            req.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        }
+
+        var httpRes = await _http.SendAsync(req);
+        string response = await httpRes.Content.ReadAsStringAsync();
+
+        if (!httpRes.IsSuccessStatusCode)
+        {
+            Console.Write(response);
+            throw new Exception("Invalid request - " + httpRes.ReasonPhrase);
+        }
+    }
+
+
+    public async Task<T?> SendRequest<T>(string uri, HttpMethod method, object? body = null)
+    {
+        HttpRequestMessage req = new HttpRequestMessage(method, Path.Combine(_url, uri));
 
         if (_defaultHeaders != null)
             foreach (KeyValuePair<string, string> cookie in _defaultHeaders)

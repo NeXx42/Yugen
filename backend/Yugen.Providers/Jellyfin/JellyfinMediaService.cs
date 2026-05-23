@@ -24,7 +24,7 @@ public class JellyfinMediaService : IMediaProvider
 
     public async Task<string?[]?> MapPathToJellyfinId(ICollection<Model_DownloadedEpisode> episodes)
     {
-        JellyfinResponse_Page<Jellyfin_Response_Item>? items = await _http.SendRequest<JellyfinResponse_Page<Jellyfin_Response_Item>>("Items?Recursive=true&IncludeItemTypes=Movie,Episode&Fields=Id,Path");
+        JellyfinResponse_Page<Jellyfin_Response_Item>? items = await _http.SendRequest<JellyfinResponse_Page<Jellyfin_Response_Item>>("Items?Recursive=true&IncludeItemTypes=Movie,Episode&Fields=Id,Path", HttpMethod.Get);
 
         if (items == null)
             return null;
@@ -86,7 +86,7 @@ public class JellyfinMediaService : IMediaProvider
         return Path.Combine(_url, "Videos", itemId, $"stream?static=true&api_key={_apiKey}");
 
         //016d249d8cdaa92c5e8234414bc842cf
-        return await _http.SendRequest<string>($"Videos/{itemId}/stream");
+        //return await _http.SendRequest<string>($"Videos/{itemId}/stream");
     }
 
     public async Task<Model_WatchedEpisode[]> UpdateWatchHistory(string userId, ICollection<Model_DownloadedEpisode> episodes)
@@ -102,7 +102,7 @@ public class JellyfinMediaService : IMediaProvider
         }
 
         string query = $"?Ids={string.Join("&Ids=", jellyfinMapping.Keys)}";
-        JellyfinResponse_Page<Jellyfin_Response_History>? items = await _http.SendRequest<JellyfinResponse_Page<Jellyfin_Response_History>>(Path.Combine("Users", userId, $"Items{query}&Fields=RunTimeTicks"));
+        JellyfinResponse_Page<Jellyfin_Response_History>? items = await _http.SendRequest<JellyfinResponse_Page<Jellyfin_Response_History>>(Path.Combine("Users", userId, $"Items{query}&Fields=RunTimeTicks"), HttpMethod.Get);
 
         if (items == null)
             return [];

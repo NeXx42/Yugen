@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Yugen.Core.Configs;
@@ -28,7 +29,7 @@ public class MediaService
         return await _mediaProvider.Play();
     }
 
-    public async Task<string?[]?> GetJellyfinIdsForEpisodes(List<Model_DownloadedEpisode> episodes) => await _mediaProvider.MapPathToJellyfinId(episodes);
+    public async Task<string?[]?> GetJellyfinIdsForEpisodes(ICollection<Model_DownloadedEpisode> episodes) => await _mediaProvider.MapPathToJellyfinId(episodes);
 
     public async Task SyncWatchHistoryWithJellyfin(UserSession usr, int AniListId, bool force = false)
     {
@@ -50,7 +51,6 @@ public class MediaService
             await _db.AddAsync(history);
         }
 
-        history.UpdatedTime = DateTime.UtcNow;
 
         int? latestWatchedEpisode = null;
         DateTime latestWatchedTime = DateTime.MinValue;
@@ -59,8 +59,11 @@ public class MediaService
 
         foreach (Model_WatchedEpisode ep in episodeData)
         {
-            if (ep.WatchPercentage > 0 && ep.LastWatched > latestWatchedTime)
+            if (ep.LastWatched.HasValue && ep.WatchPercentage > 0 && ep.LastWatched > latestWatchedTime)
+            {
+                latestWatchedTime = ep.LastWatched.Value;
                 latestWatchedEpisode = ep.EpisodeNumber;
+            }
 
             Model_WatchedEpisode? existing = history.WatchedEpisodes.FirstOrDefault(w => w.EpisodeNumber == ep.EpisodeNumber);
 
@@ -70,12 +73,13 @@ public class MediaService
             }
             else
             {
-                existing.LastWatched = ep.LastWatched;
-                existing.WatchPercentage = ep.WatchPercentage;
+                existing.LastWatched ??= ep.LastWatched;
+                existing.WatchPercentage ??= ep.WatchPercentage;
             }
         }
 
-        history.WatchedEpisode = latestWatchedEpisode;
+        history.UpdatedTime ??= DateTime.UtcNow;
+        history.WatchedEpisode ??= latestWatchedEpisode;
         await _db.SaveChangesAsync();
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Yugen.Core.Configs;
+using Yugen.Core.Helpers;
 using Yugen.Core.Services;
 using Yugen.Data;
 using Yugen.Domain.Data.Users;
@@ -89,6 +90,7 @@ builder.Services.AddScoped<NotificationService>();
 
 builder.Services.AddSingleton<CacheService>();
 builder.Services.AddSingleton<SettingsCache>();
+builder.Services.AddSingleton<EndpointDeduplicator>();
 
 builder.Services.AddHostedService<SettingsInit>();
 

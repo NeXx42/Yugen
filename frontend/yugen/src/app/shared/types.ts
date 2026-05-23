@@ -136,3 +136,49 @@ export interface SearchRequest {
     text: string | null,
     sort: number | null,
 }
+
+
+// imports
+
+export interface MediaRequest {
+    seriesId: number | null,
+    seasonId: number | null,
+
+    qualityId: number | null,
+    rootPath: string | null,
+
+    monitorSeason: boolean,
+}
+
+export interface DownloadRequestInfo {
+    monitored: boolean
+
+    sonarrRequestId: number | null,
+    sonarrSeasonId: number | null,
+
+    selectedRoot: number | null,
+    selectedQuality: number | null,
+
+    roots: DownloadRequestInfo_Root[]
+    qualities: DownloadRequestInfo_Quality[]
+
+    downloadedEpisodes: DownloadRequestInfo_Episode[] | null
+}
+
+export interface DownloadRequestInfo_Episode {
+    providerId: number,
+    episodeNumber: number,
+    monitored: boolean,
+
+    jellyfinId: string | null,
+}
+
+export interface DownloadRequestInfo_Root {
+    path: string
+    freeSpace: number | null,
+}
+
+export interface DownloadRequestInfo_Quality {
+    id: number,
+    title: string
+}

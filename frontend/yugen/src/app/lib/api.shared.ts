@@ -67,6 +67,23 @@ export async function upload<T>(uri: string, obj: FormData): Promise<T | undefin
     return res.json();
 }
 
+export async function deleteReq<T>(uri: string): Promise<T | undefined> {
+    const res = await fetch(`${URL}/api/${uri}`, {
+        method: "DELETE",
+        credentials: "include",
+    });
+
+    if (!res.ok) {
+        throw await handleException(res);
+    }
+
+    if (res.status === 204 || res.headers.get("content-length") === "0") {
+        return undefined;
+    }
+
+    return res.json();
+}
+
 async function handleException(res: Response): Promise<Error> {
     try {
         const errorData = await res.json();

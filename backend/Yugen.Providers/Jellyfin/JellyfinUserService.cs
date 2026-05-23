@@ -23,12 +23,12 @@ public class JellyfinUserService : IUserProvider
 
     public async Task<ExternalUser[]> GetAllUsers()
     {
-        return await _http.SendRequest<ExternalUser[]>("Users");
+        return await _http.SendRequest<ExternalUser[]>("Users", HttpMethod.Get);
     }
 
     public async Task<string?> LoginUser(string username, string password)
     {
-        JellyfinResponse_Session? session = await _http.SendRequest<JellyfinResponse_Session>("Users/AuthenticateByName", new
+        JellyfinResponse_Session? session = await _http.SendRequest<JellyfinResponse_Session>("Users/AuthenticateByName", HttpMethod.Post, new
         {
             Username = username,
             Pw = password

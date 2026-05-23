@@ -65,6 +65,6 @@ public class YugenContext : DbContext
 
         modelBuilder.Entity<Model_MediaTag>().HasKey(t => new { t.MediaId, t.TagId });
         modelBuilder.Entity<Model_MediaTag>().HasOne(t => t.Media).WithMany(m => m.Tags).HasForeignKey(m => m.MediaId);
-        modelBuilder.Entity<Model_MediaTag>().HasOne(t => t.Tag).WithMany().HasForeignKey(m => m.TagId);
+        modelBuilder.Entity<Model_MediaTag>().HasOne(t => t.Tag).WithMany();
     }
 }

@@ -25,6 +25,14 @@ public class LibraryController : ControllerBase
         _libraryService = libraryService;
     }
 
+
+    [HttpGet("{id}/Episodes")]
+    public async Task<EpisodeInfo[]> GetMediaEpisodes(int id, [FromQuery] bool refetch = false)
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        return await _libraryService.GetMediaEpisodesForUser(usr, id, refetch);
+    }
+
     [HttpGet("WatchHistory")]
     public async Task<PageResponse<MediaCard>> GetWatchHistory([FromQuery] int? page, [FromQuery] int? pageSize)
     {
@@ -87,17 +95,11 @@ public class LibraryController : ControllerBase
         return Results.Ok();
     }
 
-    public class SeriesRequest
-    {
-        public required string rootPath { get; set; }
-        public required int quality { get; set; }
-    }
-
     [HttpPost("{mediaId}/Request")]
-    public async Task<IResult> RequestSeries(int mediaId, [FromBody] SeriesRequest request)
+    public async Task<IResult> RequestSeries(int mediaId, [FromBody] DownloadRequest request)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        bool res = await _libraryService.RequestSeries(usr, mediaId, request.rootPath, request.quality);
+        bool res = await _libraryService.RequestSeries(usr, mediaId, request);
 
         if (res)
             return Results.Ok();
@@ -106,16 +108,30 @@ public class LibraryController : ControllerBase
     }
 
     [HttpGet("{mediaId}/Request")]
-    public async Task GetSeriesRequestInfo(int mediaId)
-    {
-
-    }
-
-
-    [HttpGet("{id}/Episodes")]
-    public async Task<EpisodeInfo[]> GetMediaEpisodes(int id, [FromQuery] bool refetch = false)
+    public async Task<DownloadRequestInfo> GetSeriesRequestInfo(int mediaId)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        return await _libraryService.GetMediaEpisodesForUser(usr, id, refetch);
+        return await _libraryService.GetSeriesRequestInfo(usr, mediaId);
+    }
+
+    [HttpPost("{mediaId}/SyncDownloads")]
+    public async Task SyncMediaDownloads(int mediaId, [FromQuery] bool force)
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        await _libraryService.RecheckDownloads(usr, mediaId, force);
+    }
+
+    [HttpPost("{mediaId}/ResearchDownloads")]
+    public async Task ResearchDownloads(int mediaId)
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        await _libraryService.ResearchDownloads(usr, mediaId);
+    }
+
+    [HttpDelete("{mediaId}")]
+    public async Task Delete(int mediaId)
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        await _libraryService.DeleteMedia(usr, mediaId);
     }
 }

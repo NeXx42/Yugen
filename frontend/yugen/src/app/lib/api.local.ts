@@ -1,7 +1,7 @@
 "use client"
 
-import { post, get, upload } from "./api.shared";
-import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo, SearchRequest } from "@shared/types";
+import { post, get, upload, deleteReq } from "./api.shared";
+import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo, SearchRequest, DownloadRequestInfo, MediaRequest } from "@shared/types";
 
 export async function auth_Login(username: string, password: string) {
     return (await post<User>("auth/login", { username, password }))!;
@@ -26,6 +26,9 @@ export async function library_sync(): Promise<number | undefined> {
 export async function library_SyncWatchHistory() {
     await post(`Library/Sync/History`);
 }
+export async function library_SyncMediaDownloads(mediaId: number, force: boolean = false) {
+    await post(`Library/${mediaId}/SyncDownloads?force=${force}`)
+}
 export async function library_Search(page: number, pageSize: number, group: string): Promise<PageResponse<MediaCardInfo>> {
     return (await post<PageResponse<MediaCardInfo>>("library/Search", {
         page,
@@ -39,26 +42,29 @@ export async function library_Upload(file: FormData) {
 export async function library_UpdateBookmark(mediaId: number, bookmarkId: number) {
     await post(`library/${mediaId}/UpdateBookmark?id=${bookmarkId}`);
 }
-export async function library_Request(aniListId: number, rootPath: string, quality: number): Promise<boolean> {
-    return (await post(`library/${aniListId}/Request`, {
-        rootPath,
-        quality
-    }))!
-}
 export async function library_GetEpisodes(mediaId: number, refetch: boolean): Promise<MediaEpisodeInfo[]> {
     return (await get<MediaEpisodeInfo[]>(`library/${mediaId}/Episodes?refetch=${refetch}`))!
 }
 export async function library_CurrentWatching(page: number, pageSize: number): Promise<PageResponse<MediaCardInfo>> {
     return (await get<PageResponse<MediaCardInfo>>(`library/WatchHistory?page=${page}&pageSize=${pageSize}`))!;
 }
-export async function library_RequestSeries(seriesId: number, quality: number, rootPath: string) {
-    return (await post(`library/${seriesId}/Request`, {
-        quality,
-        rootPath
-    }))!;
+export async function library_RequestSeries(mediaId: number, mediaRequest: MediaRequest) {
+    return (await post(`library/${mediaId}/Request`, mediaRequest))!;
 }
-export async function library_GetSeriesRequest(seriesId: number) {
-    return (await get(`library/${seriesId}/Request`))!
+export async function library_Request(aniListId: number, rootPath: string, quality: number): Promise<boolean> {
+    return (await post(`library/${aniListId}/Request`, {
+        rootPath,
+        quality
+    }))!
+}
+export async function library_GetSeriesRequest(seriesId: number): Promise<DownloadRequestInfo> {
+    return (await get<DownloadRequestInfo>(`library/${seriesId}/Request`))!
+}
+export async function library_ResearchMonitored(seriesId: number) {
+    await post(`library/${seriesId}/ResearchDownloads`)
+}
+export async function library_DeleteMedia(mediaId: number) {
+    await deleteReq(`library/${mediaId}`);
 }
 
 
