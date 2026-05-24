@@ -86,3 +86,222 @@ iframe {
 .media-default-skin--video::after {
     content: none;
 }
+
+
+.VideoPlayer_Container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+
+.VideoPlayer_Controls {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    left: 0px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+
+
+.VideoPlayer_Buffering {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.VideoPlayer_Buffering[data-visible] {
+    display: block;
+}
+
+.VideoPlayer_Buffering::after {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+
+
+
+
+
+
+.VideoPlayer_Controls_VolumeSlider {
+    width: 80px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.VideoPlayer_Controls_VolumeSlider_track {
+    position: relative;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+.VideoPlayer_Controls_VolumeSlider_fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--media-slider-fill);
+    background: #fff;
+    border-radius: 2px;
+}
+
+.VideoPlayer_Controls_VolumeSlider_thumb {
+    position: absolute;
+    top: 50%;
+    left: var(--media-slider-fill);
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+
+
+
+.VideoPlayer_Controls {
+    opacity: 0;
+    height: 30%;
+
+    padding: 10px;
+
+    background-image: linear-gradient(to top, #000000ab, #0000004d, #0000);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+
+    transition: all .5s;
+}
+
+.VideoPlayer_Controls[data-visible] {
+    opacity: 1;
+}
+
+
+.VideoPlayer_Controls_Bottom {
+    display: flex;
+    justify-content: space-between;
+}
+
+.VideoPlayer_Controls_Bottom>div {
+    display: flex;
+    gap: 10px;
+}
+
+.VideoPlayer_Controls_Right>* {
+    background: none;
+    outline: none;
+    border: none;
+
+    height: 100%;
+
+    text-align: center;
+}
+
+
+
+
+
+
+.VideoPlayer_Controls_TimeSlider {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.VideoPlayer_Controls_TimeSlider_track {
+    position: relative;
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+}
+
+.VideoPlayer_Controls_TimeSlider_buffer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--media-slider-buffer);
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: inherit;
+}
+
+.VideoPlayer_Controls_TimeSlider_fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--media-slider-fill);
+    background: #008da7;
+    border-radius: inherit;
+}
+
+.VideoPlayer_Controls_TimeSlider_thumb {
+    position: absolute;
+    top: 50%;
+    left: var(--media-slider-fill);
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+
+
+
+
+.VideoPlayer_Controls_Play>.VideoPlayer_Controls_Play_Play {
+    display: none;
+}
+
+.VideoPlayer_Controls_Play[data-paused]>.VideoPlayer_Controls_Play_Play {
+    display: block;
+}
+
+.VideoPlayer_Controls_Play[data-paused]>.VideoPlayer_Controls_Play_Pause {
+    display: none;
+}
+
+
+
+.VideoPlayer_Controls_Fullscreen>.VideoPlayer_Controls_Fullscreen_Deactivate {
+    display: none;
+}
+
+.VideoPlayer_Controls_Fullscreen[data-fullscreen]>.VideoPlayer_Controls_Fullscreen_Deactivate {
+    display: block;
+}
+
+.VideoPlayer_Controls_Fullscreen[data-fullscreen]>.VideoPlayer_Controls_Fullscreen_Activate {
+    display: none;
+}

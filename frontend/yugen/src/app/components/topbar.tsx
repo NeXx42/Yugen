@@ -49,7 +49,7 @@ export default function () {
                     <path fill="none" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="48" d="M88 152h336M88 256h336M88 360h336" />
                 </svg>
             </button>
-            <h1 onClick={goHome}>Yugen</h1>
+            <a href="home">Yugen</a>
         </div>
         <div className="Topbar_Centre">
             <input placeholder="Search" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={(e) => {

@@ -43,8 +43,9 @@
     border: 1px solid var(--nav-button-border-color, var(--global-border-color));
 }
 
-.Topbar_Left h1 {
+.Topbar_Left a {
     font-size: 28px;
+    font-weight: bolder;
     cursor: pointer;
 }
 

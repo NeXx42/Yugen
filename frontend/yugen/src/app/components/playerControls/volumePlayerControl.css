@@ -1,0 +1,29 @@
+.MediaControl_Volume {
+    position: relative;
+}
+
+.MediaControl_Volume_Popup {
+    position: absolute;
+    width: 200%;
+    height: 150px;
+
+    left: -50%;
+    bottom: -50%;
+}
+
+.MediaControl_Volume_Popup_SliderContainer {
+    position: absolute;
+    top: 0;
+
+    width: 100%;
+    height: 100px;
+
+    background-color: red;
+}
+
+.MediaControl_Volume_Popup_SliderContainer>input {
+    position: absolute;
+    inset: 0px;
+
+    transform: rotate(-90deg);
+}
