@@ -1,7 +1,7 @@
 "use client"
 
-import { post, get, upload, deleteReq } from "./api.shared";
-import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo, SearchRequest, DownloadRequestInfo, MediaRequest } from "@shared/types";
+import { post, get, getPlain, upload, deleteReq } from "./api.shared";
+import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo, SearchRequest, DownloadRequestInfo, MediaRequest, Playback_Info } from "@shared/types";
 
 export async function auth_Login(username: string, password: string) {
     return (await post<User>("auth/login", { username, password }))!;
@@ -86,8 +86,8 @@ export async function catalog_EpisodeUpcomingTime(seriesId: number): Promise<num
 
 
 
-export async function media_PlayItem(itemId: string): Promise<string> {
-    return (await get<string>("media/play"))!
+export async function media_PlaybackInfo(itemId: string): Promise<Playback_Info> {
+    return (await get<Playback_Info>(`media/${itemId}/PlaybackInfo`))!
 }
 
 

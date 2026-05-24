@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Yugen.Core.Configs;
 using Yugen.Data;
+using Yugen.Domain.Data.Media;
 using Yugen.Domain.Data.Users;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.History;
@@ -24,10 +25,29 @@ public class MediaService
         _mediaProvider = new JellyfinMediaService(settings.Get(ConfigKeys.Jellyfin_Url), settings.Get(ConfigKeys.Jellyfin_ApiKey));
     }
 
-    public async Task<string> Play()
+    public async Task<PlaybackInfo> GetPlaybackInfo(UserSession usr, string jellyfinId)
     {
-        return await _mediaProvider.Play();
+        return await _mediaProvider.GetPlaybackInfo(jellyfinId);
     }
+
+    public async Task<HttpRequestMessage> GetPlaybackRequest(UserSession usr, string jellyfinId, string mediaId)
+    {
+        string url = await _mediaProvider.GetPlaybackUrl(jellyfinId, mediaId);
+        HttpRequestMessage http = new HttpRequestMessage(HttpMethod.Get, url);
+
+        return http;
+    }
+
+    public async Task<HttpRequestMessage> GetSubtitleRequest(UserSession usr, string jellyfinId, string mediaId, int subtitleId)
+    {
+        string url = await _mediaProvider.GetSubtitleUrl(jellyfinId, mediaId, subtitleId);
+        HttpRequestMessage http = new HttpRequestMessage(HttpMethod.Get, url);
+
+        return http;
+    }
+
+
+
 
     public async Task<string?[]?> GetJellyfinIdsForEpisodes(ICollection<Model_DownloadedEpisode> episodes) => await _mediaProvider.MapPathToJellyfinId(episodes);
 

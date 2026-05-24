@@ -4,6 +4,7 @@
 }
 
 .MediaPlayer_Container {
+    position: relative;
     aspect-ratio: 16/ 9;
 
     border: 1px solid var(--global-border-color);
@@ -14,9 +15,10 @@
     overflow: hidden;
 }
 
-.MediaPlayer video {
+.MediaPlayer_Container video {
     position: absolute;
     width: 100%;
+    height: 100%;
     inset: 0px;
 }
 
@@ -73,4 +75,14 @@ iframe {
 
 .MediaPlayer_Container_Request:hover svg {
     transform: scale(3.3);
+}
+
+.media-default-skin {
+    border-radius: 0px;
+    outline: none;
+    box-shadow: none;
+}
+
+.media-default-skin--video::after {
+    content: none;
 }

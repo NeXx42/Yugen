@@ -1,7 +1,10 @@
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Yugen.Api.Helpers;
 using Yugen.Core.Services;
+using Yugen.Domain.Data.Media;
+using Yugen.Domain.Data.Users;
 
 namespace Yugen.Api.Controllers;
 
@@ -10,6 +13,7 @@ namespace Yugen.Api.Controllers;
 [Route("api/media")]
 public class MediaController : ControllerBase
 {
+    private static readonly HttpClient _client = new HttpClient();
     private readonly MediaService _mediaService;
 
     public MediaController(MediaService mediaService)
@@ -17,11 +21,54 @@ public class MediaController : ControllerBase
         _mediaService = mediaService;
     }
 
-    [HttpGet("play")]
-    public async Task<IActionResult> Play()
+    [HttpGet("{jellyfinId}/PlaybackInfo")]
+    public async Task<PlaybackInfo> PlaybackInfo(string jellyfinId)
     {
-        string url = await _mediaService.Play();
-        return Redirect("https://jellyfin.local/Videos/3a1340d44e2b8c59eb25226608786fb6/stream.mp4?&api_key=d5be01fa82e5452e923a2fcb19a02350");
+        HttpContext.GetUserFromSession(out var usr);
+        return await _mediaService.GetPlaybackInfo(usr, jellyfinId);
+    }
+
+    [HttpGet("{jellyfinId}/stream.mkv")]
+    public async Task Stream(string jellyfinId, [FromQuery] string mediaId)
+    {
+        HttpContext.GetUserFromSession(out var usr);
+        HttpRequestMessage request = await _mediaService.GetPlaybackRequest(usr, jellyfinId, mediaId);
+
+        if (Request.Headers.TryGetValue("Range", out var rangeHeader) && System.Net.Http.Headers.RangeHeaderValue.TryParse(rangeHeader, out var range))
+            request.Headers.Range = range;
+
+        using (HttpResponseMessage response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+        {
+            Response.StatusCode = (int)response.StatusCode;
+            Response.ContentType = response.Content.Headers.ContentType?.ToString() ?? "video/x-matroska";
+            Response.Headers["Content-Range"] = response.Content.Headers.ContentRange!.ToString();
+            Response.Headers["Accept-Ranges"] = "bytes";
+
+            if (response.Content.Headers.ContentLength.HasValue)
+                Response.ContentLength = response.Content.Headers.ContentLength.Value;
+
+            await using Stream upstream = await response.Content.ReadAsStreamAsync();
+            await upstream.CopyToAsync(Response.Body, 81920);
+        }
+    }
+
+    [HttpGet("{jellyfinId}/{mediaId}/{subtitleId}/Subtitle")]
+    public async Task GetSubtitle(string jellyfinId, string mediaId, int subtitleId)
+    {
+        HttpContext.GetUserFromSession(out var usr);
+        HttpRequestMessage request = await _mediaService.GetSubtitleRequest(usr, jellyfinId, mediaId, subtitleId);
+
+        using (HttpResponseMessage response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+        {
+            Response.StatusCode = (int)response.StatusCode;
+            Response.ContentType = response.Content.Headers.ContentType?.ToString();
+
+            if (response.Content.Headers.ContentLength.HasValue)
+                Response.ContentLength = response.Content.Headers.ContentLength.Value;
+
+            await using Stream upstream = await response.Content.ReadAsStreamAsync();
+            await upstream.CopyToAsync(Response.Body, 81920);
+        }
     }
 
     [HttpPost("{id}/SyncWatchHistory")]

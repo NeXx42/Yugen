@@ -1,3 +1,4 @@
+using Yugen.Domain.Data.Media;
 using Yugen.Domain.Models.History;
 using Yugen.Domain.Models.Library;
 using Yugen.Providers.Helpers;
@@ -21,6 +22,32 @@ public class JellyfinMediaService : IMediaProvider
             { "X-Emby-Token", apiKey}
         });
     }
+
+
+    public async Task<PlaybackInfo> GetPlaybackInfo(string jellyfinId)
+    {
+        JellyfinResponse_MediaInfo playbackInfo = (await _http.SendRequest<JellyfinResponse_MediaInfo>($"Items/{jellyfinId}/PlaybackInfo", HttpMethod.Get))!;
+
+        return new PlaybackInfo()
+        {
+            jellyfinId = jellyfinId,
+
+            sources = playbackInfo.MediaSources?.Select(m => new PlaybackInfo.Source()
+            {
+                id = m.id!,
+                subs = m.MediaStreams?.Where(m => m.Type?.Equals("Subtitle") ?? false).Select(s => new PlaybackInfo.Source.Subtitles()
+                {
+                    language = s.Language!,
+                    uri = $"api/media/{jellyfinId}/{m.id}/{s.Index}/Subtitle"
+
+                }).ToArray() ?? []
+
+            }).ToArray() ?? []
+        };
+    }
+
+    public async Task<string> GetPlaybackUrl(string jellyfinId, string mediaId) => $"{_url}/Videos/{jellyfinId}/stream.mkv?static=true&api_key={_apiKey}&mediaSourceId={mediaId}";
+    public async Task<string> GetSubtitleUrl(string jellyfinId, string mediaId, int subtitleId) => $"{_url}/Videos/{jellyfinId}/{mediaId}/Subtitles/{subtitleId}/Stream.vtt?api_key={_apiKey}";
 
     public async Task<string?[]?> MapPathToJellyfinId(ICollection<Model_DownloadedEpisode> episodes)
     {
@@ -78,15 +105,6 @@ public class JellyfinMediaService : IMediaProvider
 
             return span.Slice(i);
         }
-    }
-
-    public async Task<string> Play()
-    {
-        string itemId = "016d249d8cdaa92c5e8234414bc842cf";
-        return Path.Combine(_url, "Videos", itemId, $"stream?static=true&api_key={_apiKey}");
-
-        //016d249d8cdaa92c5e8234414bc842cf
-        //return await _http.SendRequest<string>($"Videos/{itemId}/stream");
     }
 
     public async Task<Model_WatchedEpisode[]> UpdateWatchHistory(string userId, ICollection<Model_DownloadedEpisode> episodes)

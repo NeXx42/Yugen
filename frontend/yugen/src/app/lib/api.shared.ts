@@ -26,6 +26,19 @@ export async function get<T>(uri: string, nextCaching: NextFetchRequestConfig | 
     return res.json();
 }
 
+export async function getPlain(uri: string) {
+    const res = await fetch(`${URL}/api/${uri}`, {
+        method: "GET",
+        credentials: "include",
+    });
+
+    if (!res.ok) {
+        throw await handleException(res);
+    }
+
+    return res;
+}
+
 export async function post<T>(uri: string, obj?: any, nextCaching: NextFetchRequestConfig | undefined = undefined, authToken: string | undefined = undefined): Promise<T | undefined> {
     const res = await fetch(`${URL}/api/${uri}`, {
         method: "POST",

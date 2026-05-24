@@ -1,3 +1,5 @@
+import { exportPages } from "next/dist/export/worker";
+
 export type BookmarkType = "None" | "Watching" | "OnHold" | "Planning" | "Completed" | "Dropped";
 
 export interface PageResponse<T> {
@@ -181,4 +183,22 @@ export interface DownloadRequestInfo_Root {
 export interface DownloadRequestInfo_Quality {
     id: number,
     title: string
+}
+
+// playback
+
+export interface Playback_Info {
+    jellyfinId: string,
+
+    sources: Playback_Info_Source[]
+}
+
+export interface Playback_Info_Source {
+    id: string
+    subs: Playback_Info_Subtitle[]
+}
+
+export interface Playback_Info_Subtitle {
+    language: string,
+    uri: string
 }
