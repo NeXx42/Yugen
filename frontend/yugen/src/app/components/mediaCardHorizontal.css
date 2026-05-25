@@ -9,26 +9,79 @@
     transition: all .2s;
 }
 
+.MediaCardHorizontal.Selected {
+    border: 1px solid var(--primary-accent);
+    color: var(--primary-accent);
+}
+
 .MediaCardHorizontal:hover {
     transform: scaleX(1.01);
 }
 
+.MediaCardHorizontal:hover .MediaCardHorizontal_Banner>img {
+    filter: grayscale(0.2);
+}
+
 
 .MediaCardHorizontal_Content {
+    position: relative;
     height: 100%;
 
+    border-radius: inherit;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
     font-size: 10px;
 }
 
-.MediaCardHorizontal_Content img {
+.MediaCardHorizontal_Icon {
+    z-index: 1;
     height: 100%;
-    aspect-ratio: 2 / 3;
+    aspect-ratio: 4.25 / 6;
+
+    border-radius: inherit;
+
+    box-shadow: 0 0 10px black;
 }
 
+.MediaCardHorizontal_Banner {
+    position: absolute;
+    right: 0px;
+
+    height: 100%;
+    width: 60%;
+}
+
+.MediaCardHorizontal_Banner>img {
+    object-fit: cover;
+    position: absolute;
+    filter: grayscale(1);
+    height: 100%;
+    width: 100%;
+
+    opacity: .5;
+}
+
+.MediaCardHorizontal_Banner>div {
+    position: absolute;
+    background: linear-gradient(-70deg, transparent -200%, var(--global-div) 80%);
+    height: 100%;
+    width: 100%;
+}
+
+
+.MediaCardHorizontal_Status {
+    background-color: #aaff00;
+    border-radius: 100%;
+
+    min-width: 5px;
+    height: 5px;
+}
+
+
+
 .MediaCardHorizontal_Info {
+    z-index: 1;
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -44,4 +97,18 @@
     background-color: rgba(85, 85, 85, .1);
 
     width: min-content;
+}
+
+.MediaCardHorizontal_ReleaseDate {
+    background-color: #0e0e0ebb;
+    backdrop-filter: blur(10px) contrast(125%);
+    padding: 2px 5px;
+    border-radius: 8px;
+
+    z-index: 1;
+    position: absolute;
+    left: 2px;
+    top: 2px;
+
+    font-size: 12px;
 }

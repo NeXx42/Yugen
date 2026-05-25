@@ -9,7 +9,7 @@ export default function ({ Card }: { Card: MediaCardInfo }) {
     const navigate = useRouter();
 
     const getNextReleaseText = (): string => {
-        const diff = Card.nextReleaseDate! * 1000; // convert seconds → ms
+        const diff = (Card.nextReleaseDate! * 1000) - Date.now();
 
         if (diff <= 0) return "now";
 

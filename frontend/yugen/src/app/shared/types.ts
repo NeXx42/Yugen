@@ -32,7 +32,7 @@ export interface MediaCardInfo {
 
     colour: string,
     cardImg: string,
-    bannerImage: string | null,
+    banner: string | null,
 
     nextReleaseDate: number | undefined,
 

@@ -7,27 +7,48 @@ import "./mediaCardHorizontal.css"
 
 interface Props {
     card: MediaCardInfo,
-    season: number | undefined
+    season?: number
+    selected?: boolean
 }
 
-export default function ({ card, season = undefined }: Props) {
+export default function (props: Props) {
     const navigate = useRouter();
 
     const navigateToPage = () => {
-        navigate.push(`${card.aniListId}`)
+        navigate.push(`${props.card.aniListId}`)
     };
 
+    const getTimeTo = () => {
+        const diff = (props.card.nextReleaseDate! * 1000) - Date.now();
 
-    return (<div key={card.aniListId} className="MediaCardHorizontal" onClick={navigateToPage}>
+        if (diff <= 0) return "now";
+
+        const minutes = Math.floor(diff / (1000 * 60));
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+        if (days > 0) return `${days}d`;
+        if (hours > 0) return `${hours}h`;
+        return `${minutes}m`
+    }
+
+    return (<div key={props.card.aniListId} className={`MediaCardHorizontal ${props.selected ? "Selected" : ""}`} onClick={navigateToPage}>
         <div className="MediaCardHorizontal_Content">
-            {card.cardImg && <img src={card.cardImg} />}
+            {props.card.cardImg && <img className="MediaCardHorizontal_Icon" src={props.card.cardImg} />}
+            {props.card.banner &&
+                <div className="MediaCardHorizontal_Banner">
+                    <img src={props.card.banner} />
+                    <div />
+                </div>
+            }
+
+            {props.card.nextReleaseDate != undefined && <div className="MediaCardHorizontal_Status" />}
+            {props.card.nextReleaseDate != undefined && <div className="MediaCardHorizontal_ReleaseDate" >{getTimeTo()}</div>}
 
             <div className="MediaCardHorizontal_Info">
-                <h2>{season ? `Season ${season}` : card.title}</h2>
-                <a>{card.type}</a>
+                <h2>{props.season ? `Season ${props.season}` : props.card.title}</h2>
+                <a>{props.card.type}</a>
             </div>
         </div>
-
-        {card.bannerImage && <img src={card.bannerImage} />}
     </div>)
 }

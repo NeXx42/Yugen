@@ -102,20 +102,27 @@ export default function (props: Props) {
 
     return (
         <div className="EpisodeList ViewPageContainer">
-            <div className="EpisodeList_Titlebar">
-                <h2>Episodes</h2>
-                <button onClick={() => fetchEpisodes(true)}>refetch</button>
-            </div>
-            <div className="EpisodeList_Entries">
-                {episodes?.map(drawEpisode)}
-            </div>
             {
-                episodeReleaseTime != null && (
-                    <div className="EpisodeList_Upcoming">
-                        {timeUntil}
+                props.mediaInfo.status === "NOT_YET_RELEASED" ? (
+                    <div className="EpisodeList_Unaired">Not yet aired
+
                     </div>
-                )
-            }
+                ) : (<>
+                    <div className="EpisodeList_Titlebar">
+                        <h2>Episodes</h2>
+                        <button onClick={() => fetchEpisodes(true)}>refetch</button>
+                    </div>
+                    <div className="EpisodeList_Entries">
+                        {episodes?.map(drawEpisode)}
+                    </div>
+                    {
+                        episodeReleaseTime != null && (
+                            <div className="EpisodeList_Upcoming">
+                                {timeUntil}
+                            </div>
+                        )
+                    }
+                </>)}
         </div>
     )
 }

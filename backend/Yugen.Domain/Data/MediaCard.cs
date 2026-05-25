@@ -29,11 +29,12 @@ public class MediaCard
             Title = dbData.Title,
 
             year = dbData.Year,
-            releasing = dbData.Status == "RELEASING",
+            releasing = dbData.Status == "RELEASING" || dbData.Status == "NOT_YET_RELEASED",
 
             colour = dbData.Colour,
             cardImg = dbData.CardImageLarge,
             banner = dbData.BannerImage,
+            nextReleaseDate = dbData.NextEpisodeReleaseDate,
 
             type = dbData.MediaFormat,
         };

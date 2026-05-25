@@ -1,0 +1,13 @@
+.CardColumn {
+    background: var(--global-div-tr);
+    border: 1px solid var(--global-border-color);
+    border-radius: 15px;
+
+    padding: 15px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    height: min-content;
+}

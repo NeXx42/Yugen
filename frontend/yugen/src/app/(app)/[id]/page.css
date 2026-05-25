@@ -43,7 +43,10 @@
 .ViewPage_Left {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+}
+
+.ViewPage_EpisodeInfo {
+    margin-bottom: 15px;
 }
 
 
@@ -67,6 +70,7 @@
 
 .ViewPage_Info_Info_Tags {
     display: flex;
+    flex-wrap: wrap;
     gap: 5px;
 }
 
@@ -74,6 +78,9 @@
     color: color-mix(in srgb, #e4d6ae, black 55%);
     padding: 5px 10px;
     border-radius: 15px;
+
+    width: max-content;
+    text-align: center;
 
     font-size: 13px;
     cursor: pointer;
@@ -145,4 +152,10 @@
     color: var(--primary-accent);
     background-color: var(--primary-accent-tr);
     outline: 1px solid var(--primary-accent)
+}
+
+.ViewPage_Right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }

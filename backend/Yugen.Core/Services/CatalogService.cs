@@ -147,7 +147,7 @@ public class CatalogService
             select new
             {
                 id = l.anilist_id!.Value,
-                relatedIds = grouped
+                relatedIds = grouped.Distinct()
             }
         ).ToArrayAsync();
 
@@ -173,7 +173,7 @@ public class CatalogService
 
         foreach (Model_Media media in dbEntries)
         {
-            MediaCard[] recommend = media.RelatedMedia.Where(r => mediaLookup.ContainsKey(r.MediaId)).Select(r => mediaLookup[r.MediaId]!).ToArray();
+            MediaCard[] recommend = media.RelatedMedia.Where(r => mediaLookup.ContainsKey(r.ConnectedMediaId)).Select(r => mediaLookup[r.ConnectedMediaId]!).ToArray();
             Model_Tag?[] mediaTags = media.Tags.Select(t =>
             {
                 if (tagLookup.TryGetValue(t.TagId, out Model_Tag? tag))

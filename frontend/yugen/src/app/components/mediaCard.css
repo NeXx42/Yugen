@@ -103,18 +103,17 @@
 }
 
 .MediaCard_NextRelease {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-
-    padding: 2px 5px;
+    background-color: #0e0e0ebb;
+    backdrop-filter: blur(10px) contrast(125%);
+    padding: 3px 10px;
     border-radius: 8px;
-    font-size: 14px;
 
-    text-align: center;
+    z-index: 1;
+    position: absolute;
+    left: 2px;
+    top: 2px;
 
-    border: 1px solid var(--global-border-color);
-    background-color: #000000bf;
+    font-size: 13px;
 }
 
 .MediaCard_Content_Items {

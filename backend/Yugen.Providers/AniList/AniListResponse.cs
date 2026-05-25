@@ -145,6 +145,7 @@ public class AniListResponse_Airing
             {
                 public int mediaId { get; set; }
                 public long timeUntilAiring { get; set; }
+                public long airingAt { get; set; }
             }
         }
     }

@@ -269,11 +269,12 @@ public class AniListProvider : IMetaDataProvider
     public async Task<Dictionary<int, long>> UpcomingMedia()
     {
         string query = @"
-        query Page($airingAtGreater: Int, $airingAtLesser: Int) {
+        query Page($airingAtGreater: Int, $airingAtLesser: Int, $sort: [AiringSort]) {
             Page {
-                airingSchedules(airingAt_greater: $airingAtGreater, airingAt_lesser: $airingAtLesser) {
+                airingSchedules(airingAt_greater: $airingAtGreater, airingAt_lesser: $airingAtLesser, sort: $sort) {
                     mediaId
                     timeUntilAiring
+                    airingAt
                 }
             }
         }";
@@ -281,7 +282,8 @@ public class AniListProvider : IMetaDataProvider
         AniListResponse_Airing? res = await SendRequest<AniListResponse_Airing>(query, new
         {
             airingAtGreater = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-            airingAtLesser = DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds()
+            airingAtLesser = DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds(),
+            sort = "TIME"
         });
 
         if (res == null)
@@ -291,10 +293,10 @@ public class AniListProvider : IMetaDataProvider
 
         foreach (var entry in res.data.page.airingSchedules!)
         {
-            if (results.TryGetValue(entry.mediaId, out long nextEpisode) && nextEpisode < entry.timeUntilAiring)
+            if (results.TryGetValue(entry.mediaId, out long nextEpisode) && nextEpisode < entry.airingAt)
                 continue;
 
-            results[entry.mediaId] = entry.timeUntilAiring;
+            results[entry.mediaId] = entry.airingAt;
         }
 
         return results;

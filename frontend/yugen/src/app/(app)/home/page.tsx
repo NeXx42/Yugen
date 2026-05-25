@@ -7,6 +7,7 @@ import CardRow from "@/app/components/cardRow";
 import TrendingList from "./trendingList";
 import SearchList from "./searchList";
 import MediaCardHorizontal from "@/app/components/mediaCardHorizontal";
+import CardColumn from "@/app/components/cardColumn";
 
 export default async function () {
     const [upcoming, watching, searchCriteria] = await Promise.all([
@@ -36,10 +37,7 @@ export default async function () {
                 <SearchList />
 
                 <div className="HomePage_Right">
-                    <div className="HomePage_UpcomingEpisodes">
-                        <h2>Airing</h2>
-                        {upcoming.data?.slice(0, 10).map(u => <MediaCardHorizontal key={u.aniListId} card={u} season={undefined} />)}
-                    </div>
+                    <CardColumn content={upcoming?.data ?? []} limit={10} header="Upcoming" />
                 </div>
             </div>
         </div>

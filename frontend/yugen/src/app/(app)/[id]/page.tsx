@@ -1,18 +1,22 @@
 import * as api from "@lib/api.server"
 
-import { MediaInfo } from "@shared/types";
+import { MediaCardInfo, MediaInfo } from "@shared/types";
 import MediaContainer from "./mediaContainer";
 import CardRow from "@comps/cardRow";
 
 import "./page.css";
 import MediaRequester from "./seriesControls";
 import MediaCardHorizontal from "@/app/components/mediaCardHorizontal";
+import CardColumn from "@/app/components/cardColumn";
+import { ReactNode } from "react";
 
 export default async function ({ params }: { params: { id: number } }) {
     const { id } = await params;
     const media: MediaInfo = (await api.catalog_GetInfo(id)).data!;
 
     void api.media_SyncWatchTime(id);
+
+    const seasons = media.connectedMedia?.sort((a, b) => (a.season ?? 0) - (b.season ?? 0)).filter(c => c.card != null);
 
     return (
         <div className="ViewPage">
@@ -62,17 +66,12 @@ export default async function ({ params }: { params: { id: number } }) {
                 <div className="ViewPage_Right">
                     {(media.connectedMedia?.length ?? 0) > 1 && (
                         <div className="ViewPage_Seasons ViewPageContainer">
-                            <h2>Related</h2>
-                            {media.connectedMedia.sort((a, b) => (a.season ?? 0) - (b.season ?? 0)).map(m => <MediaCardHorizontal key={m.card.aniListId} card={m.card} season={m.season} />)}
+                            <h2>// Related</h2>
+                            {seasons.map(m => <MediaCardHorizontal key={m.card.aniListId} card={m.card} season={m.season} selected={m.card?.aniListId === media.id} />)}
                         </div>
                     )}
 
-                    {(media.recommended?.length ?? 0) > 1 && (
-                        <div className="ViewPage_Seasons ViewPageContainer">
-                            <h2>Related</h2>
-                            {media.recommended.map(m => <MediaCardHorizontal key={m.aniListId} card={m} season={undefined} />)}
-                        </div>
-                    )}
+                    <CardColumn content={media.recommended} header="// Recommended" limit={5} />
                 </div>
             </div>
 
