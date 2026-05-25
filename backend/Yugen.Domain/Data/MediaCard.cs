@@ -10,8 +10,10 @@ public class MediaCard
     public string? type { get; set; }
 
     public bool releasing { get; set; }
-    public int? year { get; set; }
     public long? nextReleaseDate { get; set; }
+
+    public int? year { get; set; }
+    public string? season { get; set; }
 
     public string? colour { get; set; }
     public string? cardImg { get; set; }
@@ -29,12 +31,14 @@ public class MediaCard
             Title = dbData.Title,
 
             year = dbData.Year,
+            season = dbData.Season,
+
             releasing = dbData.Status == "RELEASING" || dbData.Status == "NOT_YET_RELEASED",
+            nextReleaseDate = dbData.NextEpisodeReleaseDate,
 
             colour = dbData.Colour,
             cardImg = dbData.CardImageLarge,
             banner = dbData.BannerImage,
-            nextReleaseDate = dbData.NextEpisodeReleaseDate,
 
             type = dbData.MediaFormat,
         };

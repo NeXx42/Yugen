@@ -47,7 +47,11 @@ export default function (props: Props) {
 
             <div className="MediaCardHorizontal_Info">
                 <h2>{props.season ? `Season ${props.season}` : props.card.title}</h2>
-                <a>{props.card.type}</a>
+                <div>
+                    {props.card.type != null && <p>{props.card.type}</p>}
+                    {props.card.year != null && <p>{props.card.year}</p>}
+                    {props.card.season != null && <p>{props.card.season}</p>}
+                </div>
             </div>
         </div>
     </div>)

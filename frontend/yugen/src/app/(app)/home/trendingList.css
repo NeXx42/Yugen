@@ -115,3 +115,44 @@
 .Trending_PlayButton:hover {
     border-color: white;
 }
+
+
+
+.Trending_Genres {
+    margin-top: 5px;
+
+    display: grid;
+    grid-template-columns: auto auto auto;
+
+    overflow: hidden;
+}
+
+.Trending_Genres>button {
+    outline: none;
+    background: transparent;
+    border: none;
+    padding: 5px;
+    font-size: 16px;
+
+    cursor: pointer;
+}
+
+.Trending_Genres_Scroll {
+    display: flex;
+    gap: 5px;
+
+    overflow: hidden;
+    overflow-x: hidden;
+}
+
+.Trending_Genres_Scroll>a {
+    border-radius: 8px;
+    background: var(--global-div);
+    padding: .5rem 1.75rem;
+    font-size: .8rem;
+
+    text-align: center;
+    white-space: nowrap;
+
+    cursor: pointer;
+}

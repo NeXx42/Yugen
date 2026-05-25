@@ -11,6 +11,31 @@ interface Props {
     setSelectedItem: Dispatch<SetStateAction<MediaEpisodeInfo | undefined>>,
 }
 
+const daysOfTheWeek = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday"
+];
+
+const monthsOfThYear = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+]
+
 export default function (props: Props) {
     const [episodes, setEpisodes] = useState<MediaEpisodeInfo[]>([]);
     const [episodeReleaseTime, setEpisodeReleaseTime] = useState<number | null>(null);
@@ -100,12 +125,29 @@ export default function (props: Props) {
         )
     }
 
+    const date = props.mediaInfo.startDate ? new Date(props.mediaInfo.startDate * 1000) : undefined;
+    if (props.mediaInfo.startDate != null) {
+        console.log(date);
+    }
+
     return (
         <div className="EpisodeList ViewPageContainer">
             {
                 props.mediaInfo.status === "NOT_YET_RELEASED" ? (
-                    <div className="EpisodeList_Unaired">Not yet aired
-
+                    <div className="EpisodeList_Unaired">
+                        {
+                            date != null ?
+                                (
+                                    <>
+                                        <span>PREMIERE</span>
+                                        <span>{monthsOfThYear[date?.getMonth()]}</span>
+                                        <h1>{date?.getDay()}</h1>
+                                        <span>{daysOfTheWeek[date?.getDate()]} · {date?.getFullYear()}</span>
+                                    </>
+                                ) : (
+                                    <>Unkown</>
+                                )
+                        }
                     </div>
                 ) : (<>
                     <div className="EpisodeList_Titlebar">

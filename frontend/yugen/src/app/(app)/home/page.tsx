@@ -19,13 +19,7 @@ export default async function () {
     return (
         <div className="HomePage" >
             <div className="HomePage_Trending">
-                <TrendingList />
-
-                <div className="HomePage_Trending_Genres">
-                    <div className="HomePage_Trending_Genres_Scroll">
-                        {searchCriteria.data?.genres.map(g => (<a key={g}>{g}</a>))}
-                    </div>
-                </div>
+                <TrendingList searchCriteria={searchCriteria} />
             </div>
 
             <div>

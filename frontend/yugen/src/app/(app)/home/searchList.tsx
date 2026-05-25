@@ -4,65 +4,83 @@ import * as api from "@lib/api.local"
 
 import "./searchList.css"
 import { useEffect, useState } from "react"
-import { MediaCardInfo, PageResponse } from "@/app/shared/types"
+import { MediaCardInfo, PageResponse, Season, seasonLookup } from "@shared/types"
 import MediaCard from "@/app/components/mediaCard"
+import PageContainer from "@/app/components/pageContainer"
+
+type SortType = "New" | "Popular" | "TopRated";
+const pageSize = 36;
 
 export default function () {
-    const [cards, setCards] = useState<PageResponse<MediaCardInfo>>()
-    const [loading, setLoading] = useState(false);
+    const [sort, setSort] = useState<SortType>("New");
+    const [page, setPage] = useState<number>(1);
 
-    const [sort, setSort] = useState<number>(13)
-    const [page, setPage] = useState<number>(1)
+    const [season, setSeason] = useState<Season>("FALL");
 
-    useEffect(() => {
-        setLoading(true);
-        api.catalog_Search({
-            page: page,
-            pageSize: 35,
+    const getFeaturedSeason = (): { season: Season, year: number } => {
+        return {
+            season: season,
+            year: 2026
+        };
+    }
 
-            text: null,
-            sort: sort
-        }).then(setCards).finally(() => setLoading(false));
+    const search = (): Promise<PageResponse<MediaCardInfo>> => {
+        switch (sort) {
+            case "New":
+                const { season, year } = getFeaturedSeason();
 
-    }, [sort, page])
+                return api.catalog_Search({
+                    page: page,
+                    pageSize: pageSize,
 
-    const updateSort = (to: number) => {
+                    sort: 17,
+
+                    year: year,
+                    season: season
+                });
+
+            default: return api.catalog_Search({
+                page: page,
+                pageSize: pageSize,
+
+                sort: sort === "Popular" ? 19 : 17
+            });
+        }
+    }
+
+    const drawer = (c: MediaCardInfo) => <MediaCard key={c.aniListId} Card={c} />
+
+    const updateSort = (to: SortType) => {
         setPage(1);
         setSort(to);
     }
 
+    useEffect(() => {
+        const currentDate = new Date();
+        setSeason(seasonLookup[Math.floor(currentDate.getMonth() / 3)])
+    }, [sort])
+
     return (
         <div className="SearchList">
-            <div className="SearchList_Controls">
-                <div className="SearchList_Sort">
-                    <button className={sort === 13 ? "Selected" : ""} onClick={() => updateSort(13)}>Newest</button>
-                    <button className={sort === 19 ? "Selected" : ""} onClick={() => updateSort(19)}>Popular</button>
-                    <button className={sort === 17 ? "Selected" : ""} onClick={() => updateSort(17)}>Top Rated</button>
+            <PageContainer pageSize={pageSize} currentPage={page} setCurrentPage={setPage} search={search} drawElement={drawer} track={[sort, season]}>
+                <div className="SearchList_Controls">
+                    <div className="SearchList_Sort">
+                        <button className={sort === "New" ? "Selected" : ""} onClick={() => updateSort("New")}>Newest</button>
+                        <button className={sort === "Popular" ? "Selected" : ""} onClick={() => updateSort("Popular")}>Popular</button>
+                        <button className={sort === "TopRated" ? "Selected" : ""} onClick={() => updateSort("TopRated")}>Top Rated</button>
+                    </div>
+                    {
+                        sort === "New" && (
+                            <div className="SearchList_SubFilter">
+                                <button className={season === "WINTER" ? "Selected" : ""} onClick={() => setSeason("WINTER")}>Winter</button>
+                                <button className={season === "SPRING" ? "Selected" : ""} onClick={() => setSeason("SPRING")}>Spring</button>
+                                <button className={season === "SUMMER" ? "Selected" : ""} onClick={() => setSeason("SUMMER")}>Summer</button>
+                                <button className={season === "FALL" ? "Selected" : ""} onClick={() => setSeason("FALL")}>Fall</button>
+                            </div>
+                        )
+                    }
                 </div>
-                <div className="SearchList_Page">
-                    <button disabled={page >= 1} onClick={() => setPage(page - 1)}>
-                        <svg stroke="currentColor" fill="currentColor" viewBox="0 0 320 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z" />
-                        </svg>
-                    </button>
-                    <a>{page}</a>
-                    <button onClick={() => setPage(page + 1)}>
-                        <svg stroke="currentColor" fill="currentColor" viewBox="0 0 320 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            <div className="SearchList_Content">
-                {
-                    loading ? (
-                        <a>Loading</a>
-                    ) : (
-
-                        cards?.data.map(c => <MediaCard key={c.aniListId} Card={c} />)
-                    )}
-            </div>
+            </PageContainer>
         </div >
     )
 }

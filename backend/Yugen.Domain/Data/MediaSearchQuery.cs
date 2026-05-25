@@ -10,5 +10,9 @@ public class MediaSearchQuery
     public string? text { get; set; }
     public MediaSort? sort { get; set; }
 
-    public string GetCacheKey() => Guid.NewGuid().ToString(); // temp
+    public long? lesserStartDate { get; set; }
+    public string? season { get; set; }
+    public int? year { get; set; }
+
+    public string GetCacheKey() => $"{page}_{pageSize}_{text}_{sort}_{lesserStartDate}_{season}_{year}";
 }

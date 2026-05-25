@@ -1,9 +1,9 @@
 .SearchList_Controls {
     display: flex;
-    justify-content: space-between;
+    gap: 15px;
 }
 
-.SearchList_Page,
+.SearchList_SubFilter,
 .SearchList_Sort {
     background: var(--global-border-color);
     padding: 1px;
@@ -22,7 +22,7 @@
     gap: 0px;
 }
 
-.SearchList_Page button,
+.SearchList_SubFilter button,
 .SearchList_Sort button {
     background: var(--global-div);
     padding: 10px 15px;
@@ -33,28 +33,16 @@
     transition: all .1s;
 }
 
-.SearchList_Page button {
-    padding: 10px;
-}
-
-.SearchList_Page button:hover,
+.SearchList_SubFilter button:hover,
 .SearchList_Sort button:hover {
     color: var(--primary-accent);
 }
 
+.SearchList_SubFilter button.Selected,
 .SearchList_Sort button.Selected {
     background-color: var(--primary-accent-tr);
     color: var(--primary-accent);
 }
-
-.SearchList_Page a {
-    background: var(--global-div);
-    height: 100%;
-    align-content: center;
-    padding: 0 15px;
-}
-
-
 
 
 

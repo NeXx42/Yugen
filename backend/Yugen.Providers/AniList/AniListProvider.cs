@@ -239,6 +239,24 @@ public class AniListProvider : IMetaDataProvider
             vars += ", sort: $sort";
         }
 
+        if (searchQuery.lesserStartDate.HasValue)
+        {
+            inputs += ", $startDateLesser: FuzzyDateInt";
+            vars += ", startDate_lesser: $startDateLesser";
+        }
+
+        if (searchQuery.year.HasValue)
+        {
+            inputs += ", $seasonYear: Int";
+            vars += ", seasonYear: $seasonYear";
+        }
+
+        if (!string.IsNullOrEmpty(searchQuery.season))
+        {
+            inputs += ", $season: MediaSeason";
+            vars += ", season: $season";
+        }
+
         string query = @$"query Page($perPage: Int, $page: Int, $type: MediaType{inputs}) {{
             Page(perPage: $perPage, page: $page) {{
                 media({vars}) {{
@@ -257,7 +275,11 @@ public class AniListProvider : IMetaDataProvider
             page = searchQuery.page ?? 1,
             type = "ANIME",
             isAdult = false,
-            sort = searchQuery.sort?.ToString() ?? ""
+            sort = searchQuery.sort?.ToString() ?? "",
+
+            startDate_lesser = searchQuery.lesserStartDate,
+            season = searchQuery.season,
+            seasonYear = searchQuery.year
         });
 
         if (res == null)

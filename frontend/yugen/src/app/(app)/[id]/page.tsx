@@ -1,22 +1,53 @@
 import * as api from "@lib/api.server"
 
-import { MediaCardInfo, MediaInfo } from "@shared/types";
+import { MediaInfo } from "@shared/types";
 import MediaContainer from "./mediaContainer";
-import CardRow from "@comps/cardRow";
 
-import "./page.css";
 import MediaRequester from "./seriesControls";
 import MediaCardHorizontal from "@/app/components/mediaCardHorizontal";
 import CardColumn from "@/app/components/cardColumn";
-import { ReactNode } from "react";
+
+import "./page.css";
+import { Metadata } from "next";
+
+import { cache } from "react";
+
+export const getMedia = cache(async (id: number) => {
+    return (await api.catalog_GetInfo(id)).data!;
+});
+
+export async function generateMetadata({ params }: { params: { id: number } }): Promise<Metadata> {
+    const { id } = await params;
+
+    return {
+        title: (await getMedia(id)).title ?? "Anime",
+    };
+}
 
 export default async function ({ params }: { params: { id: number } }) {
     const { id } = await params;
-    const media: MediaInfo = (await api.catalog_GetInfo(id)).data!;
+    const media: MediaInfo = await getMedia(id);
 
     void api.media_SyncWatchTime(id);
 
     const seasons = media.connectedMedia?.sort((a, b) => (a.season ?? 0) - (b.season ?? 0)).filter(c => c.card != null);
+
+    const getDate = (unixSeconds: number | null): string => {
+        if (unixSeconds == null)
+            return "Unknown";
+
+        const date = new Date(unixSeconds * 1000);
+        const months = [
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        ];
+
+        const day = date.getDate();
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+
+        return `${month} ${day} ${year}`;
+    }
 
     return (
         <div className="ViewPage">
@@ -54,8 +85,8 @@ export default async function ({ params }: { params: { id: number } }) {
                                     <div>Season:<strong>{media.season ?? "-"}</strong></div>
                                 </div>
                                 <div>
-                                    <div>Start Date:<strong>{media.startDate}</strong></div>
-                                    <div>End Date:<strong>{media.endDate}</strong></div>
+                                    <div>Start Date:<strong>{getDate(media.startDate)}</strong></div>
+                                    <div>End Date:<strong>{getDate(media.endDate)}</strong></div>
                                 </div>
                             </div>
                         </div>
@@ -67,11 +98,11 @@ export default async function ({ params }: { params: { id: number } }) {
                     {(media.connectedMedia?.length ?? 0) > 1 && (
                         <div className="ViewPage_Seasons ViewPageContainer">
                             <h2>// Related</h2>
-                            {seasons.map(m => <MediaCardHorizontal key={m.card.aniListId} card={m.card} season={m.season} selected={m.card?.aniListId === media.id} />)}
+                            {seasons.map(m => <MediaCardHorizontal key={m.card.aniListId} card={m.card} selected={m.card?.aniListId === media.id} />)}
                         </div>
                     )}
 
-                    <CardColumn content={media.recommended} header="// Recommended" limit={5} />
+                    {media.recommended?.length > 0 && <CardColumn content={media.recommended} header="// Recommended" limit={5} />}
                 </div>
             </div>
 

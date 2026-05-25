@@ -2,6 +2,9 @@ import { exportPages } from "next/dist/export/worker";
 
 export type BookmarkType = "None" | "Watching" | "OnHold" | "Planning" | "Completed" | "Dropped";
 
+export type Season = "WINTER" | "SPRING" | "SUMMER" | "FALL";
+export const seasonLookup: Season[] = ["WINTER", "SPRING", "SUMMER", "FALL"]
+
 export interface PageResponse<T> {
     page: number,
     pageSize: number,
@@ -28,13 +31,15 @@ export interface MediaCardInfo {
     type: string | null,
 
     releasing: boolean,
+    nextReleaseDate: number | undefined,
+
     year: number | null,
+    season: Season | null,
 
     colour: string,
     cardImg: string,
     banner: string | null,
 
-    nextReleaseDate: number | undefined,
 
     watchEpisode: number | undefined,
     watchLastTime: number | undefined,
@@ -136,8 +141,12 @@ export interface SearchRequest {
     page: number,
     pageSize: number,
 
-    text: string | null,
-    sort: number | null,
+    text?: string,
+    sort?: number,
+
+    lesserStartDate?: number,
+    season?: Season,
+    year?: number,
 }
 
 

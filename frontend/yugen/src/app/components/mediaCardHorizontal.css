@@ -87,7 +87,13 @@
     gap: 5px;
 }
 
-.MediaCardHorizontal_Info a {
+.MediaCardHorizontal_Info>div {
+    display: flex;
+    gap: 5px;
+    overflow: hidden;
+}
+
+.MediaCardHorizontal_Info>div>p {
     padding: 2px 5px;
     border-radius: 8px;
     font-size: 12px;

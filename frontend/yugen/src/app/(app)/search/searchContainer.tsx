@@ -19,7 +19,6 @@ export default function ({ searchQuery }: { searchQuery: string }) {
         pageSize,
 
         text: searchQuery,
-        sort: null
     });
 
     return (

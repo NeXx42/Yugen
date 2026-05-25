@@ -1,0 +1,66 @@
+.MediaCardSkeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.MediaCardSkeleton_Img {
+    position: relative;
+    overflow: hidden;
+
+    aspect-ratio: 318/450;
+    background-color: #0e0e0e;
+    border-radius: 8px;
+}
+
+.MediaCardSkeleton_Img::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(200%);
+    }
+}
+
+
+.MediaCardSkeleton_Info {
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.MediaCardSkeleton_Info>h2 {
+    font-size: 14px;
+}
+
+.MediaCardSkeleton_Info>div {
+    display: flex;
+    gap: 5px;
+    overflow: hidden;
+}
+
+.MediaCardSkeleton_Info>div>p {
+    padding: 2px 5px;
+    border-radius: 8px;
+    font-size: 12px;
+
+    text-align: center;
+    color: var(--global-text-muted);
+    background-color: rgba(85, 85, 85, .1);
+
+    width: min-content;
+}

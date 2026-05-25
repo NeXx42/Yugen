@@ -17,14 +17,8 @@ export default function ({ Card }: { Card: MediaCardInfo }) {
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-        if (days > 0) {
-            return `${days} day${days !== 1 ? "s" : ""}`;
-        }
-
-        if (hours > 0) {
-            return `${hours} hour${hours !== 1 ? "s" : ""}`;
-        }
-
+        if (days > 0) return `${days} day${days !== 1 ? "s" : ""}`;
+        if (hours > 0) return `${hours} hour${hours !== 1 ? "s" : ""}`;
         return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
     }
 
@@ -58,6 +52,7 @@ export default function ({ Card }: { Card: MediaCardInfo }) {
                 <div className="MediaCard_Content_Items">
                     {Card.type != null && <p>{Card.type}</p>}
                     {Card.year != null && <p>{Card.year}</p>}
+                    {Card.season != null && <p>{Card.season}</p>}
                 </div>
             </div>
         </div>

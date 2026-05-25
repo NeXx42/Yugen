@@ -45,7 +45,7 @@
     flex-direction: column;
 }
 
-.ViewPage_EpisodeInfo {
+#ViewPage_EpisodeInfo {
     margin-bottom: 15px;
 }
 
