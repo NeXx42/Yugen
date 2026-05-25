@@ -36,7 +36,9 @@ public class Model_Media
     public int? MeanScore { get; set; }
 
     public bool? Hydrated { get; set; }
+    public long? NextEpisodeReleaseDate { get; set; }
 
     public Collection<Model_MediaTag> Tags { get; set; } = new Collection<Model_MediaTag>();
     public Collection<Model_MediaEpisode> Episodes { get; set; } = new Collection<Model_MediaEpisode>();
+    public Collection<Model_MediaRelation> RelatedMedia { get; set; } = new Collection<Model_MediaRelation>();
 }

@@ -60,15 +60,19 @@ export default async function ({ params }: { params: { id: number } }) {
                 </div>
 
                 <div className="ViewPage_Right">
-                    {
-                        (media.connectedMedia?.length ?? 0) > 1 && (
-                            <div className="ViewPage_Seasons ViewPageContainer">
-                                <h2>Related</h2>
-                                {media.connectedMedia.sort((a, b) => (a.season ?? 0) - (b.season ?? 0)).map(m => <MediaCardHorizontal key={m.card.aniListId} card={m.card} season={m.season} />)}
-                            </div>
+                    {(media.connectedMedia?.length ?? 0) > 1 && (
+                        <div className="ViewPage_Seasons ViewPageContainer">
+                            <h2>Related</h2>
+                            {media.connectedMedia.sort((a, b) => (a.season ?? 0) - (b.season ?? 0)).map(m => <MediaCardHorizontal key={m.card.aniListId} card={m.card} season={m.season} />)}
+                        </div>
+                    )}
 
-                        )
-                    }
+                    {(media.recommended?.length ?? 0) > 1 && (
+                        <div className="ViewPage_Seasons ViewPageContainer">
+                            <h2>Related</h2>
+                            {media.recommended.map(m => <MediaCardHorizontal key={m.aniListId} card={m} season={undefined} />)}
+                        </div>
+                    )}
                 </div>
             </div>
 

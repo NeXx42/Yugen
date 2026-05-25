@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Yugen.Data;
@@ -11,9 +12,11 @@ using Yugen.Data;
 namespace Yugen.Data.Migrations
 {
     [DbContext(typeof(YugenContext))]
-    partial class YugenContextModelSnapshot : ModelSnapshot
+    [Migration("20260525122952_FixMediaRelationKey")]
+    partial class FixMediaRelationKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -288,9 +291,6 @@ namespace Yugen.Data.Migrations
 
                     b.Property<string>("MediaFormat")
                         .HasColumnType("text");
-
-                    b.Property<long?>("NextEpisodeReleaseDate")
-                        .HasColumnType("bigint");
 
                     b.Property<string>("Season")
                         .HasColumnType("text");

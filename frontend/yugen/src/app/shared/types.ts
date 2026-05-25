@@ -62,6 +62,7 @@ export interface MediaInfo {
     bookmark: number | undefined,
 
     tags: MediaTag[],
+    recommended: MediaCardInfo[]
     connectedMedia: MediaConnection[]
 }
 

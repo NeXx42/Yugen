@@ -1,6 +1,7 @@
 using Yugen.Core.Data;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.Bookmarks;
+using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
 
 namespace Yugen.Domain.Data.Media;
@@ -28,6 +29,7 @@ public class MediaInfo
     public int? bookmark { get; set; }
 
     public MediaTag[]? tags { get; set; }
+    public MediaCard[]? recommended { get; set; }
     public Connection[]? connectedMedia { get; set; }
 
     public static MediaInfo Map(Model_Media media)
@@ -53,15 +55,15 @@ public class MediaInfo
         };
     }
 
-    public MediaInfo RegisterConnectedMedia((int? season, string? type, MediaCard media)[]? media)
+    public MediaInfo RegisterConnectedMedia((Model_Link link, MediaCard media)[]? media)
     {
         if (media == null)
             return this;
 
         connectedMedia = media?.Select(m => new Connection()
         {
-            season = m.season,
-            type = m.type,
+            season = m.link.tvdb_season,
+            type = m.link.type,
 
             card = m.media,
         }).ToArray();
@@ -74,14 +76,20 @@ public class MediaInfo
         return this;
     }
 
-    public MediaInfo RegisterTags(Model_Tag[] tags)
+    public MediaInfo RegisterTags(Model_Tag?[]? tags)
     {
-        this.tags = tags.Select(t => new MediaTag()
+        this.tags = tags?.Where(t => t != null).Select(t => new MediaTag()
         {
-            id = t.Id,
+            id = t!.Id,
             title = t.Name ?? ""
         }).ToArray();
 
+        return this;
+    }
+
+    public MediaInfo RegisterRelated(MediaCard[] cards)
+    {
+        this.recommended = cards;
         return this;
     }
 

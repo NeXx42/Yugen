@@ -123,7 +123,9 @@ public class AniListProvider : IMetaDataProvider
                     }
                     recommendations {
                         nodes {
-                            id
+                            mediaRecommendation{
+                                id
+                            }
                         }
                     }
                     siteUrl
@@ -131,6 +133,9 @@ public class AniListProvider : IMetaDataProvider
                     isRecommendationBlocked
                     isReviewBlocked
                     modNotes
+                    nextAiringEpisode {
+                        airingAt
+                    }
                 }
             }
         }";
@@ -168,6 +173,8 @@ public class AniListProvider : IMetaDataProvider
                 CardImageSmall = media.coverImage?.medium,
                 Colour = media.coverImage?.color,
                 thumbnailIcon = media.trailer?.thumbnail,
+
+                NextEpisodeReleaseDate = media?.nextAiringEpisode?.airingAt
             };
 
             for (int i = 0; i < (media.tags?.Length ?? 0); i++)
@@ -188,6 +195,18 @@ public class AniListProvider : IMetaDataProvider
 
                     EpisodeTitle = Regex.Replace(media.streamingEpisodes![i].title ?? "", @"^Episode \d+ - ", ""),
                     EpisodeIcon = media.streamingEpisodes![i].thumbnail,
+                });
+            }
+
+            for (int i = 0; i < (media.recommendations?.nodes?.Length ?? 0); i++)
+            {
+                if (media.recommendations?.nodes?[i]?.mediaRecommendation?.id == null)
+                    continue;
+
+                result.RelatedMedia.Add(new Model_MediaRelation()
+                {
+                    MediaId = media.id,
+                    ConnectedMediaId = media.recommendations!.nodes![i].mediaRecommendation.id
                 });
             }
 

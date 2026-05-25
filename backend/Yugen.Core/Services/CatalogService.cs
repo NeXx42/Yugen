@@ -79,38 +79,122 @@ public class CatalogService
     }
 
     public async Task<MediaInfo> GetMediaInfo(int aniListId)
+        => (await GetMediaInfo([aniListId]))[0];
+
+    public async Task<MediaInfo[]> GetMediaInfo(ICollection<int> ids)
     {
-        string cacheId = GetInfoCacheId(aniListId);
+        List<int> remainingIds = new List<int>(ids);
+        List<MediaInfo> results = new List<MediaInfo>();
 
-        if (_cache.TryGetValue(cacheId, out MediaInfo? info) && info != null)
-            return info;
+        // find cached version
 
-        Model_Media? dbEntry = await _db.media.Include(m => m.Tags).FirstOrDefaultAsync(m => m.Id == aniListId);
-
-        if (dbEntry == null)
+        for (int i = remainingIds.Count - 1; i >= 0; i--)
         {
-            dbEntry = await _hydrationService.SaveMedia(aniListId);
+            if (_cache.TryGetValue(GetInfoCacheId(remainingIds[i]), out MediaInfo? info))
+            {
+                if (info != null)
+                    results.Add(info);
 
-            if (dbEntry == null)
-                throw new FileNotFoundException();
+                remainingIds.RemoveAt(i);
+            }
         }
 
-        (int? season, string? type, MediaCard model)[]? connectedMedia = null;
-        Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == aniListId);
+        // create db entries for those that do not exist
 
-        if (link != null && link.tvdb_id.HasValue)
+        List<int> initialCreates = new List<int>();
+        HashSet<int> existingEntriesInDB = await _db.media.Where(m => remainingIds.Contains(m.Id)).Select(m => m.Id).ToHashSetAsync();
+
+        foreach (int desired in remainingIds)
+            if (!existingEntriesInDB.Contains(desired))
+                initialCreates.Add(desired);
+
+        _ = await GetOrCreateMediaCardsFromIds([.. initialCreates]);
+
+        // hydrate
+
+        Model_Media[] dbEntries = await _db.media
+            .Include(m => m.Tags)
+            .Include(m => m.RelatedMedia)
+            .Where(m => remainingIds.Contains(m.Id)).ToArrayAsync();
+
+        Dictionary<int, Model_Tag?> tagLookup = new Dictionary<int, Model_Tag?>();
+        Dictionary<int, MediaCard?> mediaLookup = new Dictionary<int, MediaCard?>();
+        Dictionary<int, Model_Link[]?> linkLookup = new Dictionary<int, Model_Link[]?>();
+
+        foreach (Model_Media media in dbEntries)
         {
-            var connections = await _db.links.Where(l => l.tvdb_id == link.tvdb_id).ToArrayAsync();
-            MediaCard[] connectionCards = await GetOrCreateMediaCardsFromIds(connections.Where(c => c.anilist_id.HasValue).Select(c => c.anilist_id!.Value).ToList());
+            remainingIds.Remove(media.Id);
+            linkLookup[media.Id] = null;
 
-            connectedMedia = connections.Select(l => (l.tvdb_season, l.type, connectionCards.Single(c => c.aniListId == l.anilist_id))).ToArray();
+            foreach (var tag in media.Tags)
+                tagLookup[tag.TagId] = null;
+
+            foreach (var relation in media.RelatedMedia)
+                mediaLookup[relation.ConnectedMediaId] = null;
         }
 
-        Model_Tag[] tags = await _db.tags.Where(t => dbEntry.Tags.Select(mt => mt.TagId).Contains(t.Id)).ToArrayAsync();
-        info = MediaInfo.Map(dbEntry).RegisterConnectedMedia(connectedMedia).RegisterTags(tags);
+        var links = await (
+            from l in _db.links
 
-        _cache.Set(cacheId, info);
-        return info;
+            where l.anilist_id.HasValue
+                && l.tvdb_id.HasValue
+                && linkLookup.Keys.Contains(l.anilist_id.Value)
+
+            join cl in _db.links
+                on l.tvdb_id equals cl.tvdb_id
+                into grouped
+
+            select new
+            {
+                id = l.anilist_id!.Value,
+                relatedIds = grouped
+            }
+        ).ToArrayAsync();
+
+        foreach (var link in links)
+        {
+            linkLookup[link.id] = link.relatedIds.ToArray();
+
+            foreach (Model_Link linkMediaId in link.relatedIds)
+                mediaLookup[linkMediaId.anilist_id!.Value] = null;
+        }
+
+        Model_Tag[] tags = await _db.tags.Where(t => tagLookup.Keys.Contains(t.Id)).ToArrayAsync();
+
+        foreach (Model_Tag tag in tags)
+            tagLookup[tag.Id] = tag;
+
+        // fetch related content
+        MediaCard[] cards = await GetOrCreateMediaCardsFromIds(mediaLookup.Keys.ToList());
+
+        foreach (MediaCard card in cards)
+            mediaLookup[card.aniListId] = card;
+
+
+        foreach (Model_Media media in dbEntries)
+        {
+            MediaCard[] recommend = media.RelatedMedia.Where(r => mediaLookup.ContainsKey(r.MediaId)).Select(r => mediaLookup[r.MediaId]!).ToArray();
+            Model_Tag?[] mediaTags = media.Tags.Select(t =>
+            {
+                if (tagLookup.TryGetValue(t.TagId, out Model_Tag? tag))
+                    return tag;
+
+                return null;
+            }).ToArray();
+
+            MediaInfo info = MediaInfo.Map(media).RegisterTags(mediaTags).RegisterRelated(recommend);
+
+            if (linkLookup.TryGetValue(media.Id, out Model_Link[]? linkedMedia) && linkedMedia != null)
+            {
+                (Model_Link, MediaCard)[] hydratedLinks = linkedMedia.Where(l => mediaLookup.ContainsKey(l.anilist_id!.Value)).Select(l => (l, mediaLookup[l.anilist_id!.Value]!)).ToArray();
+                info.RegisterConnectedMedia(hydratedLinks);
+            }
+
+            results.Add(info);
+            _cache.Set(GetInfoCacheId(media.Id), info);
+        }
+
+        return results.ToArray();
     }
 
     public async Task<MediaCard[]> Upcoming(int take)
@@ -191,10 +275,7 @@ public class CatalogService
         if (ids == null)
             return [];
 
-        cards = new MediaInfo[ids.Count];
-
-        for (int i = 0; i < ids.Count; i++)
-            cards[i] = await GetMediaInfo(ids[i]);
+        cards = await GetMediaInfo(ids);
 
         _cache.Set(cacheKey, cards);
         return cards;
@@ -202,8 +283,9 @@ public class CatalogService
 
     public async Task ClearDatabaseCache()
     {
-        _db.RemoveRange(await _db.mediaTags.ToListAsync());
+        _db.RemoveRange(await _db.mediaRelations.ToListAsync());
         _db.RemoveRange(await _db.mediaEpisodes.ToListAsync());
+        _db.RemoveRange(await _db.mediaTags.ToListAsync());
         _db.RemoveRange(await _db.media.ToListAsync());
         await _db.SaveChangesAsync();
 

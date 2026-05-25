@@ -6,6 +6,8 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import { useToast } from "@/app/context/toast"
 
 import "./settingsModal.css"
+import { useModals } from "../context/modalContext";
+import LoadingModal from "./loadingModal";
 
 
 type SettingsGroup = "App" | "Jellyfin" | "Sonarr" | "Providers";
@@ -13,6 +15,8 @@ type SettingsGroup = "App" | "Jellyfin" | "Sonarr" | "Providers";
 
 export default function () {
     const { showToast } = useToast();
+    const { showModal, closeModal } = useModals();
+
     const filePicker = useRef<HTMLInputElement>(null);
 
     const groups: SettingsGroup[] = ["App", "Jellyfin", "Sonarr", "Providers"];
@@ -21,6 +25,10 @@ export default function () {
     const [savedConfigValues, setSavedConfigValues] = useState<Record<string, string>>()
 
     const [filePickerCall, setFilePickerCallback] = useState<(() => void) | undefined>();
+
+    const loadApiRequest = (loading: () => Promise<any>) => {
+        showModal(<LoadingModal closeRequest={closeModal} loadingCall={loading} />)
+    }
 
     useEffect(() => {
         api.settings_Load().then(r => setSavedConfigValues(
@@ -137,7 +145,7 @@ export default function () {
     const renderSetting_Button = (label: string, btnLabel: string, btnClass: string, action: () => Promise<void>, suppressToast: boolean = false): ReactNode => {
         const btnIntercept = async () => {
             try {
-                await action();
+                loadApiRequest(() => action());
 
                 if (suppressToast)
                     showToast("Success", "success");

@@ -9,8 +9,7 @@ import SearchList from "./searchList";
 import MediaCardHorizontal from "@/app/components/mediaCardHorizontal";
 
 export default async function () {
-    const [trending, upcoming, watching, searchCriteria] = await Promise.all([
-        api.catalog_Trending(),
+    const [upcoming, watching, searchCriteria] = await Promise.all([
         api.catalog_Upcoming(),
         api.library_CurrentWatching(0, 10),
         api.catalog_SearchCriteria()
@@ -19,7 +18,7 @@ export default async function () {
     return (
         <div className="HomePage" >
             <div className="HomePage_Trending">
-                <TrendingList data={trending.data ?? []} />
+                <TrendingList />
 
                 <div className="HomePage_Trending_Genres">
                     <div className="HomePage_Trending_Genres_Scroll">
@@ -30,7 +29,7 @@ export default async function () {
 
             <div>
                 <h1 style={{ marginBottom: "5px" }}>Continue Watching</h1>
-                <CardRow cards={watching.data?.data.sort((a, b) => (b.watchLastTime ?? 0) - (a.watchLastTime ?? 0)) ?? []} />
+                <CardRow cards={watching.data?.data.sort((a, b) => (a.watchLastTime ?? 0) - (b.watchLastTime ?? 0)) ?? []} />
             </div>
 
             <div className="HomePage_Body">

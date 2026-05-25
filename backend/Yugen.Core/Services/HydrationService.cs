@@ -30,7 +30,11 @@ public class HydrationService
     public async Task<Model_Media[]> SaveMedia(ICollection<int> aniListId)
     {
         Model_Media[] media = await _metaDataProvider.GetMediaInfo(aniListId);
+
         await _db.BulkInsertOrUpdateAsync(media);
+        await _db.BulkInsertOrUpdateAsync(media.SelectMany(m => m.Tags));
+        await _db.BulkInsertOrUpdateAsync(media.SelectMany(m => m.Episodes));
+        await _db.BulkInsertOrUpdateAsync(media.SelectMany(m => m.RelatedMedia));
 
         return media;
     }

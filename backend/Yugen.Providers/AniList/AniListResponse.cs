@@ -64,6 +64,7 @@ public class AniListResponse_Media
     public string[]? genres { get; set; }
 
     public NodeList? recommendations { get; set; }
+    public NextAiringEpisode? nextAiringEpisode { get; set; }
 
     public class Title
     {
@@ -93,7 +94,12 @@ public class AniListResponse_Media
 
         public class Nodes
         {
-            public required int id { get; set; }
+            public required MediaRecommendation mediaRecommendation { get; set; }
+
+            public class MediaRecommendation
+            {
+                public required int id { get; set; }
+            }
         }
     }
 
@@ -115,6 +121,11 @@ public class AniListResponse_Media
         public int? year { get; set; }
 
         public long? ToUnix() => (day.HasValue && month.HasValue && year.HasValue) ? new DateTimeOffset(year.Value, month.Value, day.Value, 0, 0, 0, TimeSpan.Zero).ToUnixTimeSeconds() : null;
+    }
+
+    public class NextAiringEpisode
+    {
+        public long? airingAt { get; set; }
     }
 }
 

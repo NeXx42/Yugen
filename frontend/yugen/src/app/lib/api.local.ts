@@ -1,7 +1,7 @@
 "use client"
 
 import { post, get, getPlain, upload, deleteReq } from "./api.shared";
-import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo, SearchRequest, DownloadRequestInfo, MediaRequest, Playback_Info } from "@shared/types";
+import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo, SearchRequest, DownloadRequestInfo, MediaRequest, Playback_Info, MediaInfo } from "@shared/types";
 
 export async function auth_Login(username: string, password: string) {
     return (await post<User>("auth/login", { username, password }))!;
@@ -83,7 +83,9 @@ export async function catalog_ClearCache() {
 export async function catalog_EpisodeUpcomingTime(seriesId: number): Promise<number | null> {
     return (await get<number | null>(`catalog/${seriesId}/UpcomingEpisode`))!;
 }
-
+export async function catalog_Trending(): Promise<MediaInfo[]> {
+    return (await get<MediaInfo[]>("catalog/Trending"))!;
+}
 
 
 export async function media_PlaybackInfo(anilistId: number, epNumber: number, itemId: string): Promise<Playback_Info> {

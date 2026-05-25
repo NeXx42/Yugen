@@ -62,9 +62,6 @@ export async function library_CurrentWatching(page: number, pageSize: number): P
 export async function catalog_Upcoming(): Promise<CaughtResponse<MediaCardInfo[]>> {
     return await getWithAuth<MediaCardInfo[]>("catalog/Upcoming");
 }
-export async function catalog_Trending(): Promise<CaughtResponse<MediaInfo[]>> {
-    return await getWithAuth<MediaInfo[]>("catalog/Trending");
-}
 export async function catalog_SearchCriteria(): Promise<CaughtResponse<SearchCriteria>> {
     return await getWithAuth<SearchCriteria>("catalog/SearchCriteria");
 }
