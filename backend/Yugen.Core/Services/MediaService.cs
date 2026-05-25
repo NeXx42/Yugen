@@ -17,17 +17,31 @@ namespace Yugen.Core.Services;
 public class MediaService
 {
     private readonly YugenContext _db;
+    private readonly CacheService _cache;
+
     private readonly IMediaProvider _mediaProvider;
 
-    public MediaService(YugenContext db, SettingsCache settings)
+    public MediaService(YugenContext db, SettingsCache settings, CacheService cache)
     {
         _db = db;
+        _cache = cache;
+
         _mediaProvider = new JellyfinMediaService(settings.Get(ConfigKeys.Jellyfin_Url), settings.Get(ConfigKeys.Jellyfin_ApiKey));
     }
 
-    public async Task<PlaybackInfo> GetPlaybackInfo(UserSession usr, string jellyfinId)
+    public async Task<PlaybackInfo> GetPlaybackInfo(UserSession usr, int? anilistId, int? episodeNumber, string jellyfinId)
     {
-        return await _mediaProvider.GetPlaybackInfo(jellyfinId);
+        PlaybackInfo info = await _mediaProvider.GetPlaybackInfo(jellyfinId);
+
+        if (episodeNumber.HasValue && anilistId.HasValue)
+        {
+            Model_WatchedEpisode? episodeWatchData = await _db.watchedEpisodes.FirstOrDefaultAsync(e => e.MediaId == anilistId && e.EpisodeNumber == episodeNumber);
+
+            if (episodeWatchData != null)
+                info.historicalTicks = episodeWatchData.PlaybackPositionTicks;
+        }
+
+        return info;
     }
 
     public async Task<HttpRequestMessage> GetPlaybackRequest(UserSession usr, string jellyfinId, string mediaId)
@@ -50,6 +64,64 @@ public class MediaService
 
 
     public async Task<string?[]?> GetJellyfinIdsForEpisodes(ICollection<Model_DownloadedEpisode> episodes) => await _mediaProvider.MapPathToJellyfinId(episodes);
+
+    public async Task UpdateEpisodeWatchTime(UserSession usr, int AniListId, int epNumber, float percentage, long ticks)
+    {
+        Model_WatchHistory? history = await _db.watchHistory.Include(e => e.WatchedEpisodes).FirstOrDefaultAsync(e => e.MediaId == AniListId);
+
+        if (history == null)
+        {
+            // should be empty
+            _db.RemoveRange(_db.watchedEpisodes.Where(e => e.MediaId == AniListId));
+
+            history = new Model_WatchHistory()
+            {
+                MediaId = AniListId,
+                UpdatedTime = DateTime.UtcNow,
+                WatchedEpisode = epNumber,
+
+                WatchedEpisodes = [
+                    new Model_WatchedEpisode(){
+                        MediaId = AniListId,
+                        EpisodeNumber = epNumber,
+
+                        PlaybackPositionTicks = ticks,
+                        WatchPercentage = percentage,
+                        LastWatched = DateTime.UtcNow,
+                    }
+                ]
+            };
+
+            await _db.SaveChangesAsync();
+            return;
+        }
+
+        history.UpdatedTime = DateTime.UtcNow;
+        history.WatchedEpisode = epNumber;
+
+        Model_WatchedEpisode? ep = history.WatchedEpisodes.FirstOrDefault(e => e.EpisodeNumber == epNumber);
+
+        if (ep == null)
+        {
+            history.WatchedEpisodes.Add(new Model_WatchedEpisode()
+            {
+                MediaId = AniListId,
+                EpisodeNumber = epNumber,
+
+                PlaybackPositionTicks = ticks,
+                WatchPercentage = percentage,
+                LastWatched = DateTime.UtcNow,
+            });
+        }
+        else
+        {
+            ep.PlaybackPositionTicks = ticks;
+            ep.WatchPercentage = percentage;
+        }
+
+        await _db.SaveChangesAsync();
+        _cache.Remove(CatalogService.GetCardCacheId(AniListId));
+    }
 
     public async Task SyncWatchHistoryWithJellyfin(UserSession usr, int AniListId, bool force = false)
     {
@@ -93,6 +165,7 @@ public class MediaService
             }
             else
             {
+                existing.PlaybackPositionTicks ??= ep.PlaybackPositionTicks;
                 existing.LastWatched ??= ep.LastWatched;
                 existing.WatchPercentage ??= ep.WatchPercentage;
             }
@@ -101,5 +174,7 @@ public class MediaService
         history.UpdatedTime ??= DateTime.UtcNow;
         history.WatchedEpisode ??= latestWatchedEpisode;
         await _db.SaveChangesAsync();
+
+        _cache.Remove(CatalogService.GetCardCacheId(AniListId));
     }
 }

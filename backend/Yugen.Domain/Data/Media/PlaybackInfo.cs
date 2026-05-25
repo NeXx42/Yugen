@@ -2,6 +2,8 @@ namespace Yugen.Domain.Data.Media;
 
 public class PlaybackInfo
 {
+    public long? historicalTicks { get; set; }
+
     public required string jellyfinId { get; set; }
     public required Source[] sources { get; set; }
 

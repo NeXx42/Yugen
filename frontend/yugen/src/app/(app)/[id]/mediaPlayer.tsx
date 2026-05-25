@@ -4,16 +4,14 @@ import * as api from "@lib/api.local"
 
 import { ReactNode, useEffect, useRef, useState } from "react"
 
-import { MediaEpisodeInfo, MediaInfo, Playback_Info, Playback_Info_Subtitle } from "@shared/types"
+import { MediaEpisodeInfo, MediaInfo, Playback_Info } from "@shared/types"
 
 import { BufferingIndicator, Container, createPlayer, Gesture, videoFeatures } from '@videojs/react';
 import {
     Controls,
     PlayButton,
-    MuteButton,
     TimeSlider,
     FullscreenButton,
-    VolumeSlider,
 } from "@videojs/react";
 import { Video } from '@videojs/react/video';
 
@@ -22,6 +20,7 @@ import "./mediaPlayer.css"
 import VolumePlayerControl from "@/app/components/playerControls/volumePlayerControl";
 import SubtitleSelectorPlayerControl from "@/app/components/playerControls/subtitleSelectorPlayerControl";
 import SubtitlesPlayerControl from "@/app/components/playerControls/subtitlesPlayerControl";
+import WatchtimeSyncerPlayerControl from "@/app/components/playerControls/watchtimeSyncerPlayerControl";
 
 interface Props {
     mediaInfo: MediaInfo
@@ -50,7 +49,7 @@ export default function (props: Props) {
         setIsPlaying(false);
 
         if (props.episode?.jellyfinId) {
-            api.media_PlaybackInfo(props.episode?.jellyfinId).then(setPlaybackInfo).catch(() => setPlaybackInfo(undefined));
+            api.media_PlaybackInfo(props.mediaInfo.id, props.episode.number, props.episode?.jellyfinId).then(setPlaybackInfo).catch(() => setPlaybackInfo(undefined));
         }
         else {
             setPlaybackInfo(undefined);
@@ -68,18 +67,30 @@ export default function (props: Props) {
 
     }, [videoRef.current, selectedSub])
 
+    const onMetadataLoad = (video: HTMLVideoElement) => {
+        if (playbackInfo?.historicalTicks == null)
+            return;
+
+        video.currentTime = playbackInfo!.historicalTicks / 10_000_000;
+    };
+
+    const syncPlaybackTime = (runtime: number, percentage: number) => {
+        void api.media_UpdateEpisodeTime(props.mediaInfo.id, props.episode!.number, runtime, percentage);
+    }
+
     const drawPlayer = (info: Playback_Info): ReactNode => {
         const source = info.sources[0];
 
         return (
             <Player.Provider>
                 <Container className="VideoPlayer_Container">
-                    <Video ref={videoRef} src={`api/media/${info.jellyfinId}/stream.mkv?mediaId=${source.id}`} playsInline autoPlay className="VideoPlayer_Video" />
+                    <Video ref={videoRef} src={`api/media/${info.jellyfinId}/stream.mkv?mediaId=${source.id}`} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={(e) => onMetadataLoad(e.currentTarget)} />
 
                     <BufferingIndicator className="VideoPlayer_Buffering" />
                     <Gesture action="togglePaused" type="tap" />
                     <Gesture action="toggleFullscreen" type="doubletap" />
 
+                    <WatchtimeSyncerPlayerControl syncFunc={syncPlaybackTime} />
                     <SubtitlesPlayerControl url={source.subs[selectedSub]?.uri} offset={subtitleOffset} />
 
                     <Controls.Root className="VideoPlayer_Controls">

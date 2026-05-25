@@ -86,10 +86,15 @@ export async function catalog_EpisodeUpcomingTime(seriesId: number): Promise<num
 
 
 
-export async function media_PlaybackInfo(itemId: string): Promise<Playback_Info> {
-    return (await get<Playback_Info>(`media/${itemId}/PlaybackInfo`))!
+export async function media_PlaybackInfo(anilistId: number, epNumber: number, itemId: string): Promise<Playback_Info> {
+    return (await get<Playback_Info>(`media/${itemId}/PlaybackInfo?anilistId=${anilistId}&episodeNumber=${epNumber}`))!
 }
-
+export async function media_UpdateEpisodeTime(mediaId: number, episode: number, runtimeSeconds: number, percentage: number) {
+    return (await post(`media/${mediaId}/${episode}/UpdateTime`, {
+        runtimeSeconds,
+        percentage
+    }))!
+}
 
 
 export async function notification_Count(): Promise<number> {

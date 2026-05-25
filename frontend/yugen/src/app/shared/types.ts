@@ -188,6 +188,7 @@ export interface DownloadRequestInfo_Quality {
 // playback
 
 export interface Playback_Info {
+    historicalTicks: number | null,
     jellyfinId: string,
 
     sources: Playback_Info_Source[]

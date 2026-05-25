@@ -139,7 +139,8 @@ public class JellyfinMediaService : IMediaProvider
                     MediaId = episodes.ElementAt(index).MediaId,
                     EpisodeNumber = episodes.ElementAt(index).EpisodeNumber,
                     LastWatched = history.userData.LastPlayedDate,
-                    WatchPercentage = history.userData.played ? 1f : Math.Clamp(history.userData.playBackPositionTicks / history.runTimeTicks.Value, 0, 1)
+                    WatchPercentage = history.userData.played ? 1f : Math.Clamp(history.userData.playBackPositionTicks / history.runTimeTicks.Value, 0, 1),
+                    PlaybackPositionTicks = history.userData.playBackPositionTicks
                 });
             }
         }

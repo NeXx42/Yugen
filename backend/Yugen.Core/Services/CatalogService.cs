@@ -29,8 +29,8 @@ public class CatalogService
     private readonly SettingsService _settings;
     private readonly HydrationService _hydrationService;
 
-    public string GetCardCacheId(int id) => $"CardCache_{id}";
-    public string GetInfoCacheId(int id) => $"Info_{id}";
+    public static string GetCardCacheId(int id) => $"CardCache_{id}";
+    public static string GetInfoCacheId(int id) => $"Info_{id}";
 
     public CatalogService(YugenContext db, HydrationService hydrationService, CacheService cache, SettingsService settings)
     {

@@ -22,10 +22,10 @@ public class MediaController : ControllerBase
     }
 
     [HttpGet("{jellyfinId}/PlaybackInfo")]
-    public async Task<PlaybackInfo> PlaybackInfo(string jellyfinId)
+    public async Task<PlaybackInfo> PlaybackInfo(string jellyfinId, [FromQuery] int? anilistId, [FromQuery] int? episodeNumber)
     {
         HttpContext.GetUserFromSession(out var usr);
-        return await _mediaService.GetPlaybackInfo(usr, jellyfinId);
+        return await _mediaService.GetPlaybackInfo(usr, anilistId, episodeNumber, jellyfinId);
     }
 
     [HttpGet("{jellyfinId}/stream.mkv")]
@@ -76,5 +76,20 @@ public class MediaController : ControllerBase
     {
         HttpContext.GetUserFromSession(out var usr);
         await _mediaService.SyncWatchHistoryWithJellyfin(usr, id);
+    }
+
+    public class EpisodeWatchTimeUpdate()
+    {
+        public float percentage { get; set; }
+        public double runtimeSeconds { get; set; }
+    }
+
+    [HttpPost("{mediaId}/{episode}/UpdateTime")]
+    public async Task UpdateEpisodeWatchTime(int mediaId, int episode, [FromBody] EpisodeWatchTimeUpdate data)
+    {
+        long ticks = new DateTimeOffset().AddSeconds(data.runtimeSeconds).Ticks;
+
+        HttpContext.GetUserFromSession(out var usr);
+        await _mediaService.UpdateEpisodeWatchTime(usr, mediaId, episode, data.percentage, ticks);
     }
 }
