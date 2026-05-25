@@ -29,5 +29,10 @@
 
 
 .MediaControl_Subtitles_Popup_SliderContainer>div {
+    cursor: pointer;
+    padding: 5px;
+}
+
+.MediaControl_Subtitles_Popup_SliderContainer>.Selected {
     background-color: red;
 }

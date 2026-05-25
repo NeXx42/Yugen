@@ -18,8 +18,10 @@ import {
 import { Video } from '@videojs/react/video';
 
 import "./mediaPlayer.css"
-import SubtitlePlayerControl from "@/app/components/playerControls/subtitlePlayerControl";
+
 import VolumePlayerControl from "@/app/components/playerControls/volumePlayerControl";
+import SubtitleSelectorPlayerControl from "@/app/components/playerControls/subtitleSelectorPlayerControl";
+import SubtitlesPlayerControl from "@/app/components/playerControls/subtitlesPlayerControl";
 
 interface Props {
     mediaInfo: MediaInfo
@@ -38,7 +40,8 @@ export default function (props: Props) {
 
     const thumbnail = props.episode?.thumbnail ?? props.mediaInfo.thumbnailImage;
 
-    const [selectedSub, setSelectedSub] = useState<Playback_Info_Subtitle | undefined>(undefined);
+    const [selectedSub, setSelectedSub] = useState<number>(-1);
+    const [subtitleOffset, setSubtitleOffset] = useState<number>(0);
 
     const [playbackInfo, setPlaybackInfo] = useState<Playback_Info | undefined>(undefined);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -55,11 +58,15 @@ export default function (props: Props) {
 
     }, [props.mediaInfo, props.episode])
 
-    const test = () => {
+    useEffect(() => {
+        if (videoRef.current == null)
+            return;
+
         for (let i = 0; i < videoRef.current!.textTracks.length; i++) {
-            videoRef.current!.textTracks[i].mode = "showing";
+            videoRef.current!.textTracks[i].mode = selectedSub === i ? "showing" : "disabled";
         }
-    }
+
+    }, [videoRef.current, selectedSub])
 
     const drawPlayer = (info: Playback_Info): ReactNode => {
         const source = info.sources[0];
@@ -67,14 +74,13 @@ export default function (props: Props) {
         return (
             <Player.Provider>
                 <Container className="VideoPlayer_Container">
-                    <Video ref={videoRef} src={`api/media/${info.jellyfinId}/stream.mkv?mediaId=${source.id}`} playsInline autoPlay className="VideoPlayer_Video">
-                        {source.subs.map(s => <track src={s.uri} label={s.language} srcLang={s.language} />)}
-                    </Video>
+                    <Video ref={videoRef} src={`api/media/${info.jellyfinId}/stream.mkv?mediaId=${source.id}`} playsInline autoPlay className="VideoPlayer_Video" />
 
                     <BufferingIndicator className="VideoPlayer_Buffering" />
                     <Gesture action="togglePaused" type="tap" />
                     <Gesture action="toggleFullscreen" type="doubletap" />
 
+                    <SubtitlesPlayerControl url={source.subs[selectedSub]?.uri} offset={subtitleOffset} />
 
                     <Controls.Root className="VideoPlayer_Controls">
                         <TimeSlider.Root className="VideoPlayer_Controls_TimeSlider">
@@ -100,7 +106,13 @@ export default function (props: Props) {
                             </div>
 
                             <div className="VideoPlayer_Controls_Right">
-                                <SubtitlePlayerControl videoElement={videoRef.current!} />
+                                <SubtitleSelectorPlayerControl
+                                    selectedSub={selectedSub}
+                                    selectSub={setSelectedSub}
+                                    subtitleOffset={subtitleOffset}
+                                    setSubtitleOffset={setSubtitleOffset}
+                                    subs={source.subs}
+                                />
                                 <FullscreenButton className="VideoPlayer_Controls_Fullscreen">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" aria-hidden="true" viewBox="0 0 18 18" className="VideoPlayer_Controls_Fullscreen_Activate">
                                         <path d="M9.57 3.617A1 1 0 0 0 8.646 3H4c-.552 0-1 .449-1 1v4.646a.996.996 0 0 0 1.001 1 1 1 0 0 0 .706-.293l4.647-4.647a1 1 0 0 0 .216-1.089m4.812 4.812a1 1 0 0 0-1.089.217l-4.647 4.647a.998.998 0 0 0 .708 1.706H14c.552 0 1-.449 1-1V9.353a1 1 0 0 0-.618-.924" />
@@ -148,11 +160,7 @@ export default function (props: Props) {
             <div className="MediaPlayer_Controls ViewPageContainer">
                 <div className="MediaPlayer_Controls_Bookmark">
                     {playbackInfo && (<>
-                        {playbackInfo.sources[0].id}
-                        <select>
-                            {playbackInfo.sources[0].subs.map(e => <option>{e.language}</option>)}
-                        </select>
-                        <button onClick={test} >test</button>
+
                     </>)}
                 </div>
             </div>

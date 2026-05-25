@@ -1,0 +1,15 @@
+.VideoPlayer_SubtitlesContainer {
+    position: absolute;
+
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+
+    font-size: 30px;
+}
+
+.VideoPlayer_SubtitlesContainer>div {
+    background-color: black;
+    margin: auto;
+    width: max-content;
+}
