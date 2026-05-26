@@ -58,6 +58,9 @@ export default function (props: Props) {
             const [startRaw, endRaw] = timingLine.split("-->").map(s => s.trim().split(" ")[0]);
             const text = lines.slice(timingIndex + 1).join("\n");
 
+            if (!isValidSubtitleText(text))
+                continue;
+
             cues.push({
                 start: parseTimestamp(startRaw),
                 end: parseTimestamp(endRaw),
@@ -66,6 +69,21 @@ export default function (props: Props) {
         }
 
         SetCues(cues);
+    }
+
+    function isValidSubtitleText(text: string) {
+        const cleaned = text.replace(/\{[^}]*\}/g, "").trim();
+
+        // reject empty or pure ASS/automation garbage
+        if (!cleaned) return false;
+
+        // reject lines that are only tags or keyframe instructions
+        if (/^\{.*\}$/.test(text)) return false;
+
+        // reject obvious ASS automation fragments
+        if (/\\(kf|bord|shad|t\(|an|pos|move)/i.test(text)) return false;
+
+        return true;
     }
 
     function WithinCue(time: number, pos: number): boolean {
