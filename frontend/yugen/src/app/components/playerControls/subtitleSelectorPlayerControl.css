@@ -4,21 +4,25 @@
 
 .MediaControl_Subtitles_Popup {
     position: absolute;
-    width: 300px;
+    width: 400px;
     height: 300px;
 
     right: -50%;
     bottom: -50%;
 }
 
-.MediaControl_Subtitles_Popup_SliderContainer {
+.MediaControl_Subtitles_Popup_Container {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 80px;
 
-    background-color: black;
+    gap: 10px;
+
+    background: var(--global-div);
+    border: 1px solid var(--global-border-color);
+    border-radius: 12px;
 
     padding: 5px;
     overflow: scroll;
@@ -28,11 +32,23 @@
 }
 
 
-.MediaControl_Subtitles_Popup_SliderContainer>div {
+.MediaControl_Subtitles_Popup_Container>div {
     cursor: pointer;
     padding: 5px;
+
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
 }
 
-.MediaControl_Subtitles_Popup_SliderContainer>.Selected {
-    background-color: red;
+.MediaControl_Subtitles_Popup_Subs>div {
+    height: fit-content;
+    padding: 5px 0px;
+    gap: 5px;
+}
+
+.MediaControl_Subtitles_Popup_Subs>.Selected {
+    background: var(--global-div-tr);
+    border: 1px solid var(--global-border-color);
+    border-radius: 12px;
 }

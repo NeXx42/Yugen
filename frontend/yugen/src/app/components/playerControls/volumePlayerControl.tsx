@@ -12,7 +12,7 @@ export default function (props: Props): ReactNode {
     const [isHovered, setIsHovered] = useState(false);
 
     const drawSVG = () => {
-        if (player?.volume ?? 0 == 0) {
+        if (player?.muted || ((player?.volume ?? 0) == 0)) {
             return (
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" aria-hidden="true" viewBox="0 0 18 18">
                     <path d="M.714 6.008h3.072l4.071-3.857c.5-.376 1.143 0 1.143.601V15.28c0 .602-.643.903-1.143.602l-4.071-3.858H.714c-.428 0-.714-.3-.714-.752V6.76c0-.451.286-.752.714-.752M14.5 7.586l-1.768-1.768a1 1 0 1 0-1.414 1.414L13.085 9l-1.767 1.768a1 1 0 0 0 1.414 1.414l1.768-1.768 1.768 1.768a1 1 0 0 0 1.414-1.414L15.914 9l1.768-1.768a1 1 0 0 0-1.414-1.414z" />
@@ -41,9 +41,7 @@ export default function (props: Props): ReactNode {
 
         {isHovered && (
             <div className="MediaControl_Volume_Popup" onMouseLeave={() => setIsHovered(false)} >
-                <div className="MediaControl_Volume_Popup_SliderContainer" onClick={e => e.stopPropagation()}>
-                    <input min={0} max={100} type="range" value={(player?.volume ?? 0) * 100} onChange={e => player?.setVolume(Number.parseFloat(e.target.value) / 100)} />
-                </div>
+                <input onClick={e => e.stopPropagation()} min={0} max={100} type="range" value={(player?.volume ?? 0) * 100} onChange={e => player?.setVolume(Number.parseFloat(e.target.value) / 100)} />
             </div>
         )}
     </button>)

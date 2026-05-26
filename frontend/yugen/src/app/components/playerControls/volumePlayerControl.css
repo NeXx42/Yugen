@@ -5,25 +5,32 @@
 .MediaControl_Volume_Popup {
     position: absolute;
     width: 200%;
-    height: 150px;
+    height: 200px;
 
     left: -50%;
     bottom: -50%;
+
+    display: flex;
+    align-items: center;
 }
 
 .MediaControl_Volume_Popup_SliderContainer {
     position: absolute;
-    top: 0;
+    margin-bottom: auto;
 
-    width: 100%;
-    height: 100px;
+    width: 60%;
+    height: 140px;
 
-    background-color: red;
+    background: var(--global-div);
+    border: 1px solid var(--global-border-color);
+    border-radius: 12px;
+
 }
 
-.MediaControl_Volume_Popup_SliderContainer>input {
+.MediaControl_Volume_Popup>input {
     position: absolute;
-    inset: 0px;
+    left: 0px;
+    width: 120px;
 
     transform: rotate(-90deg);
 }

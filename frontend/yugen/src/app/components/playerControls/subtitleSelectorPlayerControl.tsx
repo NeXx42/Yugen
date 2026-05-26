@@ -16,7 +16,6 @@ interface Props {
 
 export default function (props: Props): ReactNode {
     const [isHovered, setIsHovered] = useState(false);
-    const [editSubtitleOffset, setEditSubtitleOffset] = useState(false);
 
     const selectSub = (id: number) => {
         props.selectSub(id);
@@ -28,11 +27,15 @@ export default function (props: Props): ReactNode {
 
         {isHovered && (
             <div className="MediaControl_Subtitles_Popup" onMouseLeave={() => setIsHovered(false)} >
-                <div className="MediaControl_Subtitles_Popup_SliderContainer" onClick={e => e.stopPropagation()}>
-                    <div onClick={() => setEditSubtitleOffset(true)}>Edit</div>
-
-                    <div onClick={() => selectSub(-1)} className={props.selectedSub === -1 ? "Selected" : ""}>None</div>
-                    {props.subs.map((t, i) => <div key={i} onClick={() => selectSub(i)} className={props.selectedSub === i ? "Selected" : ""}>{t.title}</div>)}
+                <div className="MediaControl_Subtitles_Popup_Container" onClick={e => e.stopPropagation()}>
+                    <div className="MediaControl_Subtitles_Popup_OffsetContainer">
+                        <p>{props.subtitleOffset}</p>
+                        <input type="range" min={-20} max={20} value={props.subtitleOffset} onChange={e => props.setSubtitleOffset(Number.parseFloat(e.target.value))} step={0.001} />
+                    </div>
+                    <div className="MediaControl_Subtitles_Popup_Subs">
+                        <div onClick={() => selectSub(-1)} className={props.selectedSub === -1 ? "Selected" : ""}>None</div>
+                        {props.subs.map((t, i) => <div key={i} onClick={() => selectSub(i)} className={props.selectedSub === i ? "Selected" : ""}>{t.title}</div>)}
+                    </div>
                 </div>
             </div>
         )}
