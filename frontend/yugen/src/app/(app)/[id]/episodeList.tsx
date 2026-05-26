@@ -38,7 +38,6 @@ const monthsOfThYear = [
 
 export default function (props: Props) {
     const [episodes, setEpisodes] = useState<MediaEpisodeInfo[]>([]);
-    const [episodeReleaseTime, setEpisodeReleaseTime] = useState<number | null>(null);
 
     const [timeUntil, setTimeUntil] = useState("")
     const [selectedEpisodeIndex, setSelectedEpisodeIndex] = useState<number | null>(null);
@@ -46,15 +45,11 @@ export default function (props: Props) {
 
     useEffect(() => {
         fetchEpisodes(false);
-        api.catalog_EpisodeUpcomingTime(props.mediaInfo.id).then(setEpisodeReleaseTime);
 
-    }, [props.mediaInfo])
-
-    useEffect(() => {
-        if (episodeReleaseTime == null) return;
+        if (props.mediaInfo.upcomingEpisode == null) return;
 
         const update = () => {
-            const ms = episodeReleaseTime! * 1000 - Date.now();
+            const ms = props.mediaInfo.upcomingEpisode! * 1000 - Date.now();
 
             const seconds = Math.floor(ms / 1000) % 60;
             const minutes = Math.floor(ms / (1000 * 60)) % 60;
@@ -68,7 +63,8 @@ export default function (props: Props) {
 
         const interval = setInterval(update, 1000);
         return () => clearInterval(interval);
-    }, [episodeReleaseTime])
+
+    }, [props.mediaInfo])
 
     useEffect(() => {
         var bestTime = 0;
@@ -158,7 +154,7 @@ export default function (props: Props) {
                         {episodes?.map(drawEpisode)}
                     </div>
                     {
-                        episodeReleaseTime != null && (
+                        props.mediaInfo.upcomingEpisode != null && (
                             <div className="EpisodeList_Upcoming">
                                 {timeUntil}
                             </div>

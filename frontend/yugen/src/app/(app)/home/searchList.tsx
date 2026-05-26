@@ -15,27 +15,22 @@ export default function () {
     const [sort, setSort] = useState<SortType>("New");
     const [page, setPage] = useState<number>(1);
 
-    const [season, setSeason] = useState<Season>("FALL");
+    const [season, setSeason] = useState<Season>(() => {
+        const currentDate = new Date();
+        return seasonLookup[Math.floor(currentDate.getMonth() / 3)];
+    });
 
-    const getFeaturedSeason = (): { season: Season, year: number } => {
-        return {
-            season: season,
-            year: 2026
-        };
-    }
 
     const search = (): Promise<PageResponse<MediaCardInfo>> => {
         switch (sort) {
             case "New":
-                const { season, year } = getFeaturedSeason();
-
                 return api.catalog_Search({
                     page: page,
                     pageSize: pageSize,
 
                     sort: 17,
 
-                    year: year,
+                    year: new Date().getFullYear(),
                     season: season
                 });
 
@@ -54,11 +49,6 @@ export default function () {
         setPage(1);
         setSort(to);
     }
-
-    useEffect(() => {
-        const currentDate = new Date();
-        setSeason(seasonLookup[Math.floor(currentDate.getMonth() / 3)])
-    }, [sort])
 
     return (
         <div className="SearchList">

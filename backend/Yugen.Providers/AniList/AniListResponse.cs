@@ -158,17 +158,25 @@ public class AniListResponse_AiringEpisode
 
     public class Data
     {
-        public Media? media { get; set; }
+        public Page? page { get; set; }
 
-        public class Media
+        public class Page
         {
-            public NextAiringEpisode? nextAiringEpisode { get; set; }
+            public Media[]? media { get; set; }
 
-            public class NextAiringEpisode
+            public class Media
             {
-                public long? airingAt { get; set; }
+                public required int id { get; set; }
+                public NextAiringEpisode? nextAiringEpisode { get; set; }
+
+                public class NextAiringEpisode
+                {
+                    public long? airingAt { get; set; }
+                }
             }
+
         }
+
     }
 }
 

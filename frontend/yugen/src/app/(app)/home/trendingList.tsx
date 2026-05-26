@@ -58,7 +58,6 @@ export default function ({ searchCriteria }: { searchCriteria: CaughtResponse<Se
     }
 
     const drawItem = (item: MediaInfo | undefined) => {
-        console.log(item);
         if (item == undefined)
             return <>Failed to load</>
 
@@ -70,13 +69,13 @@ export default function ({ searchCriteria }: { searchCriteria: CaughtResponse<Se
 
                 <div className="Trending_Navigation" onClick={e => e.stopPropagation()}>
                     <button onClick={() => iterateItem(-1)}>
-                        <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 256 512" height="20" width="20" xmlns="http://www.w3.org/2000/svg">
+                        <svg stroke="currentColor" fill="currentColor" viewBox="0 0 256 512" height="20" width="20" xmlns="http://www.w3.org/2000/svg">
                             <path d="M31.7 239l136-136c9.4-9.4 24.6-9.4 33.9 0l22.6 22.6c9.4 9.4 9.4 24.6 0 33.9L127.9 256l96.4 96.4c9.4 9.4 9.4 24.6 0 33.9L201.7 409c-9.4 9.4-24.6 9.4-33.9 0l-136-136c-9.5-9.4-9.5-24.6-.1-34z" />
                         </svg>
                     </button>
                     <a>{`${selectedItem + 1} / ${data?.length}`}</a>
                     <button onClick={() => iterateItem(1)}>
-                        <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 256 512" height="20" width="20" xmlns="http://www.w3.org/2000/svg">
+                        <svg stroke="currentColor" fill="currentColor" viewBox="0 0 256 512" height="20" width="20" xmlns="http://www.w3.org/2000/svg">
                             <path d="M224.3 273l-136 136c-9.4 9.4-24.6 9.4-33.9 0l-22.6-22.6c-9.4-9.4-9.4-24.6 0-33.9l96.4-96.4-96.4-96.4c-9.4-9.4-9.4-24.6 0-33.9L54.3 103c9.4-9.4 24.6-9.4 33.9 0l136 136c9.5 9.4 9.5 24.6.1 34z" />
                         </svg>
                     </button>
@@ -89,7 +88,7 @@ export default function ({ searchCriteria }: { searchCriteria: CaughtResponse<Se
                 </div>
 
                 <button className="Trending_PlayButton">
-                    <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="18" width="18" xmlns="http://www.w3.org/2000/svg">
+                    <svg stroke="currentColor" fill="currentColor" viewBox="0 0 512 512" height="18" width="18" xmlns="http://www.w3.org/2000/svg">
                         <path d="M0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zM188.3 147.1c-7.6 4.2-12.3 12.3-12.3 20.9l0 176c0 8.7 4.7 16.7 12.3 20.9s16.8 4.1 24.3-.5l144-88c7.1-4.4 11.5-12.1 11.5-20.5s-4.4-16.1-11.5-20.5l-144-88c-7.4-4.5-16.7-4.7-24.3-.5z" />
                     </svg>
                     Watch
@@ -98,7 +97,7 @@ export default function ({ searchCriteria }: { searchCriteria: CaughtResponse<Se
 
             <div className="Trending_Genres">
                 <button>
-                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                    <svg stroke="currentColor" fill="currentColor" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
                         <path d="M256 504C119 504 8 393 8 256S119 8 256 8s248 111 248 248-111 248-248 248zM142.1 273l135.5 135.5c9.4 9.4 24.6 9.4 33.9 0l17-17c9.4-9.4 9.4-24.6 0-33.9L226.9 256l101.6-101.6c9.4-9.4 9.4-24.6 0-33.9l-17-17c-9.4-9.4-24.6-9.4-33.9 0L142.1 239c-9.4 9.4-9.4 24.6 0 34z" />
                     </svg>
                 </button>
@@ -106,7 +105,7 @@ export default function ({ searchCriteria }: { searchCriteria: CaughtResponse<Se
                     {searchCriteria.data?.genres.map(g => (<a key={g}>{g}</a>))}
                 </div>
                 <button type="button" >
-                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                    <svg stroke="currentColor" fill="currentColor" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
                         <path d="M256 8c137 0 248 111 248 248S393 504 256 504 8 393 8 256 119 8 256 8zm113.9 231L234.4 103.5c-9.4-9.4-24.6-9.4-33.9 0l-17 17c-9.4 9.4-9.4 24.6 0 33.9L285.1 256 183.5 357.6c-9.4 9.4-9.4 24.6 0 33.9l17 17c9.4 9.4 24.6 9.4 33.9 0L369.9 273c9.4-9.4 9.4-24.6 0-34z" />
                     </svg>
                 </button>

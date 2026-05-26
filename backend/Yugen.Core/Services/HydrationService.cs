@@ -88,4 +88,22 @@ public class HydrationService
         media.Hydrated = true;
         await _db.SaveChangesAsync();
     }
+
+    public async Task<Dictionary<int, long?>> HydrateReleaseDates(ICollection<int> mediaIds)
+    {
+        if (mediaIds.Count == 0)
+            return new Dictionary<int, long?>();
+
+        Dictionary<int, long?> results = await _metaDataProvider.GetTimeOfNextEpisodes(mediaIds);
+        Model_Media[] mediaEntries = await _db.media.Where(m => mediaIds.Contains(m.Id)).ToArrayAsync();
+
+        foreach (Model_Media media in mediaEntries)
+        {
+            if (results.TryGetValue(media.Id, out long? val))
+                media.NextEpisodeReleaseDate = val;
+        }
+
+        await _db.SaveChangesAsync();
+        return results;
+    }
 }

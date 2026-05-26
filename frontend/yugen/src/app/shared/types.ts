@@ -58,6 +58,7 @@ export interface MediaInfo {
     episodeCount: number | null,
     duration: number | null,
     season: string | null,
+    upcomingEpisode: number | null,
 
     thumbnailImage: string | null;
     bannerImage: string | null,

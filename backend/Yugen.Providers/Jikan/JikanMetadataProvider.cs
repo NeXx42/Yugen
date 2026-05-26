@@ -49,6 +49,11 @@ public class JikanMetadataProvider : IMetaDataProvider
         throw new NotImplementedException();
     }
 
+    public Task<Dictionary<int, long?>> GetTimeOfNextEpisodes(ICollection<int> aniListIds)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<int>> GetTrending(int limit)
     {
         throw new NotImplementedException();

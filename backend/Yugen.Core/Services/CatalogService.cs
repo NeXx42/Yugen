@@ -4,6 +4,7 @@ using Azure;
 using EFCore.BulkExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Noding;
 using Yugen.Core.Data;
 using Yugen.Data;
 using Yugen.Domain.Data;
@@ -87,17 +88,33 @@ public class CatalogService
         List<MediaInfo> results = new List<MediaInfo>();
 
         // find cached version
+        long currentTime = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
 
         for (int i = remainingIds.Count - 1; i >= 0; i--)
         {
-            if (_cache.TryGetValue(GetInfoCacheId(remainingIds[i]), out MediaInfo? info))
+            string cacheId = GetInfoCacheId(remainingIds[i]);
+
+            if (_cache.TryGetValue(cacheId, out MediaInfo? info))
             {
                 if (info != null)
+                {
+                    if (info.upcomingEpisode.HasValue && info.upcomingEpisode.Value < currentTime)
+                    {
+                        // invalidate cache
+                        _cache.Remove(cacheId);
+                        _cache.Remove(GetCardCacheId(info.id));
+                        continue;
+                    }
+
                     results.Add(info);
+                }
 
                 remainingIds.RemoveAt(i);
             }
         }
+
+        if (remainingIds.Count == 0)
+            return results.ToArray();
 
         // create db entries for those that do not exist
 
@@ -117,9 +134,10 @@ public class CatalogService
             .Include(m => m.RelatedMedia)
             .Where(m => remainingIds.Contains(m.Id)).ToArrayAsync();
 
-        Dictionary<int, Model_Tag?> tagLookup = new Dictionary<int, Model_Tag?>();
-        Dictionary<int, MediaCard?> mediaLookup = new Dictionary<int, MediaCard?>();
-        Dictionary<int, Model_Link[]?> linkLookup = new Dictionary<int, Model_Link[]?>();
+        Dictionary<int, Model_Tag?> tagLookup = new();
+        Dictionary<int, MediaCard?> mediaLookup = new();
+        Dictionary<int, Model_Link[]?> linkLookup = new();
+        HashSet<int> episodesToRehydrateUpcomingDate = new();
 
         foreach (Model_Media media in dbEntries)
         {
@@ -131,6 +149,12 @@ public class CatalogService
 
             foreach (var relation in media.RelatedMedia)
                 mediaLookup[relation.ConnectedMediaId] = null;
+
+            if (media.NextEpisodeReleaseDate.HasValue && media.NextEpisodeReleaseDate < currentTime)
+            {
+                if (!episodesToRehydrateUpcomingDate.Contains(media.Id))
+                    episodesToRehydrateUpcomingDate.Add(media.Id);
+            }
         }
 
         var links = await (
@@ -170,6 +194,7 @@ public class CatalogService
         foreach (MediaCard card in cards)
             mediaLookup[card.aniListId] = card;
 
+        var nextEpisodeReleaseDateLookup = await _hydrationService.HydrateReleaseDates(episodesToRehydrateUpcomingDate);
 
         foreach (Model_Media media in dbEntries)
         {
@@ -189,6 +214,9 @@ public class CatalogService
                 (Model_Link, MediaCard)[] hydratedLinks = linkedMedia.Where(l => mediaLookup.ContainsKey(l.anilist_id!.Value)).Select(l => (l, mediaLookup[l.anilist_id!.Value]!)).ToArray();
                 info.RegisterConnectedMedia(hydratedLinks);
             }
+
+            if (nextEpisodeReleaseDateLookup.TryGetValue(info.id, out long? newDate))
+                info.upcomingEpisode = newDate;
 
             results.Add(info);
             _cache.Set(GetInfoCacheId(media.Id), info);
@@ -247,20 +275,6 @@ public class CatalogService
             _cache.Set(GetCardCacheId(newCard.aniListId), newCard);
 
         return [.. results, .. newCards];
-    }
-
-    public async Task<long?> GetTimeOfNextEpisode(int id)
-    {
-        string cacheKey = $"{nameof(GetTimeOfNextEpisode)}_{id}";
-
-        if (_cache.TryGetValue(cacheKey, out long? unixTime))
-            return unixTime;
-
-        unixTime = await _currentProvider.GetTimeOfNextEpisode(id);
-        TimeSpan cacheDuration = unixTime.HasValue ? DateTimeOffset.FromUnixTimeSeconds(unixTime.Value) - DateTime.UtcNow : new TimeSpan(12, 0, 0);
-
-        _cache.Set(cacheKey, unixTime, cacheDuration);
-        return unixTime;
     }
 
     public async Task<MediaInfo[]> GetTrending(int limit)

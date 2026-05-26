@@ -10,8 +10,7 @@ import "./cardColumn.css"
 interface Props {
     header: string;
     limit?: number;
-    content?: MediaCardInfo[];
-    loader?: (() => Promise<MediaCardInfo[]>);
+    content: MediaCardInfo[];
 
     drawer?: (card: MediaCardInfo) => ReactNode
 }
@@ -21,15 +20,8 @@ export default function (props: Props) {
     const [loadedAll, setLoadedAll] = useState(false);
 
     useEffect(() => {
-        if (props.loader != undefined) {
-            props.loader()!.then(setLoadedContent);
-        }
-        else {
-            setLoadedContent(props.content)
-        }
-
-        setLoadedAll(false);
-    }, [props.content, props.loader]);
+        setLoadedContent(props.content);
+    }, [props.content]);
 
     const drawElement = (card: MediaCardInfo) => {
         if (props.drawer != null)

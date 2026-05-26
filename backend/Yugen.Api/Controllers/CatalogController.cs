@@ -61,10 +61,6 @@ public class CatalogController : ControllerBase
     [HttpGet("SearchCriteria")]
     public async Task<SearchCriteria> GetSearchCriteria() => await _catalogService.GetSearchCriteria();
 
-    [HttpGet("{id}/UpcomingEpisode")]
-    public async Task<long?> GetTimeOfNextEpisode(int id) => await _catalogService.GetTimeOfNextEpisode(id);
-
-
     [HttpPost("Cache/DatabaseClear")]
     public async Task ClearDatabaseCache() => await _catalogService.ClearDatabaseCache();
 

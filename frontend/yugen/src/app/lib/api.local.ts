@@ -80,9 +80,6 @@ export async function catalog_ClearDatabase() {
 export async function catalog_ClearCache() {
     await post("catalog/Cache/Clear");
 }
-export async function catalog_EpisodeUpcomingTime(seriesId: number): Promise<number | null> {
-    return (await get<number | null>(`catalog/${seriesId}/UpcomingEpisode`))!;
-}
 export async function catalog_Trending(): Promise<MediaInfo[]> {
     return (await get<MediaInfo[]>("catalog/Trending"))!;
 }

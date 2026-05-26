@@ -25,6 +25,7 @@ public class MediaInfo
     public int? episodeCount { get; set; }
     public int? duration { get; set; }
     public string? season { get; set; }
+    public long? upcomingEpisode { get; set; }
 
     public int? bookmark { get; set; }
 
@@ -47,6 +48,7 @@ public class MediaInfo
             episodeCount = media.EpisodeCount,
             duration = media.Duration,
             season = media.Season,
+            upcomingEpisode = media.NextEpisodeReleaseDate,
 
             thumbnailImage = media.thumbnailIcon,
             bannerImage = media.BannerImage,

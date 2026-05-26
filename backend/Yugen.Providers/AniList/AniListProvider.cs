@@ -324,18 +324,41 @@ public class AniListProvider : IMetaDataProvider
         return results;
     }
 
-    public async Task<long?> GetTimeOfNextEpisode(int id)
+    public async Task<Dictionary<int, long?>> GetTimeOfNextEpisodes(ICollection<int> aniListIds)
     {
-        string query = @"query Media($mediaId: Int) {
-            Media(id: $mediaId) {
-                nextAiringEpisode {
-                airingAt
+        if (aniListIds.Count == 0)
+            return new Dictionary<int, long?>();
+
+        string query = @"query Page($perPage: Int, $idIn: [Int]) {
+            Page(perPage: $perPage) {
+                media(id_in: $idIn) {
+                    id
+                    nextAiringEpisode {
+                        airingAt
+                    }
                 }
             }
         }";
 
-        AniListResponse_AiringEpisode? res = await SendRequest<AniListResponse_AiringEpisode>(query, new { mediaId = id });
-        return res?.data?.media?.nextAiringEpisode?.airingAt;
+        Dictionary<int, long?> response = new Dictionary<int, long?>();
+
+        foreach (int id in aniListIds)
+            response[id] = null;
+
+        AniListResponse_AiringEpisode? res = await SendRequest<AniListResponse_AiringEpisode>(query, new { idIn = response.Keys, perPage = response.Count });
+
+        if ((res?.data?.page?.media?.Length ?? 0) > 0)
+        {
+            foreach (AniListResponse_AiringEpisode.Data.Page.Media? entry in res!.data!.page!.media!)
+            {
+                if (entry == null)
+                    continue;
+
+                response[entry.id] = entry?.nextAiringEpisode?.airingAt;
+            }
+        }
+
+        return response;
     }
 
     public async Task<List<int>> GetTrending(int limit)
