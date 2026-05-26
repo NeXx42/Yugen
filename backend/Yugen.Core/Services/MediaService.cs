@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Yugen.Core.Configs;
@@ -176,5 +177,27 @@ public class MediaService
         await _db.SaveChangesAsync();
 
         _cache.Remove(CatalogService.GetCardCacheId(AniListId));
+    }
+
+    public async Task UploadSubtitle(string jellyfinId, string language, IFormFile subtitle)
+    {
+        string data;
+
+        using (var stream = subtitle.OpenReadStream())
+        using (var reader = new StreamReader(stream))
+        {
+            data = await reader.ReadToEndAsync();
+        }
+
+        if (string.IsNullOrEmpty(data))
+            throw new Exception("Failed to read data");
+
+        string base64Data = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(data));
+        await _mediaProvider.UploadSubtitle(jellyfinId, language, Path.GetExtension(subtitle.FileName).TrimStart('.'), base64Data);
+    }
+
+    public async Task DeleteSubtitle(string jellyfinId, int id)
+    {
+        await _mediaProvider.DeleteSubtitle(jellyfinId, id);
     }
 }

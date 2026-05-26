@@ -92,4 +92,24 @@ public class MediaController : ControllerBase
         HttpContext.GetUserFromSession(out var usr);
         await _mediaService.UpdateEpisodeWatchTime(usr, mediaId, episode, data.percentage, ticks);
     }
+
+    [HttpPost("{jellyfinId}/UploadSubtitle")]
+    public async Task<IActionResult> UploadSubtitle(string jellyfinId, IFormFile? subtitle, [FromQuery] string language)
+    {
+        if (string.IsNullOrEmpty(language))
+            return BadRequest("Invalid language");
+
+        if (subtitle == null)
+            return BadRequest("Invalid file");
+
+        await _mediaService.UploadSubtitle(jellyfinId, language, subtitle);
+        return Ok();
+    }
+
+    [HttpDelete("{jellyfinId}/{subtitleId}/Subtitle")]
+    public async Task<IActionResult> DeleteSubtitle(string jellyfinId, int subtitleId)
+    {
+        await _mediaService.DeleteSubtitle(jellyfinId, subtitleId);
+        return Ok();
+    }
 }

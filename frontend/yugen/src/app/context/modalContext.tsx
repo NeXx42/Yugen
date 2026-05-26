@@ -3,6 +3,8 @@
 import { createPortal } from "react-dom";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react"
 
+import "./modalContext.css"
+
 const ModalContext = createContext<any>(null)
 
 interface ModalRequest {

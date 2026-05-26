@@ -2,7 +2,7 @@
 
 import * as api from "@lib/api.local"
 
-import { ReactNode, useEffect, useRef, useState } from "react"
+import { ReactNode, SubmitEvent, useEffect, useRef, useState } from "react"
 
 import { MediaEpisodeInfo, MediaInfo, Playback_Info } from "@shared/types"
 
@@ -21,6 +21,8 @@ import VolumePlayerControl from "@/app/components/playerControls/volumePlayerCon
 import SubtitleSelectorPlayerControl from "@/app/components/playerControls/subtitleSelectorPlayerControl";
 import SubtitlesPlayerControl from "@/app/components/playerControls/subtitlesPlayerControl";
 import WatchtimeSyncerPlayerControl from "@/app/components/playerControls/watchtimeSyncerPlayerControl";
+import { createPortal } from "react-dom";
+import { useModals } from "@/app/context/modalContext";
 
 interface Props {
     mediaInfo: MediaInfo
@@ -35,8 +37,9 @@ const Player = createPlayer({
 
 
 export default function (props: Props) {
-    const videoRef = useRef<HTMLVideoElement | null>(null);
+    const { showModal, closeModal } = useModals();
 
+    const videoRef = useRef<HTMLVideoElement | null>(null);
     const thumbnail = props.episode?.thumbnail ?? props.mediaInfo.thumbnailImage;
 
     const [selectedSub, setSelectedSub] = useState<number>(-1);
@@ -45,18 +48,7 @@ export default function (props: Props) {
     const [playbackInfo, setPlaybackInfo] = useState<Playback_Info | undefined>(undefined);
     const [isPlaying, setIsPlaying] = useState(false);
 
-    useEffect(() => {
-        setIsPlaying(false);
-
-        if (props.episode?.jellyfinId) {
-            api.media_PlaybackInfo(props.mediaInfo.id, props.episode.number, props.episode?.jellyfinId).then(setPlaybackInfo).catch(() => setPlaybackInfo(undefined));
-        }
-        else {
-            setPlaybackInfo(undefined);
-        }
-
-    }, [props.mediaInfo, props.episode])
-
+    useEffect(() => fetchPlaybackInfo(), [props.mediaInfo, props.episode])
     useEffect(() => {
         if (videoRef.current == null)
             return;
@@ -66,6 +58,17 @@ export default function (props: Props) {
         }
 
     }, [videoRef.current, selectedSub])
+
+    const fetchPlaybackInfo = () => {
+        setIsPlaying(false);
+
+        if (props.episode?.jellyfinId) {
+            api.media_PlaybackInfo(props.mediaInfo.id, props.episode.number, props.episode?.jellyfinId).then(setPlaybackInfo).catch(() => setPlaybackInfo(undefined));
+        }
+        else {
+            setPlaybackInfo(undefined);
+        }
+    }
 
     const onMetadataLoad = (video: HTMLVideoElement) => {
         if (playbackInfo?.historicalTicks == null)
@@ -77,6 +80,101 @@ export default function (props: Props) {
     const syncPlaybackTime = (runtime: number, percentage: number) => {
         void api.media_UpdateEpisodeTime(props.mediaInfo.id, props.episode!.number, runtime, percentage);
     }
+
+
+
+    const drawSubtitlesEditor = (playbackInfo: Playback_Info) => {
+        const uploadSubtitle = async (e: SubmitEvent<HTMLFormElement>) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const form = e.currentTarget;
+            const formData = new FormData(form);
+            const lang = formData.get("language") as string;
+
+            await api.media_UploadSubtitle(
+                playbackInfo.jellyfinId,
+                lang,
+                formData
+            );
+
+            fetchPlaybackInfo();
+            closeModal();
+        };
+
+        const deleteExternalSubtitle = async (id: number) => {
+            await api.media_DeleteSubtitle(playbackInfo.jellyfinId, id);
+
+            fetchPlaybackInfo();
+            closeModal();
+        }
+
+        const subs = playbackInfo.sources[0].subs.filter(s => s.isExternal);
+
+        showModal(
+            <div className="MediaPlayer_SubtitlesEdit">
+                <h2>Episode {props.episode?.number}</h2>
+                <form onSubmit={uploadSubtitle}>
+                    <div>
+                        <select name="language">
+                            <option value="eng">English</option>
+                            <option value="spa">Spanish</option>
+                            <option value="fra">French</option>
+                            <option value="deu">German</option>
+                            <option value="ita">Italian</option>
+                            <option value="por">Portuguese</option>
+                            <option value="nld">Dutch</option>
+                            <option value="swe">Swedish</option>
+                            <option value="nor">Norwegian</option>
+                            <option value="dan">Danish</option>
+                            <option value="fin">Finnish</option>
+                            <option value="pol">Polish</option>
+                            <option value="rus">Russian</option>
+                            <option value="tur">Turkish</option>
+                            <option value="ara">Arabic</option>
+                            <option value="zho">Chinese</option>
+                            <option value="jpn">Japanese</option>
+                            <option value="kor">Korean</option>
+                        </select>
+                        <input type="file" name="subtitle" accept=".srt,.vtt,.ass,.ssa" />
+                    </div>
+
+                    <button type="submit">Upload</button>
+                </form>
+
+                <div>
+                    {
+                        subs.length > 0 ? (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {
+                                        subs.map(s => < tr key={s.id}>
+                                            <td>
+                                                {s.title}
+                                            </td>
+                                            <td className="MediaPlayer_SubtitlesEdit_Existing_Action">
+                                                <button onClick={() => deleteExternalSubtitle(s.id)}>Delete</button>
+                                            </td>
+                                        </tr>)
+                                    }
+                                </tbody>
+                            </table>
+                        ) :
+                            (
+                                <p>No External Subs</p>
+                            )
+                    }
+                </div>
+            </div>
+        );
+    }
+
 
     const drawPlayer = (info: Playback_Info): ReactNode => {
         const source = info.sources[0];
@@ -148,7 +246,6 @@ export default function (props: Props) {
                 </Container>
             </Player.Provider >
         )
-
     }
 
     return (
@@ -171,7 +268,7 @@ export default function (props: Props) {
             <div className="MediaPlayer_Controls ViewPageContainer">
                 <div className="MediaPlayer_Controls_Bookmark">
                     {playbackInfo && (<>
-
+                        <button onClick={() => drawSubtitlesEditor(playbackInfo)}>Subtitles</button>
                     </>)}
                 </div>
             </div>

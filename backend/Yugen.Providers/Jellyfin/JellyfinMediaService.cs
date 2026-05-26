@@ -23,7 +23,6 @@ public class JellyfinMediaService : IMediaProvider
         });
     }
 
-
     public async Task<PlaybackInfo> GetPlaybackInfo(string jellyfinId)
     {
         JellyfinResponse_MediaInfo playbackInfo = (await _http.SendRequest<JellyfinResponse_MediaInfo>($"Items/{jellyfinId}/PlaybackInfo", HttpMethod.Get))!;
@@ -37,8 +36,11 @@ public class JellyfinMediaService : IMediaProvider
                 id = m.id!,
                 subs = m.MediaStreams?.Where(m => m.Type?.Equals("Subtitle") ?? false).Select(s => new PlaybackInfo.Source.Subtitles()
                 {
+                    title = s.DisplayTitle ?? s.Title,
                     language = s.Language!,
-                    uri = $"api/media/{jellyfinId}/{m.id}/{s.Index}/Subtitle"
+                    isExternal = s.IsExternal ?? false,
+                    uri = $"api/media/{jellyfinId}/{m.id}/{s.Index}/Subtitle",
+                    id = s.Index,
 
                 }).ToArray() ?? []
 
@@ -146,5 +148,23 @@ public class JellyfinMediaService : IMediaProvider
         }
 
         return res.ToArray();
+    }
+
+    public async Task UploadSubtitle(string jellyfinId, string language, string format, string data)
+    {
+        await _http.SendRequest($"Videos/{jellyfinId}/Subtitles", HttpMethod.Post, new
+        {
+            Language = language,
+            Format = format,
+            Data = data,
+            IsForced = false,
+            IsHearingImpaired = false
+        });
+    }
+
+
+    public async Task DeleteSubtitle(string jellyfinId, int id)
+    {
+        await _http.SendRequest($"Videos/{jellyfinId}/Subtitles/{id}", HttpMethod.Delete);
     }
 }

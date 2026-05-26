@@ -1,4 +1,6 @@
 .MediaRequest {
+    z-index: 5;
+
     position: fixed;
     inset: 0px;
 

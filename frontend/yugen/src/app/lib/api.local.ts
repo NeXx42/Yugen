@@ -97,7 +97,12 @@ export async function media_UpdateEpisodeTime(mediaId: number, episode: number, 
         percentage
     }))!
 }
-
+export async function media_UploadSubtitle(jellyfinId: string, language: string, file: FormData) {
+    await upload(`media/${jellyfinId}/UploadSubtitle?language=${language}`, file);
+}
+export async function media_DeleteSubtitle(jellyfinId: string, id: number) {
+    await deleteReq(`media/${jellyfinId}/${id}/Subtitle`);
+}
 
 export async function notification_Count(): Promise<number> {
     return (await get<number>("Notifications/Count"))!;

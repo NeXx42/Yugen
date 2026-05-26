@@ -14,8 +14,11 @@ public class PlaybackInfo
 
         public class Subtitles
         {
-            public required string language { get; set; }
+            public string? title { get; set; }
+            public bool isExternal { get; set; }
+            public string? language { get; set; }
             public required string uri { get; set; }
+            public required int id { get; set; }
         }
     }
 }

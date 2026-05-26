@@ -210,6 +210,9 @@ export interface Playback_Info_Source {
 }
 
 export interface Playback_Info_Subtitle {
-    language: string,
+    id: number,
+    title: string | undefined
+    language: string | undefined,
     uri: string
+    isExternal: boolean,
 }

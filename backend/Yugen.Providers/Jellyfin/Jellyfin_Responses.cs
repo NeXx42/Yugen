@@ -136,7 +136,7 @@ public class JellyfinResponse_MediaInfo
             public string? Profile { get; set; }
             public string? Type { get; set; }
             public string? AspectRatio { get; set; }
-            public int? Index { get; set; }
+            public required int Index { get; set; }
             public bool? IsExternal { get; set; }
             public bool? IsTextSubtitleStream { get; set; }
             public bool? SupportsExternalStream { get; set; }

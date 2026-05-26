@@ -32,7 +32,7 @@ export default function (props: Props): ReactNode {
                     <div onClick={() => setEditSubtitleOffset(true)}>Edit</div>
 
                     <div onClick={() => selectSub(-1)} className={props.selectedSub === -1 ? "Selected" : ""}>None</div>
-                    {props.subs.map((t, i) => <div key={i} onClick={() => selectSub(i)} className={props.selectedSub === i ? "Selected" : ""}>{t.language}</div>)}
+                    {props.subs.map((t, i) => <div key={i} onClick={() => selectSub(i)} className={props.selectedSub === i ? "Selected" : ""}>{t.title}</div>)}
                 </div>
             </div>
         )}

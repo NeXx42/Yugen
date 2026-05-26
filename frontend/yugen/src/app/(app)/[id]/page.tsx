@@ -98,7 +98,7 @@ export default async function ({ params }: { params: { id: number } }) {
                     {(media.connectedMedia?.length ?? 0) > 1 && (
                         <div className="ViewPage_Seasons ViewPageContainer">
                             <h2>// Related</h2>
-                            {seasons.map(m => <MediaCardHorizontal key={m.card.aniListId} card={m.card} selected={m.card?.aniListId === media.id} />)}
+                            {seasons.filter(m => m.card).map(m => <MediaCardHorizontal key={m.card.aniListId} card={m.card} selected={m.card.aniListId === media.id} />)}
                         </div>
                     )}
 

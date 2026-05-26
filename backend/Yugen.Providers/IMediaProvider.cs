@@ -8,6 +8,10 @@ namespace Yugen.Providers;
 public interface IMediaProvider
 {
     public Task<PlaybackInfo> GetPlaybackInfo(string jellyfinId);
+
+    public Task DeleteSubtitle(string jellyfinId, int id);
+    public Task UploadSubtitle(string jellyfinId, string language, string format, string data);
+
     public Task<string> GetPlaybackUrl(string jellyfinId, string mediaId);
     public Task<string> GetSubtitleUrl(string jellyfinId, string mediaId, int subtitleId);
 
