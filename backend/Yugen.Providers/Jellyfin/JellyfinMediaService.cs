@@ -23,9 +23,14 @@ public class JellyfinMediaService : IMediaProvider
         });
     }
 
+    private async Task<JellyfinResponse_MediaInfo> GetPlaybackInfoInternal(string jellyfinId)
+    {
+        return (await _http.SendRequest<JellyfinResponse_MediaInfo>($"Items/{jellyfinId}/PlaybackInfo", HttpMethod.Get))!;
+    }
+
     public async Task<PlaybackInfo> GetPlaybackInfo(string jellyfinId)
     {
-        JellyfinResponse_MediaInfo playbackInfo = (await _http.SendRequest<JellyfinResponse_MediaInfo>($"Items/{jellyfinId}/PlaybackInfo", HttpMethod.Get))!;
+        JellyfinResponse_MediaInfo playbackInfo = await GetPlaybackInfoInternal(jellyfinId);
 
         return new PlaybackInfo()
         {
@@ -48,7 +53,47 @@ public class JellyfinMediaService : IMediaProvider
         };
     }
 
-    public async Task<string> GetPlaybackUrl(string jellyfinId, string mediaId) => $"{_url}/Videos/{jellyfinId}/stream.mkv?static=true&api_key={_apiKey}&mediaSourceId={mediaId}";
+    public Task<string> ProxyUrl(string relative, bool includeApiKey = false) => Task.FromResult($"{_url}/{relative}{(includeApiKey ? $"&api_key={_apiKey}" : "")}");
+
+    public async Task<string> GetPlaybackUrl(string jellyfinId, int source, bool hls)
+    {
+        JellyfinResponse_MediaInfo info = await GetPlaybackInfoInternal(jellyfinId);
+        JellyfinResponse_MediaInfo.MediaSource sourceObj = info.MediaSources![source];
+
+        if (!hls)
+            return await ProxyUrl($"Videos/{jellyfinId}/stream.mkv?static=true&mediaSourceId={sourceObj.id}&playSessionId={info.playSessionId}");
+
+        JellyfinResponse_MediaInfo.MediaSource.MediaStream? stream = sourceObj.MediaStreams?.FirstOrDefault(m => m.Type == "Video");
+
+        if (stream == null)
+            throw new Exception("Couldnt find stream");
+
+        string urlParams = string.Join("&", [
+            $"MediaSourceId={sourceObj.id}",
+            //$"videoCodec={"h264,vp9,av1"}",
+            $"PlaySessionId={info.playSessionId}",
+            $"SegmentContainer={"mp4"}",
+            $"AudioCodec={"copy"}",
+            $"Tag={System.Guid.NewGuid().ToString().Replace("-", string.Empty)}",
+            
+            //$"VideoCodec={"av1,h264,vp9"}",
+            //$"TranscodingMaxAudioChannels={"2"}",
+            //$"RequireAvc={"false"}",
+            //$"EnableAudioVbrEncoding={"true"}",
+            //$"h264-level={"40"}",
+            //$"h264-videobitdepth={"8"}",
+            //$"h264-videobitdepth={"high"}",
+            //$"av1-profile={"main"}",
+            //$"av1-rangetype={"SDR"}",
+            //$"av1-level={"19"}",
+            //$"vp9-rangetype={"SDR"}",
+            //$"h264-rangetype={"SDR"}",
+            //$"h264-deinterlace={"SDR"}",
+            //$"TranscodeReasons={"ContainerBitrateExceedsLimit"}",
+        ]);
+        return await ProxyUrl($"Videos/{jellyfinId}/master.m3u8?{urlParams}", true);
+    }
+
     public async Task<string> GetSubtitleUrl(string jellyfinId, string mediaId, int subtitleId) => $"{_url}/Videos/{jellyfinId}/{mediaId}/Subtitles/{subtitleId}/Stream.vtt?api_key={_apiKey}";
 
     public async Task<string?[]?> MapPathToJellyfinId(ICollection<Model_DownloadedEpisode> episodes)

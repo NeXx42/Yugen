@@ -68,6 +68,7 @@ public class Jellyfin_Response_History
 
 public class JellyfinResponse_MediaInfo
 {
+    public required string playSessionId { get; set; }
     public MediaSource[]? MediaSources { get; set; }
 
     public class MediaSource

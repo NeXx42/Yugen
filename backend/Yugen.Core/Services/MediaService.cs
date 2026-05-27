@@ -45,9 +45,11 @@ public class MediaService
         return info;
     }
 
-    public async Task<HttpRequestMessage> GetPlaybackRequest(UserSession usr, string jellyfinId, string mediaId)
+    public async Task<string> ProxyUrl(string relative, bool includeApiKey) => await _mediaProvider.ProxyUrl(relative, includeApiKey);
+
+    public async Task<HttpRequestMessage> GetPlaybackRequest(UserSession usr, string jellyfinId, int source, bool hls)
     {
-        string url = await _mediaProvider.GetPlaybackUrl(jellyfinId, mediaId);
+        string url = await _mediaProvider.GetPlaybackUrl(jellyfinId, source, hls);
         HttpRequestMessage http = new HttpRequestMessage(HttpMethod.Get, url);
 
         return http;

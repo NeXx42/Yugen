@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 using Yugen.Api.Helpers;
 using Yugen.Core.Services;
 using Yugen.Domain.Data.Media;
@@ -28,11 +29,11 @@ public class MediaController : ControllerBase
         return await _mediaService.GetPlaybackInfo(usr, anilistId, episodeNumber, jellyfinId);
     }
 
-    [HttpGet("{jellyfinId}/stream.mkv")]
-    public async Task Stream(string jellyfinId, [FromQuery] string mediaId)
+    [HttpGet("{jellyfinId}/{source}/stream.mkv")]
+    public async Task Stream(string jellyfinId, int source)
     {
         HttpContext.GetUserFromSession(out var usr);
-        HttpRequestMessage request = await _mediaService.GetPlaybackRequest(usr, jellyfinId, mediaId);
+        HttpRequestMessage request = await _mediaService.GetPlaybackRequest(usr, jellyfinId, source, false);
 
         if (Request.Headers.TryGetValue("Range", out var rangeHeader) && System.Net.Http.Headers.RangeHeaderValue.TryParse(rangeHeader, out var range))
             request.Headers.Range = range;
@@ -51,6 +52,46 @@ public class MediaController : ControllerBase
             await upstream.CopyToAsync(Response.Body, 81920);
         }
     }
+
+    [HttpGet("{jellyfinId}/{source}/stream.m3u8")]
+    public async Task StreamHLS(string jellyfinId, int source)
+    {
+        HttpContext.GetUserFromSession(out var usr);
+        HttpRequestMessage request = await _mediaService.GetPlaybackRequest(usr, jellyfinId, source, true);
+
+        await ProxyRequest(request);
+    }
+
+    [HttpGet("{jellyfinId}/{source}/main.m3u8")]
+    public async Task StreamHLS_Main(string jellyfinId)
+    {
+        string url = await _mediaService.ProxyUrl($"Videos/{jellyfinId}/main.m3u8{HttpContext.Request.QueryString.Value}", false);
+        await ProxyRequest(new HttpRequestMessage(HttpMethod.Get, url));
+    }
+
+    [HttpGet("{jellyfinId}/{source}/hls1/main/{segmentId}.{container}")]
+    public async Task StreamHLS_Segment(string jellyfinId, string segmentId, string container)
+    {
+        string url = await _mediaService.ProxyUrl($"Videos/{jellyfinId}/hls1/main/{segmentId}.{container}{HttpContext.Request.QueryString.Value}", false);
+        await ProxyRequest(new HttpRequestMessage(HttpMethod.Get, url));
+    }
+
+    private async Task ProxyRequest(HttpRequestMessage request)
+    {
+        using (HttpResponseMessage response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+        {
+            Response.StatusCode = (int)response.StatusCode;
+            Response.ContentType = response.Content.Headers.ContentType?.ToString() ?? "application/x-mpegURL";
+
+            foreach (var header in response.Content.Headers)
+                Response.Headers[header.Key] = new StringValues(header.Value.ToArray());
+
+            await using Stream upstream = await response.Content.ReadAsStreamAsync();
+            await upstream.CopyToAsync(Response.Body);
+        }
+    }
+
+
 
     [HttpGet("{jellyfinId}/{mediaId}/{subtitleId}/Subtitle")]
     public async Task GetSubtitle(string jellyfinId, string mediaId, int subtitleId)

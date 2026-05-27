@@ -12,7 +12,8 @@ public interface IMediaProvider
     public Task DeleteSubtitle(string jellyfinId, int id);
     public Task UploadSubtitle(string jellyfinId, string language, string format, string data);
 
-    public Task<string> GetPlaybackUrl(string jellyfinId, string mediaId);
+    public Task<string> ProxyUrl(string relative, bool includeApiKey = false);
+    public Task<string> GetPlaybackUrl(string jellyfinId, int source, bool hls);
     public Task<string> GetSubtitleUrl(string jellyfinId, string mediaId, int subtitleId);
 
     public Task<string?[]?> MapPathToJellyfinId(ICollection<Model_DownloadedEpisode> episodes);

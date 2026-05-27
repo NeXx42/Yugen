@@ -23,6 +23,7 @@ import SubtitlesPlayerControl from "@/app/components/playerControls/subtitlesPla
 import WatchtimeSyncerPlayerControl from "@/app/components/playerControls/watchtimeSyncerPlayerControl";
 import { createPortal } from "react-dom";
 import { useModals } from "@/app/context/modalContext";
+import { HlsVideo } from "@videojs/react/media/hls-video";
 
 interface Props {
     mediaInfo: MediaInfo
@@ -47,6 +48,7 @@ export default function (props: Props) {
 
     const [playbackInfo, setPlaybackInfo] = useState<Playback_Info | undefined>(undefined);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [hlsPlayback, setHlsPlayback] = useState(true);
 
     useEffect(() => fetchPlaybackInfo(), [props.mediaInfo, props.episode])
     useEffect(() => {
@@ -58,6 +60,7 @@ export default function (props: Props) {
         }
 
     }, [videoRef.current, selectedSub])
+
 
     const fetchPlaybackInfo = () => {
         setIsPlaying(false);
@@ -182,7 +185,11 @@ export default function (props: Props) {
         return (
             <Player.Provider>
                 <Container className="VideoPlayer_Container">
-                    <Video ref={videoRef} src={`api/media/${info.jellyfinId}/stream.mkv?mediaId=${source.id}`} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={(e) => onMetadataLoad(e.currentTarget)} />
+                    {
+                        hlsPlayback ? <HlsVideo src={`api/media/${info.jellyfinId}/${0}/stream.m3u8`} ref={videoRef} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={(e) => onMetadataLoad(e.currentTarget)} />
+                            : <Video src={`api/media/${info.jellyfinId}/${0}/stream.mkv`} ref={videoRef} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={(e) => onMetadataLoad(e.currentTarget)} />
+                    }
+
 
                     <BufferingIndicator className="VideoPlayer_Buffering" />
                     <Gesture action="togglePaused" type="tap" />
@@ -266,9 +273,13 @@ export default function (props: Props) {
                 }
             </div>
             <div className="MediaPlayer_Controls ViewPageContainer">
-                <div className="MediaPlayer_Controls_Bookmark">
+                <div className="MediaPlayer_Controls_ExternalControls">
                     {playbackInfo && (<>
                         <button onClick={() => drawSubtitlesEditor(playbackInfo)}>Subtitles</button>
+                        <div>
+                            <a>HLS</a>
+                            <input checked={hlsPlayback} onChange={e => setHlsPlayback(e.currentTarget.checked)} type="checkbox" />
+                        </div>
                     </>)}
                 </div>
             </div>
