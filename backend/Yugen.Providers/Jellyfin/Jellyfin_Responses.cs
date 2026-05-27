@@ -66,6 +66,23 @@ public class Jellyfin_Response_History
     }
 }
 
+public class JellyfinResponse_Chapters
+{
+    public Item[]? items { get; set; }
+
+    public class Item
+    {
+        public required long runTimeTicks { get; set; }
+        public Chapter[]? chapters { get; set; }
+
+        public class Chapter
+        {
+            public required long startPositionTicks { get; set; }
+            public required string Name { get; set; }
+        }
+    }
+}
+
 public class JellyfinResponse_MediaInfo
 {
     public required string playSessionId { get; set; }

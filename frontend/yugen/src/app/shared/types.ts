@@ -202,7 +202,13 @@ export interface Playback_Info {
     historicalTicks: number | null,
     jellyfinId: string,
 
+    segments: PlaybackInfo_Segment[]
     sources: Playback_Info_Source[]
+}
+
+export interface PlaybackInfo_Segment {
+    start: number,
+    duration: number,
 }
 
 export interface Playback_Info_Source {

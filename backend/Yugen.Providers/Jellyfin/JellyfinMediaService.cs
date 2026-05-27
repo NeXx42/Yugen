@@ -30,11 +30,57 @@ public class JellyfinMediaService : IMediaProvider
 
     public async Task<PlaybackInfo> GetPlaybackInfo(string jellyfinId)
     {
+        List<PlaybackInfo.Segment> segments = new List<PlaybackInfo.Segment>();
+
+        try
+        {
+            JellyfinResponse_Chapters? itemChapters = await _http.SendRequest<JellyfinResponse_Chapters>($"Items?ids={jellyfinId}&fields=chapters", HttpMethod.Get);
+
+            long? introStart = null;
+            long? introEnd = null;
+
+            long? endingStart = null;
+            long? endingEnd = null;
+
+            var item = itemChapters?.items?.FirstOrDefault();
+
+            if (item?.chapters != null)
+            {
+                foreach (var chapter in item.chapters)
+                {
+                    switch (chapter.Name)
+                    {
+                        case "OP":
+                        case "Prolog": introStart ??= chapter.startPositionTicks; break;
+                        case "Episode": introEnd ??= chapter.startPositionTicks; break;
+
+                        case "ED":
+                        case "Ending": endingStart = chapter.startPositionTicks; break;
+                        case "Epilogue": endingEnd = chapter.startPositionTicks; break;
+                    }
+                }
+
+                endingEnd ??= item.runTimeTicks;
+
+                if (introStart.HasValue && introEnd.HasValue)
+                    segments.Add(new PlaybackInfo.Segment(introStart.Value, introEnd.Value, item.runTimeTicks));
+
+                if (endingStart.HasValue && endingEnd.HasValue)
+                    segments.Add(new PlaybackInfo.Segment(endingStart.Value, endingEnd.Value, item.runTimeTicks));
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Failed to get segments - {e.Message}");
+        }
+
+
         JellyfinResponse_MediaInfo playbackInfo = await GetPlaybackInfoInternal(jellyfinId);
 
         return new PlaybackInfo()
         {
             jellyfinId = jellyfinId,
+            segments = segments.ToArray(),
 
             sources = playbackInfo.MediaSources?.Select(m => new PlaybackInfo.Source()
             {

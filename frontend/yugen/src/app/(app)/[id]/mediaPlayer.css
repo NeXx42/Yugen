@@ -375,6 +375,12 @@ iframe {
     transform: translate(-50%, -50%);
 }
 
+.VideoPlayer_Controls_TimeSlider_Segment {
+    position: absolute;
+    height: 100%;
+
+    background-color: #fdd253;
+}
 
 
 

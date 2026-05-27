@@ -3,9 +3,22 @@ namespace Yugen.Domain.Data.Media;
 public class PlaybackInfo
 {
     public long? historicalTicks { get; set; }
+    public Segment[]? segments { get; set; }
 
     public required string jellyfinId { get; set; }
     public required Source[] sources { get; set; }
+
+    public class Segment
+    {
+        public double start { get; set; }
+        public double duration { get; set; }
+
+        public Segment(long start, long end, long duration)
+        {
+            this.start = (start / (double)duration) * 100;
+            this.duration = ((end - start) / (double)duration) * 100;
+        }
+    }
 
     public class Source
     {
