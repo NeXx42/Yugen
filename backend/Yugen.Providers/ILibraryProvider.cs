@@ -10,7 +10,7 @@ public interface ILibraryProvider
     public Task<List<int>?> GetDownloadedMedia();
     public Task<Model_DownloadedMedia?> GetDownloadedEpisodes(int mediaId, Model_Link link);
 
-    public Task<DownloadRequestInfo> GetRequestInfo(int? existingId);
+    public Task<DownloadRequestInfo> GetRequestInfo(Model_Link link);
 
     public Task DeleteMedia(Model_DownloadedMedia existingDownload);
     public Task<bool> ResearchMedia(Model_DownloadedMedia existingDownload);

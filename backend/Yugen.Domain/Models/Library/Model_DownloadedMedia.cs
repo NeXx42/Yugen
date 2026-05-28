@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Yugen.Domain.Data.Downloads;
+using Yugen.Domain.Enums;
 
 namespace Yugen.Domain.Models.Library;
 
@@ -8,6 +9,9 @@ public class Model_DownloadedMedia
     [Key]
     [Required]
     public required int MediaId { get; set; }
+
+    [Required]
+    public required LibraryProviderType ProviderType { get; set; }
 
     [Required]
     public required int ProviderId { get; set; }

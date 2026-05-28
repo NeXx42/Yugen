@@ -20,6 +20,9 @@ public enum ConfigKeys
 
     AdultContent,
     HasSearchCriteriaCached,
+
+    Radarr_Url,
+    Radarr_ApiKey,
 }
 
 public class SettingsService

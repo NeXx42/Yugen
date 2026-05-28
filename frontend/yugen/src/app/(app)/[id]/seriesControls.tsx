@@ -34,7 +34,7 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
 
     const requestMedia = async (): Promise<any> => {
         if (mediaRequest?.seriesId == null ||
-            mediaRequest?.seasonId == null ||
+            (requestInfo?.libraryProvider !== 1 && mediaRequest?.seasonId == null) ||
             mediaRequest?.qualityId == null ||
             mediaRequest?.rootPath == null)
             throw new Error("Invalid argument");
@@ -49,6 +49,7 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
             setMediaRequest({
                 seriesId: r.sonarrRequestId,
                 seasonId: r.sonarrSeasonId,
+                libraryProvider: r.libraryProvider,
 
                 rootPath: r.selectedRoot != null ? r.roots[r.selectedRoot].path : r.roots[0]?.path,
                 qualityId: r.selectedQuality != null ? r.qualities[r.selectedQuality].id : r.qualities[0]?.id,
@@ -141,8 +142,18 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
         const drawMenuContent = (info: DownloadRequestInfo): ReactNode => {
             return (<>
                 <div className="MediaRequest_Menu_Ids">
-                    <div>TVDB Id: <strong>{info.sonarrRequestId ?? "UNKNOWN"}</strong></div>
-                    <div>Season: <strong>{info.sonarrSeasonId ?? "UNKNOWN"}</strong></div>
+                    {
+                        info.libraryProvider === 1 ?
+                            (
+                                <div>TMDB Id: <strong>{info.sonarrRequestId ?? "UNKNOWN"}</strong></div>
+                            )
+                            : (
+                                <>
+                                    <div>TVDB Id: <strong>{info.sonarrRequestId ?? "UNKNOWN"}</strong></div>
+                                    <div>Season: <strong>{info.sonarrSeasonId ?? "UNKNOWN"}</strong></div>
+                                </>
+                            )
+                    }
 
                     <div>Root:
                         <select value={requestInfo!.selectedRoot ?? 0} onChange={e => updateSelectedRoot(e.target.value)}>

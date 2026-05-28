@@ -156,6 +156,7 @@ export interface SearchRequest {
 export interface MediaRequest {
     seriesId: number | null,
     seasonId: number | null,
+    libraryProvider: number
 
     qualityId: number | null,
     rootPath: string | null,
@@ -168,6 +169,7 @@ export interface DownloadRequestInfo {
 
     sonarrRequestId: number | null,
     sonarrSeasonId: number | null,
+    libraryProvider: number
 
     selectedRoot: number | null,
     selectedQuality: number | null,

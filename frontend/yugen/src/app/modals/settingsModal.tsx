@@ -10,7 +10,7 @@ import { useModals } from "../context/modalContext";
 import LoadingModal from "./loadingModal";
 
 
-type SettingsGroup = "App" | "Jellyfin" | "Sonarr" | "Providers";
+type SettingsGroup = "App" | "Jellyfin" | "Indexers" | "Providers";
 
 
 export default function () {
@@ -19,7 +19,7 @@ export default function () {
 
     const filePicker = useRef<HTMLInputElement>(null);
 
-    const groups: SettingsGroup[] = ["App", "Jellyfin", "Sonarr", "Providers"];
+    const groups: SettingsGroup[] = ["App", "Jellyfin", "Indexers", "Providers"];
 
     const [selectedSettingsGroup, setSelectedSettingsGroup] = useState<SettingsGroup>(groups[0]);
     const [savedConfigValues, setSavedConfigValues] = useState<Record<string, string>>()
@@ -81,7 +81,7 @@ export default function () {
                     {renderSetting_ApiGroup("Jellyfin API", "Jellyfin_Url", "Jellyfin_ApiKey")}
                 </>)
 
-            case "Sonarr":
+            case "Indexers":
                 const librarySyncCallback = async () => {
                     try {
                         const importCount = await api.library_sync();
@@ -94,6 +94,7 @@ export default function () {
                 return (<>
                     {renderSetting_Button("Sync Library", "Sync", "", librarySyncCallback)}
                     {renderSetting_ApiGroup("Sonarr API", "Sonarr_Url", "Sonarr_ApiKey")}
+                    {renderSetting_ApiGroup("Radarr API", "Radarr_Url", "Radarr_ApiKey")}
                 </>)
 
             case "Providers":
@@ -114,7 +115,6 @@ export default function () {
         const configValue: boolean = savedConfigValues![configKey] === "1";
 
         const btnIntercept = async () => {
-            console.log("test");
             try {
                 const saveValue = (!configValue) ? "1" : "0";
 

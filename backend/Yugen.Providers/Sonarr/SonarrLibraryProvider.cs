@@ -1,5 +1,6 @@
 using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.Media;
+using Yugen.Domain.Enums;
 using Yugen.Domain.Models.Library;
 using Yugen.Domain.Models.Linking;
 using Yugen.Providers.Helpers;
@@ -58,6 +59,7 @@ public class SonarrLibraryProvider : ILibraryProvider
             MediaId = mediaId,
 
             ProviderId = series.id,
+            ProviderType = Domain.Enums.LibraryProviderType.Sonarr,
             SeasonId = matchedSeason.seasonNumber,
 
             ExternalQuality = series.qualityProfileId,
@@ -80,13 +82,17 @@ public class SonarrLibraryProvider : ILibraryProvider
         return series.Where(s => s.tvdbId > 0).Select(s => s.tvdbId).Distinct().ToList();
     }
 
-    public async Task<DownloadRequestInfo> GetRequestInfo(int? existingId)
+    public async Task<DownloadRequestInfo> GetRequestInfo(Model_Link link)
     {
         SonarrLibrary_Response_Roots[]? roots = await _http.SendRequest<SonarrLibrary_Response_Roots[]>("rootfolder", HttpMethod.Get);
         SonarrLibrary_Response_Qualities[]? qualities = await _http.SendRequest<SonarrLibrary_Response_Qualities[]>("qualitydefinition", HttpMethod.Get);
 
         return new DownloadRequestInfo()
         {
+            sonarrRequestId = link.tvdb_id,
+            sonarrSeasonId = link.tvdb_season,
+            libraryProvider = LibraryProviderType.Sonarr,
+
             roots = roots?.Select(r => new DownloadRequestInfo.Roots()
             {
                 path = r.path,
@@ -138,7 +144,8 @@ public class SonarrLibraryProvider : ILibraryProvider
             {
                 MediaId = mediaId,
                 ProviderId = series.id,
-                SeasonId = mediaRequest.seasonId,
+                ProviderType = Domain.Enums.LibraryProviderType.Sonarr,
+                SeasonId = mediaRequest.seasonId ?? -1,
 
                 IsMonitored = true,
 

@@ -45,6 +45,9 @@ export async function library_UpdateBookmark(mediaId: number, bookmarkId: number
 export async function library_GetEpisodes(mediaId: number, refetch: boolean): Promise<MediaEpisodeInfo[]> {
     return (await get<MediaEpisodeInfo[]>(`library/${mediaId}/Episodes?refetch=${refetch}`))!
 }
+export async function library_GetFilm(mediaId: number, refetch: boolean): Promise<MediaEpisodeInfo | null> {
+    return (await get<MediaEpisodeInfo | null>(`library/${mediaId}/Film?refetch=${refetch}`))!
+}
 export async function library_CurrentWatching(page: number, pageSize: number): Promise<PageResponse<MediaCardInfo>> {
     return (await get<PageResponse<MediaCardInfo>>(`library/WatchHistory?page=${page}&pageSize=${pageSize}`))!;
 }

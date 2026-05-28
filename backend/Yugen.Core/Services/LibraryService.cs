@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Yugen.Core.Data;
+using Yugen.Core.Factories;
 using Yugen.Core.Helpers;
 using Yugen.Data;
 using Yugen.Domain.Data;
@@ -16,6 +17,7 @@ using Yugen.Domain.Models.Library;
 using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
 using Yugen.Providers;
+using Yugen.Providers.Radarr;
 using Yugen.Providers.Sonarr;
 
 namespace Yugen.Core.Services;
@@ -31,7 +33,7 @@ public class LibraryService
 
     private readonly EndpointDeduplicator _endpointDeduplicator;
 
-    private readonly ILibraryProvider _libraryProvider;
+    private readonly LibraryFactory _library;
 
     public LibraryService(YugenContext db,
                         SettingsCache settings,
@@ -50,7 +52,10 @@ public class LibraryService
 
         _endpointDeduplicator = endpointDeduplicator;
 
-        _libraryProvider = new SonarrLibraryProvider(settings.Get(ConfigKeys.Sonarr_Url), settings.Get(ConfigKeys.Sonarr_ApiKey));
+        _library = new LibraryFactory(
+            new SonarrLibraryProvider(settings.Get(ConfigKeys.Sonarr_Url), settings.Get(ConfigKeys.Sonarr_ApiKey)),
+            new RadarrLibraryProvider(settings.Get(ConfigKeys.Radarr_Url), settings.Get(ConfigKeys.Radarr_ApiKey))
+        );
     }
 
     public async Task<DownloadedEpisode[]> GetDownloadedEpisodes(UserSession usr, int aniListId)
@@ -87,7 +92,7 @@ public class LibraryService
             }
         }
 
-        downloadedMedia = await _libraryProvider.GetDownloadedEpisodes(aniListId, link!);
+        downloadedMedia = await _library.GetFactory(link!).GetDownloadedEpisodes(aniListId, link!);
 
         if (downloadedMedia == null)
             return null;
@@ -139,7 +144,7 @@ public class LibraryService
     {
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(ResyncLibrary));
 
-        List<int>? ids = await _libraryProvider.GetDownloadedMedia();
+        List<int>? ids = await _library.GetFactory().GetDownloadedMedia();
 
         if (ids == null)
             return null;
@@ -161,6 +166,20 @@ public class LibraryService
         }
 
         return importCount;
+    }
+
+    public async Task<EpisodeInfo?> GetFilmEpisodeContainer(UserSession usr, int aniListId, bool refetch)
+    {
+        Model_DownloadedMedia? media = await _db.downloadedMedia.Include(m => m.downloadedEpisodes).FirstOrDefaultAsync(m => m.MediaId == aniListId);
+
+        if ((media?.ProviderType ?? LibraryProviderType.Sonarr) != LibraryProviderType.Radarr)
+            throw new Exception("Cannot get film from non Radarr source");
+
+        if (media?.downloadedEpisodes.Count != 1)
+            return null;
+
+        Model_WatchedEpisode? history = await _db.watchedEpisodes.FirstOrDefaultAsync(w => w.MediaId == aniListId && w.EpisodeNumber == media.downloadedEpisodes.ElementAt(0).EpisodeNumber);
+        return EpisodeInfo.Map(null, media.downloadedEpisodes.ElementAt(0), history);
     }
 
     public async Task<EpisodeInfo[]> GetMediaEpisodesForUser(UserSession usr, int aniListId, bool refetch)
@@ -336,7 +355,7 @@ public class LibraryService
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(RequestSeries), mediaId.ToString());
 
         Model_DownloadedMedia? existingDownload = await _db.downloadedMedia.FirstOrDefaultAsync(m => m.MediaId == mediaId);
-        Model_DownloadedMedia? newDownload = await _libraryProvider.RequestSeries(mediaId, existingDownload, request);
+        Model_DownloadedMedia? newDownload = await _library.GetFactory((LibraryProviderType)request.libraryProvider).RequestSeries(mediaId, existingDownload, request);
 
         if (newDownload == null)
             return false;
@@ -361,7 +380,7 @@ public class LibraryService
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(GetSeriesRequestInfo), aniListId.ToString());
 
         Model_DownloadedMedia? media = await _db.downloadedMedia.FirstOrDefaultAsync(d => d.MediaId == aniListId);
-        if (media != null) await _libraryProvider.ResearchMedia(media);
+        if (media != null) await _library.GetFactory(media).ResearchMedia(media);
     }
 
     public async Task<DownloadRequestInfo> GetSeriesRequestInfo(UserSession usr, int aniListId)
@@ -370,11 +389,8 @@ public class LibraryService
 
         Model_DownloadedMedia? existingData = await _db.downloadedMedia.Include(d => d.downloadedEpisodes).FirstOrDefaultAsync(d => d.MediaId == aniListId);
 
-        DownloadRequestInfo requestInfo = await _libraryProvider.GetRequestInfo(existingData?.ProviderId);
         Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == aniListId);
-
-        requestInfo.sonarrRequestId = link?.tvdb_id;
-        requestInfo.sonarrSeasonId = link?.tvdb_season;
+        DownloadRequestInfo requestInfo = await _library.GetFactory(link!).GetRequestInfo(link!);
 
         if (existingData == null)
             existingData = await RecheckDownloads(usr, aniListId);
@@ -420,7 +436,7 @@ public class LibraryService
             if (media.downloadedEpisodes.Any(e => e.monitored))
                 throw new Exception("Cannot delete with monitored episodes");
 
-            await _libraryProvider.DeleteMedia(media);
+            await _library.GetFactory(media).DeleteMedia(media);
             await RecheckDownloads(usr, aniListId, true);
         }
     }

@@ -1,10 +1,13 @@
+using Yugen.Domain.Enums;
+
 namespace Yugen.Domain.Data.Downloads;
 
 public class DownloadRequestInfo
 {
     public bool monitored { get; set; }
-    public int? sonarrRequestId { get; set; }
-    public int? sonarrSeasonId { get; set; }
+    public required int? sonarrRequestId { get; set; }
+    public required int? sonarrSeasonId { get; set; }
+    public required LibraryProviderType libraryProvider { get; set; }
 
     public int? selectedRoot { get; set; }
     public int? selectedQuality { get; set; }

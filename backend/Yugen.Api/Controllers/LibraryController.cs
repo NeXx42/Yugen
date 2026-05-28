@@ -25,6 +25,12 @@ public class LibraryController : ControllerBase
         _libraryService = libraryService;
     }
 
+    [HttpGet("{id}/Film")]
+    public async Task<EpisodeInfo?> GetFilmEpisodeContainer(int id, [FromQuery] bool refetch = false)
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        return await _libraryService.GetFilmEpisodeContainer(usr, id, refetch);
+    }
 
     [HttpGet("{id}/Episodes")]
     public async Task<EpisodeInfo[]> GetMediaEpisodes(int id, [FromQuery] bool refetch = false)

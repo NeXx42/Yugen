@@ -28,8 +28,6 @@ export default async function ({ params }: { params: { id: number } }) {
     const { id } = await params;
     const media: MediaInfo = await getMedia(id);
 
-    void api.media_SyncWatchTime(id);
-
     const seasons = media.connectedMedia?.sort((a, b) => (a.season ?? 0) - (b.season ?? 0)).filter(c => c.card != null);
 
     const getDate = (unixSeconds: number | null): string => {

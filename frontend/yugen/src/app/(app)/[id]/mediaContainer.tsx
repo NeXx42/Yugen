@@ -1,8 +1,8 @@
 "use client"
 
+import * as api from "@lib/api.local"
+
 import { ReactNode, useEffect, useState } from "react";
-
-
 import { MediaEpisodeInfo, MediaInfo } from "@shared/types";
 import MediaPlayer from "./mediaPlayer";
 import EpisodeList from "./episodeList";
@@ -14,7 +14,13 @@ import { createPortal } from "react-dom";
 
 export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
     if (mediaInfo.type === "MOVIE") {
-        return <MediaPlayer mediaInfo={mediaInfo} episode={undefined} />
+        const [filmEpisode, setFileEpisode] = useState<MediaEpisodeInfo | null>();
+
+        useEffect(() => {
+            api.library_GetFilm(mediaInfo.id, false).then(setFileEpisode);
+        }, [mediaInfo])
+
+        return <MediaPlayer mediaInfo={mediaInfo} episode={filmEpisode ?? undefined} />
     }
 
     const [episodeContainer, setEpisodeContainer] = useState<HTMLElement | null>(null)

@@ -19,18 +19,18 @@ public class EpisodeInfo
     public long? watchDate { get; set; }
     public float? watchPercentage { get; set; }
 
-    public static EpisodeInfo Map(Model_MediaEpisode episode, Model_DownloadedEpisode? download, Model_WatchedEpisode? watchTime)
+    public static EpisodeInfo Map(Model_MediaEpisode? episode, Model_DownloadedEpisode? download, Model_WatchedEpisode? watchTime)
     {
         return new EpisodeInfo()
         {
-            title = episode.EpisodeTitle,
-            number = episode.EpisodeNumber,
-            thumbnail = episode.EpisodeIcon,
+            title = episode?.EpisodeTitle ?? "Film",
+            number = (episode?.EpisodeNumber ?? download?.EpisodeNumber!).Value,
+            thumbnail = episode?.EpisodeIcon,
 
-            isFiller = episode.IsFiller,
-            isRecap = episode.IsRecap,
+            isFiller = episode?.IsFiller ?? false,
+            isRecap = episode?.IsRecap ?? false,
 
-            score = episode.Score,
+            score = episode?.Score,
 
             jellyfinId = download?.JellyfinId,
             watchDate = watchTime?.LastWatched != null ? new DateTimeOffset(watchTime.LastWatched!.Value).ToUnixTimeMilliseconds() : null,

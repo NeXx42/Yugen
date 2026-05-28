@@ -5,6 +5,7 @@ import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import "./episodeList.css"
 import { MediaEpisodeInfo, MediaInfo } from "@/app/shared/types";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface Props {
     mediaInfo: MediaInfo,
@@ -37,6 +38,10 @@ const monthsOfThYear = [
 ]
 
 export default function (props: Props) {
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
     const [episodes, setEpisodes] = useState<MediaEpisodeInfo[]>([]);
 
     const [timeUntil, setTimeUntil] = useState("")
@@ -67,6 +72,15 @@ export default function (props: Props) {
     }, [props.mediaInfo])
 
     useEffect(() => {
+
+        const urlBased: string | null = searchParams.get("episode");
+
+        if (urlBased != null) {
+            const selected = Math.min(Math.max(Number.parseInt(urlBased), 0), episodes.length - 1);
+            onSelectEpisode(selected);
+            return;
+        }
+
         var bestTime = 0;
         var bestIndex = null;
 
@@ -90,6 +104,8 @@ export default function (props: Props) {
     }, [episodes])
 
     const onSelectEpisode = (pos: number | null) => {
+        window.history.replaceState(null, "", pos != null ? `?episode=${pos}` : "");
+
         setSelectedEpisodeIndex(pos);
         props.setSelectedItem(pos == null ? undefined : episodes[pos]);
     }
@@ -122,9 +138,6 @@ export default function (props: Props) {
     }
 
     const date = props.mediaInfo.startDate ? new Date(props.mediaInfo.startDate * 1000) : undefined;
-    if (props.mediaInfo.startDate != null) {
-        console.log(date);
-    }
 
     return (
         <div className="EpisodeList ViewPageContainer">
