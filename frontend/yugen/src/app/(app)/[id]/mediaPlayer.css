@@ -303,11 +303,14 @@ iframe {
 .VideoPlayer_Controls_Bottom {
     display: flex;
     justify-content: space-between;
+    gap: 15px;
+    padding: 10px;
 }
 
 .VideoPlayer_Controls_Bottom>div {
     display: flex;
-    gap: 10px;
+    align-items: center;
+    gap: 15px;
 }
 
 .VideoPlayer_Controls_Left>*,
@@ -318,9 +321,6 @@ iframe {
 
     height: 100%;
     font-size: 20px;
-    padding: 10px;
-
-    text-align: center;
 }
 
 

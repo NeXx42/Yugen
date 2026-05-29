@@ -51,11 +51,13 @@ public class JellyfinMediaService : IMediaProvider
                     switch (chapter.Name)
                     {
                         case "OP":
-                        case "Prolog": introStart ??= chapter.startPositionTicks; break;
+                        case "Prolog":
+                        case "Opening": introStart ??= chapter.startPositionTicks; break;
                         case "Episode": introEnd ??= chapter.startPositionTicks; break;
 
                         case "ED":
                         case "Ending": endingStart = chapter.startPositionTicks; break;
+                        case "Preview":
                         case "Epilogue": endingEnd = chapter.startPositionTicks; break;
                     }
                 }

@@ -1,12 +1,14 @@
 .MediaControl_Volume {
     position: relative;
+    display: flex;
+}
+
+.MediaControl_Volume>button {
+    background: none;
+    border: none;
 }
 
 .MediaControl_Volume_Popup {
-    position: absolute;
-    width: 200%;
-    height: 200px;
-
     left: -50%;
     bottom: -50%;
 
@@ -14,23 +16,7 @@
     align-items: center;
 }
 
-.MediaControl_Volume_Popup_SliderContainer {
-    position: absolute;
-    margin-bottom: auto;
-
-    width: 60%;
-    height: 140px;
-
-    background: var(--global-div);
-    border: 1px solid var(--global-border-color);
-    border-radius: 12px;
-
-}
-
 .MediaControl_Volume_Popup>input {
-    position: absolute;
     left: 0px;
     width: 120px;
-
-    transform: rotate(-90deg);
 }

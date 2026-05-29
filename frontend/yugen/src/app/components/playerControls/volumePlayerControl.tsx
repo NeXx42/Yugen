@@ -36,13 +36,14 @@ export default function (props: Props): ReactNode {
         )
     }
 
-    return (<button onClick={() => player?.toggleMuted()} onMouseEnter={() => setIsHovered(true)} className="MediaControl_Volume">
-        {drawSVG()}
-
+    return (<div className="MediaControl_Volume">
+        <button onClick={() => player?.toggleMuted()} onMouseEnter={() => setIsHovered(true)}>
+            {drawSVG()}
+        </button>
         {isHovered && (
             <div className="MediaControl_Volume_Popup" onMouseLeave={() => setIsHovered(false)} >
                 <input onClick={e => e.stopPropagation()} min={0} max={100} type="range" value={(player?.volume ?? 0) * 100} onChange={e => player?.setVolume(Number.parseFloat(e.target.value) / 100)} />
             </div>
         )}
-    </button>)
+    </div>)
 }

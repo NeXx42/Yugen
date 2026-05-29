@@ -24,6 +24,8 @@ import WatchtimeSyncerPlayerControl from "@/app/components/playerControls/watcht
 import { createPortal } from "react-dom";
 import { useModals } from "@/app/context/modalContext";
 import { HlsVideo } from "@videojs/react/media/hls-video";
+import SegmentSkipperPlayerControl from "@/app/components/playerControls/segmentSkipperPlayerControl";
+import TimePlayerControl from "@/app/components/playerControls/timePlayerControl";
 
 interface Props {
     mediaInfo: MediaInfo
@@ -231,6 +233,8 @@ export default function (props: Props) {
                     <WatchtimeSyncerPlayerControl syncFunc={syncPlaybackTime} />
                     <SubtitlesPlayerControl url={source.subs[selectedSub]?.uri} offset={subtitleOffset} />
 
+                    <SegmentSkipperPlayerControl video={videoRef} info={info} />
+
                     <Controls.Root className="VideoPlayer_Controls">
                         <TimeSlider.Root className="VideoPlayer_Controls_TimeSlider">
                             <TimeSlider.Track className="VideoPlayer_Controls_TimeSlider_track">
@@ -257,6 +261,7 @@ export default function (props: Props) {
                                     </svg>
                                 </PlayButton>
                                 <VolumePlayerControl />
+                                <TimePlayerControl />
                             </div>
 
                             <div className="VideoPlayer_Controls_Right">
@@ -276,15 +281,6 @@ export default function (props: Props) {
                                     </svg>
                                 </FullscreenButton>
                             </div>
-
-                            {/*             
-                            <VolumeSlider.Root className="VideoPlayer_Controls_VolumeSlider">
-                                <VolumeSlider.Track className="VideoPlayer_Controls_VolumeSlider_track">
-                                    <VolumeSlider.Fill className="VideoPlayer_Controls_VolumeSlider_fill" />
-                                    <VolumeSlider.Thumb className="VideoPlayer_Controls_VolumeSlider_thumb" />
-                                </VolumeSlider.Track>
-                            </VolumeSlider.Root>                
-                            */}
                         </Controls.Group>
 
                     </Controls.Root>

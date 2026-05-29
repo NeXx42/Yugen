@@ -1,0 +1,14 @@
+.SegmentSkipper {
+    z-index: 5;
+
+    position: absolute;
+    background: #ffffffb3;
+    border: 1px solid white;
+    border-radius: 8px;
+    color: black;
+
+    right: 10px;
+    bottom: 15%;
+
+    padding: 10px 25px;
+}
