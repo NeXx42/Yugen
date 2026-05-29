@@ -6,7 +6,7 @@ import { ReactNode, SubmitEvent, useEffect, useRef, useState } from "react"
 
 import { MediaEpisodeInfo, MediaInfo, Playback_Info } from "@shared/types"
 
-import { BufferingIndicator, Container, createPlayer, Gesture, videoFeatures } from '@videojs/react';
+import { audioFeatures, BufferingIndicator, Container, createPlayer, Gesture, videoFeatures } from '@videojs/react';
 import {
     Controls,
     PlayButton,
@@ -60,7 +60,6 @@ export default function (props: Props) {
         }
 
     }, [videoRef.current, selectedSub])
-
 
     const fetchPlaybackInfo = () => {
         setIsPlaying(false);
@@ -179,6 +178,40 @@ export default function (props: Props) {
     }
 
 
+    const detectPlaybackCapabilities = () => {
+        const test = (mime: string) => {
+            return window.MediaSource?.isTypeSupported(mime) ?? false;
+        };
+
+        let videoCodecs = []
+        let audioCodecs = []
+
+        if (test('video/mp4; codecs="avc1.42E01E,mp4a.40.2"')) {
+            if (test('video/mp4; codecs="avc1.42E01E"')) videoCodecs.push("h264");
+            if (test('video/mp4; codecs="hvc1.1.6.L93.B0"')) videoCodecs.push("hevc");
+            if (test('video/mp4; codecs="av01.0.05M.08"')) videoCodecs.push("av1");
+
+            if (test('audio/mp4; codecs="mp4a.40.2"')) audioCodecs.push("aac");
+            if (test('audio/mp4; codecs="ac-3"')) audioCodecs.push("ac3");
+            if (test('audio/mp4; codecs="ec-3"')) audioCodecs.push("eac3");
+        }
+
+        return {
+            videoCodecs: videoCodecs.join(","),
+            audioCodecs: audioCodecs.join(","),
+        }
+    }
+
+
+    const getPlaybackUrl = (info: Playback_Info, hls: boolean) => {
+        if (hls) {
+            const { videoCodecs, audioCodecs } = detectPlaybackCapabilities();
+            return `api/media/${info.jellyfinId}/${0}/stream.m3u8?videoCodecs=${videoCodecs}&audioCodecs=${audioCodecs}`;
+        }
+
+        return `api/media/${info.jellyfinId}/${0}/stream.mkv`;
+    }
+
     const drawPlayer = (info: Playback_Info): ReactNode => {
         const source = info.sources[0];
 
@@ -186,8 +219,8 @@ export default function (props: Props) {
             <Player.Provider>
                 <Container className="VideoPlayer_Container">
                     {
-                        hlsPlayback ? <HlsVideo src={`api/media/${info.jellyfinId}/${0}/stream.m3u8`} ref={videoRef} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={(e) => onMetadataLoad(e.currentTarget)} />
-                            : <Video src={`api/media/${info.jellyfinId}/${0}/stream.mkv`} ref={videoRef} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={(e) => onMetadataLoad(e.currentTarget)} />
+                        hlsPlayback ? <HlsVideo src={getPlaybackUrl(info, true)} ref={videoRef} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={(e) => onMetadataLoad(e.currentTarget)} />
+                            : <Video src={getPlaybackUrl(info, false)} ref={videoRef} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={(e) => onMetadataLoad(e.currentTarget)} />
                     }
 
 

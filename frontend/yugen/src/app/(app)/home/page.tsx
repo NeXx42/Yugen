@@ -24,7 +24,7 @@ export default async function () {
 
             <div>
                 <h1 style={{ marginBottom: "5px" }}>Continue Watching</h1>
-                <CardRow cards={watching.data?.data.slice(0, 7).sort((a, b) => (a.watchLastTime ?? 0) - (b.watchLastTime ?? 0)) ?? []} />
+                <CardRow cards={watching.data?.data.slice(0, 7).sort((a, b) => (b.watchLastTime ?? 0) - (a.watchLastTime ?? 0)) ?? []} />
             </div>
 
             <div className="HomePage_Body">

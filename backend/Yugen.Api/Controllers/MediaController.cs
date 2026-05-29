@@ -54,10 +54,10 @@ public class MediaController : ControllerBase
     }
 
     [HttpGet("{jellyfinId}/{source}/stream.m3u8")]
-    public async Task StreamHLS(string jellyfinId, int source)
+    public async Task StreamHLS(string jellyfinId, int source, [FromQuery] string videoCodecs, [FromQuery] string audioCodecs)
     {
         HttpContext.GetUserFromSession(out var usr);
-        HttpRequestMessage request = await _mediaService.GetPlaybackRequest(usr, jellyfinId, source, true);
+        HttpRequestMessage request = await _mediaService.GetPlaybackRequest(usr, jellyfinId, source, true, videoCodecs, audioCodecs);
 
         await ProxyRequest(request);
     }

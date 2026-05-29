@@ -29,7 +29,7 @@ export default function ({ Card }: { Card: MediaCardInfo }) {
 
                 {Card.nextReleaseDate != undefined && <div className="MediaCard_NextRelease">{getNextReleaseText()}</div>}
 
-                {Card.watchEpisode != undefined && <div className="MediaCard_WatchedEpisode">EP {Card.watchEpisode}</div>}
+                {Card.watchEpisode != undefined && Card.watchEpisode > 0 && <div className="MediaCard_WatchedEpisode">EP {Card.watchEpisode}</div>}
                 {Card.watchPercentage != undefined && (
                     <>
                         <div className="MediCard_WatchPercentage">

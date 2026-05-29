@@ -101,7 +101,7 @@ public class JellyfinMediaService : IMediaProvider
 
     public Task<string> ProxyUrl(string relative, bool includeApiKey = false) => Task.FromResult($"{_url}/{relative}{(includeApiKey ? $"&api_key={_apiKey}" : "")}");
 
-    public async Task<string> GetPlaybackUrl(string jellyfinId, int source, bool hls)
+    public async Task<string> GetPlaybackUrl(string jellyfinId, int source, bool hls, string? videoCodecs, string? audioCodecs)
     {
         JellyfinResponse_MediaInfo info = await GetPlaybackInfoInternal(jellyfinId);
         JellyfinResponse_MediaInfo.MediaSource sourceObj = info.MediaSources![source];
@@ -116,11 +116,11 @@ public class JellyfinMediaService : IMediaProvider
 
         string urlParams = string.Join("&", [
             $"MediaSourceId={sourceObj.id}",
-            //$"videoCodec={"h264,vp9,av1"}",
             $"PlaySessionId={info.playSessionId}",
             $"SegmentContainer={"mp4"}",
-            $"AudioCodec={"copy"}",
+            $"AudioCodec={audioCodecs}",
             $"Tag={System.Guid.NewGuid().ToString().Replace("-", string.Empty)}",
+            $"videoCodec={videoCodecs}",
             
             //$"VideoCodec={"av1,h264,vp9"}",
             //$"TranscodingMaxAudioChannels={"2"}",

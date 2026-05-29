@@ -47,9 +47,9 @@ public class MediaService
 
     public async Task<string> ProxyUrl(string relative, bool includeApiKey) => await _mediaProvider.ProxyUrl(relative, includeApiKey);
 
-    public async Task<HttpRequestMessage> GetPlaybackRequest(UserSession usr, string jellyfinId, int source, bool hls)
+    public async Task<HttpRequestMessage> GetPlaybackRequest(UserSession usr, string jellyfinId, int source, bool hls, string? videoCodecs = "", string? audioCodecs = "")
     {
-        string url = await _mediaProvider.GetPlaybackUrl(jellyfinId, source, hls);
+        string url = await _mediaProvider.GetPlaybackUrl(jellyfinId, source, hls, videoCodecs, audioCodecs);
         HttpRequestMessage http = new HttpRequestMessage(HttpMethod.Get, url);
 
         return http;
@@ -120,6 +120,7 @@ public class MediaService
         {
             ep.PlaybackPositionTicks = ticks;
             ep.WatchPercentage = percentage;
+            ep.LastWatched = DateTime.UtcNow;
         }
 
         await _db.SaveChangesAsync();
