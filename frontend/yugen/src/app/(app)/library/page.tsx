@@ -9,14 +9,53 @@ import MediaCard from "@comps/mediaCard"
 import PageContainer from "@comps/pageContainer"
 
 import "./page.css"
+import { useSearchParams } from "next/navigation"
 
-type LibraryGroup = "Downloaded" | "Watching" | "OnHold" | "Planning" | "Completed" | "Dropped";
+type LibraryGroup = "ContinueWatching" | "Downloaded" | "Watching" | "OnHold" | "Planning" | "Completed" | "Dropped";
 
 export default function () {
+    const searchParams = useSearchParams();
     const pageSize = 56;
 
-    const [selectedGroup, setSelectedGroup] = useState<LibraryGroup>("Downloaded");
-    const [currentPage, setCurrentPage] = useState(1);
+    const [refresh, setRefresh] = useState<number>(0);
+
+    const [selectedGroup, setSelectedGroup] = useState<LibraryGroup>(() => {
+        const group = searchParams.get("group");
+
+        const validGroups: LibraryGroup[] = [
+            "ContinueWatching",
+            "Downloaded",
+            "Watching",
+            "OnHold",
+            "Planning",
+            "Completed",
+            "Dropped",
+        ];
+
+        if (group && validGroups.includes(group as LibraryGroup)) {
+            return group as LibraryGroup;
+        }
+
+        return "ContinueWatching";
+    });
+
+    const [currentPage, setCurrentPage] = useState<number>(() => {
+        const page = searchParams.get("page");
+
+        if (page) {
+            const parsed = Number.parseInt(page, 10);
+
+            if (!Number.isNaN(parsed) && parsed > 0) {
+                return parsed;
+            }
+        }
+
+        return 1;
+    });
+
+    useEffect(() => {
+        window.history.replaceState(null, "", selectedGroup != null ? `?group=${selectedGroup}&page=${currentPage}` : "");
+    }, [selectedGroup, currentPage])
 
     const search = (): Promise<PageResponse<MediaCardInfo>> => api.library_Search(currentPage - 1, pageSize, selectedGroup);
 
@@ -30,12 +69,12 @@ export default function () {
     }
 
     const drawCard = (inp: MediaCardInfo): ReactNode => {
-        return <MediaCard key={inp.aniListId} Card={inp} />
+        return <MediaCard key={inp.aniListId} Card={inp} requestRefresh={() => setRefresh(refresh + 1)} />
     }
-
     return (
         <div className="Library">
             <div className="Library_Filters">
+                {drawGroupBtn("ContinueWatching", "Continue Watching")}
                 {drawGroupBtn("Downloaded")}
                 {drawGroupBtn("Watching")}
                 {drawGroupBtn("OnHold", "On-Hold")}
@@ -45,7 +84,7 @@ export default function () {
             </div>
 
             <div className="Library_Items">
-                {<PageContainer search={search} currentPage={currentPage} setCurrentPage={setCurrentPage} pageSize={pageSize} drawElement={drawCard} track={[selectedGroup]} />}
+                {<PageContainer search={search} currentPage={currentPage} setCurrentPage={setCurrentPage} pageSize={pageSize} drawElement={drawCard} track={[selectedGroup, refresh]} />}
             </div>
         </div >
     )

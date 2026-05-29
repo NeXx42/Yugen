@@ -69,6 +69,9 @@ export async function library_ResearchMonitored(seriesId: number) {
 export async function library_DeleteMedia(mediaId: number) {
     await deleteReq(`library/${mediaId}`);
 }
+export async function library_ClearWatchHistory(seriesId: number) {
+    return (await post(`library/${seriesId}/ClearHistory`));
+}
 
 
 export async function catalog_ReloadLinks() {

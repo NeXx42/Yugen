@@ -163,11 +163,11 @@ public class LibraryService
     {
         Model_DownloadedMedia? media = await _db.downloadedMedia.Include(m => m.downloadedEpisodes).FirstOrDefaultAsync(m => m.MediaId == aniListId);
 
-        if ((media?.ProviderType ?? LibraryProviderType.Sonarr) != LibraryProviderType.Radarr)
-            throw new Exception("Cannot get film from non Radarr source");
-
         if (media?.downloadedEpisodes.Count != 1)
             return null;
+
+        if (media.ProviderType != LibraryProviderType.Radarr)
+            throw new Exception("Cannot get film from non Radarr source");
 
         Model_WatchedEpisode? history = await _db.watchedEpisodes.FirstOrDefaultAsync(w => w.MediaId == aniListId && w.EpisodeNumber == media.downloadedEpisodes.ElementAt(0).EpisodeNumber);
         return EpisodeInfo.Map(null, media.downloadedEpisodes.ElementAt(0), history);
@@ -220,6 +220,9 @@ public class LibraryService
 
         switch (group.ToLower())
         {
+            case "continuewatching":
+                return await GetWatchHistory(page, pageSize);
+
             case "downloaded":
                 query = _db.downloadedMedia.Include(m => m.downloadedEpisodes).Where(m => m.downloadedEpisodes.Any(e => e.fileId.HasValue)).Select(m => m.MediaId);
                 break;
@@ -428,5 +431,16 @@ public class LibraryService
             await _library.GetFactory(media).DeleteMedia(media);
             await RecheckDownloads(usr, aniListId, true);
         }
+    }
+
+    public async Task ClearMediaHistory(UserSession usr, int aniListId)
+    {
+        _db.RemoveRange(_db.watchedEpisodes.Where(e => e.MediaId == aniListId));
+        _db.RemoveRange(_db.watchHistory.Where(e => e.MediaId == aniListId));
+
+        await _db.SaveChangesAsync();
+
+        _cache.Remove(CatalogService.GetCardCacheId(aniListId));
+        _cache.Remove(CatalogService.GetInfoCacheId(aniListId));
     }
 }

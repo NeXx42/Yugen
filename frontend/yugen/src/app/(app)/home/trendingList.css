@@ -1,7 +1,9 @@
+.Trending_Error,
 .Trending {
     position: relative;
     width: 100%;
-    height: 450px;
+    min-height: 450px;
+    max-height: 450px;
 
     border-radius: 15px;
 
@@ -9,7 +11,14 @@
     cursor: pointer;
 }
 
+.Trending_Error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .Trending img {
+    position: absolute;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -17,6 +26,7 @@
 
 .Trending_ImgOverlay {
     position: absolute;
+    height: 100%;
     inset: 0px;
     background: linear-gradient(45deg, var(--global-primary-bg) 5%, transparent 60%), linear-gradient(0deg, var(--global-primary-bg) 1%, transparent 60%), linear-gradient(-45deg, var(--global-primary-bg) 5%, transparent 60%);
 }
@@ -75,7 +85,8 @@
     font-size: 13px;
     text-align: center;
 
-    max-height: 50px;
+    max-height: 60px;
+
     overflow: hidden;
     text-overflow: ellipsis;
 

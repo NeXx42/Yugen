@@ -15,7 +15,8 @@
 }
 
 .MediaCardHorizontal:hover {
-    transform: scaleX(1.01);
+
+    margin-left: 6px;
 }
 
 .MediaCardHorizontal:hover .MediaCardHorizontal_Banner>img {

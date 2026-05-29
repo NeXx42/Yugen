@@ -133,4 +133,20 @@ public class LibraryController : ControllerBase
         HttpContext.GetUserFromSession(out UserSession usr);
         await _libraryService.DeleteMedia(usr, mediaId);
     }
+
+    [HttpPost("{mediaId}/ClearHistory")]
+    public async Task<IResult> ClearSeriesHistory(int mediaId)
+    {
+        try
+        {
+            HttpContext.GetUserFromSession(out UserSession usr);
+            await _libraryService.ClearMediaHistory(usr, mediaId);
+
+            return Results.Ok();
+        }
+        catch
+        {
+            return Results.BadRequest();
+        }
+    }
 }

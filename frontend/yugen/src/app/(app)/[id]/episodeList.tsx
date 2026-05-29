@@ -38,8 +38,6 @@ const monthsOfThYear = [
 ]
 
 export default function (props: Props) {
-    const router = useRouter();
-    const pathname = usePathname();
     const searchParams = useSearchParams();
 
     const [episodes, setEpisodes] = useState<MediaEpisodeInfo[]>([]);

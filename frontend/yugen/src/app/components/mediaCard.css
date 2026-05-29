@@ -102,6 +102,9 @@
     background-color: #000000bf;
 }
 
+
+
+.MediaCard_ClearWatchHistory,
 .MediaCard_NextRelease {
     background-color: #0e0e0ebb;
     backdrop-filter: blur(10px) contrast(125%);
@@ -115,6 +118,25 @@
 
     font-size: 13px;
 }
+
+.MediaCard_ClearWatchHistory {
+    right: 2px;
+    top: 2px;
+    left: unset;
+    bottom: unset;
+    padding: 5px 8px;
+
+    display: none;
+}
+
+.MediCard:hover .MediaCard_ClearWatchHistory {
+    display: block;
+}
+
+.MediaCard_ClearWatchHistory:hover {
+    border: 1px solid white;
+}
+
 
 .MediaCard_Content_Items {
     display: flex;

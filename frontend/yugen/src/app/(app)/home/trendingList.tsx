@@ -59,7 +59,11 @@ export default function ({ searchCriteria }: { searchCriteria: CaughtResponse<Se
 
     const drawItem = (item: MediaInfo | undefined) => {
         if (item == undefined)
-            return <>Failed to load</>
+            return (<div className="Trending_Error" >
+                <div className="Page_Error">
+                    {"Failed to load"}
+                </div>
+            </div>)
 
         return (<>
             <div className="Trending" onClick={() => router.push(`/${item.id}`)}>

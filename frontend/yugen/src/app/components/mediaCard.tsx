@@ -1,13 +1,11 @@
 "use client"
 
+import * as api from "@lib/api.local"
 import { MediaCardInfo } from "@shared/types";
-import { useRouter } from "next/navigation";
 
 import "./mediaCard.css"
 
-export default function ({ Card }: { Card: MediaCardInfo }) {
-    const navigate = useRouter();
-
+export default function ({ Card, requestRefresh }: { Card: MediaCardInfo, requestRefresh?: () => void }) {
     const getNextReleaseText = (): string => {
         const diff = (Card.nextReleaseDate! * 1000) - Date.now();
 
@@ -20,6 +18,20 @@ export default function ({ Card }: { Card: MediaCardInfo }) {
         if (days > 0) return `${days} day${days !== 1 ? "s" : ""}`;
         if (hours > 0) return `${hours} hour${hours !== 1 ? "s" : ""}`;
         return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
+    }
+
+    const clearWatchHistory = (e: any) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        api.library_ClearWatchHistory(Card.aniListId).then(() => {
+            if (requestRefresh != null) {
+                requestRefresh();
+                return;
+            }
+
+            window.location.reload();
+        });
     }
 
     return (<a key={Card.aniListId} className="MediCard" href={`${Card.aniListId}`} style={{ "--hover-color": Card.colour } as React.CSSProperties}>
@@ -39,6 +51,7 @@ export default function ({ Card }: { Card: MediaCardInfo }) {
                         </div>
                     </>
                 )}
+                {(Card.watchEpisode != undefined || Card.watchPercentage != undefined) && <div className="MediaCard_ClearWatchHistory" onClick={e => clearWatchHistory(e)}>X</div>}
 
                 <svg stroke="currentColor" fill="currentColor" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
                     <path d="M424.4 214.7L72.4 6.6C43.8-10.3 0 6.1 0 47.9V464c0 37.5 40.7 60.1 72.4 41.3l352-208c31.4-18.5 31.5-64.1 0-82.6z"></path>
