@@ -15,7 +15,7 @@ export default async function () {
         api.library_CurrentWatching(0, 10),
         api.catalog_SearchCriteria()
     ])
-
+    console.log(watching.data?.data);
     return (
         <div className="HomePage" >
             <div className="HomePage_Trending">
@@ -24,7 +24,7 @@ export default async function () {
 
             <div>
                 <h1 style={{ marginBottom: "5px" }}>Continue Watching</h1>
-                <CardRow cards={watching.data?.data.slice(0, 7).sort((a, b) => (b.watchLastTime ?? 0) - (a.watchLastTime ?? 0)) ?? []} />
+                <CardRow cards={watching.data?.data.sort((a, b) => (b.watchLastTime ?? 0) - (a.watchLastTime ?? 0)).slice(0, 7) ?? []} />
             </div>
 
             <div className="HomePage_Body">

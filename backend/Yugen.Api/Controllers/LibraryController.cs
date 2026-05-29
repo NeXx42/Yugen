@@ -45,13 +45,6 @@ public class LibraryController : ControllerBase
         return await _libraryService.GetWatchHistory(page ?? 0, pageSize ?? 10);
     }
 
-    [HttpPost("Sync/History")]
-    public async Task SyncWatchHistory()
-    {
-        HttpContext.GetUserFromSession(out UserSession usr);
-        await _libraryService.SyncWatchHistory(usr);
-    }
-
     [HttpPost("Sync/Library")]
     public async Task<int?> SyncExternalLibraries()
     {

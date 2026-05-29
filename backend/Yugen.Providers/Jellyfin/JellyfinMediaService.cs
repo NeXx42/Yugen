@@ -101,7 +101,7 @@ public class JellyfinMediaService : IMediaProvider
 
     public Task<string> ProxyUrl(string relative, bool includeApiKey = false) => Task.FromResult($"{_url}/{relative}{(includeApiKey ? $"&api_key={_apiKey}" : "")}");
 
-    public async Task<string> GetPlaybackUrl(string jellyfinId, int source, bool hls, string? videoCodecs, string? audioCodecs)
+    public async Task<string> GetPlaybackUrl(string jellyfinId, int source, bool hls, long? maxBitrate, string? videoCodecs, string? audioCodecs)
     {
         JellyfinResponse_MediaInfo info = await GetPlaybackInfoInternal(jellyfinId);
         JellyfinResponse_MediaInfo.MediaSource sourceObj = info.MediaSources![source];
@@ -121,6 +121,7 @@ public class JellyfinMediaService : IMediaProvider
             $"AudioCodec={audioCodecs}",
             $"Tag={System.Guid.NewGuid().ToString().Replace("-", string.Empty)}",
             $"videoCodec={videoCodecs}",
+            //$"VideoBitrate={maxBitrate ?? 0}",
             
             //$"VideoCodec={"av1,h264,vp9"}",
             //$"TranscodingMaxAudioChannels={"2"}",
@@ -198,47 +199,6 @@ public class JellyfinMediaService : IMediaProvider
 
             return span.Slice(i);
         }
-    }
-
-    public async Task<Model_WatchedEpisode[]> UpdateWatchHistory(string userId, ICollection<Model_DownloadedEpisode> episodes)
-    {
-        Dictionary<string, int> jellyfinMapping = new Dictionary<string, int>();
-
-        for (int i = 0; i < episodes.Count; i++)
-        {
-            if (string.IsNullOrEmpty(episodes.ElementAt(i).JellyfinId))
-                continue;
-
-            jellyfinMapping.Add(episodes.ElementAt(i).JellyfinId!, i);
-        }
-
-        string query = $"?Ids={string.Join("&Ids=", jellyfinMapping.Keys)}";
-        JellyfinResponse_Page<Jellyfin_Response_History>? items = await _http.SendRequest<JellyfinResponse_Page<Jellyfin_Response_History>>(Path.Combine("Users", userId, $"Items{query}&Fields=RunTimeTicks"), HttpMethod.Get);
-
-        if (items == null)
-            return [];
-
-        List<Model_WatchedEpisode> res = new List<Model_WatchedEpisode>();
-
-        foreach (Jellyfin_Response_History history in items.Items)
-        {
-            if (jellyfinMapping.TryGetValue(history.id, out int index))
-            {
-                if (history.userData == null || history.runTimeTicks == null)
-                    continue;
-
-                res.Add(new Model_WatchedEpisode()
-                {
-                    MediaId = episodes.ElementAt(index).MediaId,
-                    EpisodeNumber = episodes.ElementAt(index).EpisodeNumber,
-                    LastWatched = history.userData.LastPlayedDate,
-                    WatchPercentage = history.userData.played ? 1f : Math.Clamp(history.userData.playBackPositionTicks / history.runTimeTicks.Value, 0, 1),
-                    PlaybackPositionTicks = history.userData.playBackPositionTicks
-                });
-            }
-        }
-
-        return res.ToArray();
     }
 
     public async Task UploadSubtitle(string jellyfinId, string language, string format, string data)

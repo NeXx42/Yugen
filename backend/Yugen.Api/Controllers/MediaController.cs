@@ -54,10 +54,10 @@ public class MediaController : ControllerBase
     }
 
     [HttpGet("{jellyfinId}/{source}/stream.m3u8")]
-    public async Task StreamHLS(string jellyfinId, int source, [FromQuery] string videoCodecs, [FromQuery] string audioCodecs)
+    public async Task StreamHLS(string jellyfinId, int source, [FromQuery] long? bitrate, [FromQuery] string videoCodecs, [FromQuery] string audioCodecs)
     {
         HttpContext.GetUserFromSession(out var usr);
-        HttpRequestMessage request = await _mediaService.GetPlaybackRequest(usr, jellyfinId, source, true, videoCodecs, audioCodecs);
+        HttpRequestMessage request = await _mediaService.GetPlaybackRequest(usr, jellyfinId, source, true, bitrate, videoCodecs, audioCodecs);
 
         await ProxyRequest(request);
     }
@@ -110,13 +110,6 @@ public class MediaController : ControllerBase
             await using Stream upstream = await response.Content.ReadAsStreamAsync();
             await upstream.CopyToAsync(Response.Body, 81920);
         }
-    }
-
-    [HttpPost("{id}/SyncWatchHistory")]
-    public async Task SyncWatchHistory(int id)
-    {
-        HttpContext.GetUserFromSession(out var usr);
-        await _mediaService.SyncWatchHistoryWithJellyfin(usr, id);
     }
 
     public class EpisodeWatchTimeUpdate()

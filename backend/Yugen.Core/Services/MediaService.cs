@@ -47,9 +47,9 @@ public class MediaService
 
     public async Task<string> ProxyUrl(string relative, bool includeApiKey) => await _mediaProvider.ProxyUrl(relative, includeApiKey);
 
-    public async Task<HttpRequestMessage> GetPlaybackRequest(UserSession usr, string jellyfinId, int source, bool hls, string? videoCodecs = "", string? audioCodecs = "")
+    public async Task<HttpRequestMessage> GetPlaybackRequest(UserSession usr, string jellyfinId, int source, bool hls, long? bitrate = null, string? videoCodecs = "", string? audioCodecs = "")
     {
-        string url = await _mediaProvider.GetPlaybackUrl(jellyfinId, source, hls, videoCodecs, audioCodecs);
+        string url = await _mediaProvider.GetPlaybackUrl(jellyfinId, source, hls, bitrate, videoCodecs, audioCodecs);
         HttpRequestMessage http = new HttpRequestMessage(HttpMethod.Get, url);
 
         return http;
@@ -90,7 +90,6 @@ public class MediaService
 
                         PlaybackPositionTicks = ticks,
                         WatchPercentage = percentage,
-                        LastWatched = DateTime.UtcNow,
                     }
                 ]
             };
@@ -113,72 +112,15 @@ public class MediaService
 
                 PlaybackPositionTicks = ticks,
                 WatchPercentage = percentage,
-                LastWatched = DateTime.UtcNow,
             });
         }
         else
         {
             ep.PlaybackPositionTicks = ticks;
             ep.WatchPercentage = percentage;
-            ep.LastWatched = DateTime.UtcNow;
         }
 
         await _db.SaveChangesAsync();
-        _cache.Remove(CatalogService.GetCardCacheId(AniListId));
-    }
-
-    public async Task SyncWatchHistoryWithJellyfin(UserSession usr, int AniListId, bool force = false)
-    {
-        Model_DownloadedMedia? downloadedMedia = await _db.downloadedMedia.Include(m => m.downloadedEpisodes).FirstOrDefaultAsync(m => m.MediaId == AniListId);
-
-        if (downloadedMedia == null)
-            return; // its not downloaded, so nothing to sync with
-
-        Model_WatchHistory? history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.MediaId == AniListId);
-
-        if (history == null)
-        {
-            history ??= new Model_WatchHistory()
-            {
-                MediaId = AniListId,
-                UpdatedTime = DateTime.UtcNow,
-            };
-
-            await _db.AddAsync(history);
-        }
-
-
-        int? latestWatchedEpisode = null;
-        DateTime latestWatchedTime = DateTime.MinValue;
-
-        Model_WatchedEpisode[] episodeData = await _mediaProvider.UpdateWatchHistory(usr.JellyfinId, downloadedMedia.downloadedEpisodes);
-
-        foreach (Model_WatchedEpisode ep in episodeData)
-        {
-            if (ep.LastWatched.HasValue && ep.WatchPercentage > 0 && ep.LastWatched > latestWatchedTime)
-            {
-                latestWatchedTime = ep.LastWatched.Value;
-                latestWatchedEpisode = ep.EpisodeNumber;
-            }
-
-            Model_WatchedEpisode? existing = history.WatchedEpisodes.FirstOrDefault(w => w.EpisodeNumber == ep.EpisodeNumber);
-
-            if (existing == null)
-            {
-                history.WatchedEpisodes.Add(ep);
-            }
-            else
-            {
-                existing.PlaybackPositionTicks ??= ep.PlaybackPositionTicks;
-                existing.LastWatched ??= ep.LastWatched;
-                existing.WatchPercentage ??= ep.WatchPercentage;
-            }
-        }
-
-        history.UpdatedTime ??= DateTime.UtcNow;
-        history.WatchedEpisode ??= latestWatchedEpisode;
-        await _db.SaveChangesAsync();
-
         _cache.Remove(CatalogService.GetCardCacheId(AniListId));
     }
 

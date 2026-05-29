@@ -9,5 +9,4 @@ public class Model_WatchedEpisode
 
     public long? PlaybackPositionTicks { get; set; }
     public float? WatchPercentage { get; set; }
-    public DateTime? LastWatched { get; set; }
 }

@@ -112,32 +112,23 @@ public class LibraryService
     public async Task<PageResponse<MediaCard>> GetWatchHistory(int page, int pageSize)
     {
         var query = _db.watchHistory
+            .Include(w => w.WatchedEpisodes)
             .Where(w => w.WatchedEpisode.HasValue)
+            .OrderByDescending(w => w.UpdatedTime)
             .Select(w => new
             {
-                w.MediaId,
+                Media = w,
                 Episode = w.WatchedEpisodes.FirstOrDefault(e => e.EpisodeNumber == w.WatchedEpisode)
             })
-            .Where(x => x.Episode != null)
-            .OrderByDescending(x => x.Episode!.LastWatched);
+            .Where(x => x.Episode != null);
 
         int totalResults = await query.CountAsync();
         var results = await query.Skip(page * pageSize).Take(pageSize).ToArrayAsync();
 
-        Dictionary<int, Model_WatchedEpisode?> historyLookup = results.ToDictionary(x => x.MediaId, x => x.Episode);
-        MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds(results.Select(r => r.MediaId).ToList());
+        Dictionary<int, (Model_WatchHistory, Model_WatchedEpisode?)> historyLookup = results.ToDictionary(x => x.Media.MediaId, x => (x.Media, x.Episode));
+        MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds(results.Select(r => r.Media.MediaId).ToList());
 
         return new PageResponse<MediaCard>(cards.Select(c => c.WithWatchInfo(historyLookup[c.aniListId])).ToArray(), page, pageSize, totalResults);
-    }
-
-    public async Task SyncWatchHistory(UserSession usr)
-    {
-        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(SyncWatchHistory));
-
-        int[] downloadedMedia = await _db.downloadedMedia.Select(m => m.MediaId).ToArrayAsync();
-
-        foreach (int i in downloadedMedia)
-            await _mediaService.SyncWatchHistoryWithJellyfin(usr, i, true);
     }
 
     public async Task<int?> ResyncLibrary(UserSession usr)
@@ -192,9 +183,7 @@ public class LibraryService
         if (refetch || !(media.Hydrated ?? false))
         {
             await _hydrationService.HydrateEpisodes(media);
-
             await RecheckDownloads(usr, aniListId, true);
-            await _mediaService.SyncWatchHistoryWithJellyfin(usr, aniListId, true);
         }
 
         var results = await (
