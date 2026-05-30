@@ -2,7 +2,7 @@
 
 import * as api from "@lib/api.local"
 
-import { BufferingIndicator, Container, createPlayer, Gesture, videoFeatures } from '@videojs/react';
+import { BufferingIndicator, Container, createPlayer, Gesture, selectPlaybackRate, usePlayer, videoFeatures } from '@videojs/react';
 import {
     Controls,
     PlayButton,
@@ -24,6 +24,7 @@ import { MediaEpisodeInfo, MediaInfo, Playback_Info } from '@/app/shared/types';
 import { useEffect, useRef, useState } from 'react';
 
 import "./playerControl.css"
+import PlaybackSpeedListPlayerControl from "./playbackSpeedListPlayerControl";
 
 const Player = createPlayer({
     features: [
@@ -62,7 +63,6 @@ export default function ({ mediaInfo, episodeInfo, playbackInfo }: { mediaInfo: 
 
     }, [videoRef.current, selectedSub])
 
-
     const drawSubMenu = () => {
         switch (activeSubMenu) {
             case "Subtitles":
@@ -92,13 +92,7 @@ export default function ({ mediaInfo, episodeInfo, playbackInfo }: { mediaInfo: 
                             <>
                                 <button onClick={() => setSettingsMenu("None")}>Back</button>
                                 <div className="SubMenu_Options SubMenu_Generic_Container">
-                                    <button>0.50</button>
-                                    <button>0.75</button>
-                                    <button>Normal</button>
-                                    <button>1.25</button>
-                                    <button>1.50</button>
-                                    <button>1.75</button>
-                                    <button>2.00</button>
+                                    <PlaybackSpeedListPlayerControl />
                                 </div>
                             </>
                         )
