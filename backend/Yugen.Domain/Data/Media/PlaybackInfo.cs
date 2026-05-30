@@ -23,7 +23,9 @@ public class PlaybackInfo
     public class Source
     {
         public required string id { get; set; }
+
         public Subtitles[]? subs { get; set; }
+        public Audio[]? audio { get; set; }
 
         public class Subtitles
         {
@@ -32,6 +34,13 @@ public class PlaybackInfo
             public string? language { get; set; }
             public required string uri { get; set; }
             public required int id { get; set; }
+        }
+
+        public class Audio
+        {
+            public required int id { get; set; }
+            public string? title { get; set; }
+            public bool isDefault { get; set; }
         }
     }
 }

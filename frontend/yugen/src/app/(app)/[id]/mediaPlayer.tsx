@@ -6,62 +6,27 @@ import { ReactNode, SubmitEvent, useEffect, useRef, useState } from "react"
 
 import { MediaEpisodeInfo, MediaInfo, Playback_Info } from "@shared/types"
 
-import { audioFeatures, BufferingIndicator, Container, createPlayer, Gesture, videoFeatures } from '@videojs/react';
-import {
-    Controls,
-    PlayButton,
-    TimeSlider,
-    FullscreenButton,
-} from "@videojs/react";
-import { Video } from '@videojs/react/video';
-
 import "./mediaPlayer.css"
-
-import VolumePlayerControl from "@/app/components/playerControls/volumePlayerControl";
-import SubtitleSelectorPlayerControl from "@/app/components/playerControls/subtitleSelectorPlayerControl";
-import SubtitlesPlayerControl from "@/app/components/playerControls/subtitlesPlayerControl";
-import WatchtimeSyncerPlayerControl from "@/app/components/playerControls/watchtimeSyncerPlayerControl";
-import { createPortal } from "react-dom";
 import { useModals } from "@/app/context/modalContext";
-import { HlsVideo } from "@videojs/react/media/hls-video";
-import SegmentSkipperPlayerControl from "@/app/components/playerControls/segmentSkipperPlayerControl";
-import TimePlayerControl from "@/app/components/playerControls/timePlayerControl";
+import PlayerControl from "@/app/components/playerControls/playerControl"
 
 interface Props {
     mediaInfo: MediaInfo
     episode: MediaEpisodeInfo | undefined
 }
 
-const Player = createPlayer({
-    features: [
-        ...videoFeatures,
-    ]
-});
-
-
 export default function (props: Props) {
     const { showModal, closeModal } = useModals();
 
-    const videoRef = useRef<HTMLVideoElement | null>(null);
     const thumbnail = props.episode?.thumbnail ?? props.mediaInfo.thumbnailImage;
 
-    const [selectedSub, setSelectedSub] = useState<number>(-1);
-    const [subtitleOffset, setSubtitleOffset] = useState<number>(0);
 
     const [playbackInfo, setPlaybackInfo] = useState<Playback_Info | undefined>(undefined);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [hlsPlayback, setHlsPlayback] = useState(true);
+
 
     useEffect(() => fetchPlaybackInfo(), [props.mediaInfo, props.episode])
-    useEffect(() => {
-        if (videoRef.current == null)
-            return;
 
-        for (let i = 0; i < videoRef.current!.textTracks.length; i++) {
-            videoRef.current!.textTracks[i].mode = selectedSub === i ? "showing" : "disabled";
-        }
-
-    }, [videoRef.current, selectedSub])
 
     const fetchPlaybackInfo = () => {
         setIsPlaying(false);
@@ -73,18 +38,6 @@ export default function (props: Props) {
             setPlaybackInfo(undefined);
         }
     }
-
-    const onMetadataLoad = (video: HTMLVideoElement) => {
-        if (playbackInfo?.historicalTicks == null)
-            return;
-
-        video.currentTime = playbackInfo!.historicalTicks / 10_000_000;
-    };
-
-    const syncPlaybackTime = (runtime: number, percentage: number) => {
-        void api.media_UpdateEpisodeTime(props.mediaInfo.id, props.episode!.number, runtime, percentage);
-    }
-
 
 
     const drawSubtitlesEditor = (playbackInfo: Playback_Info) => {
@@ -180,120 +133,15 @@ export default function (props: Props) {
     }
 
 
-    const detectPlaybackCapabilities = () => {
-        const test = (mime: string) => {
-            return window.MediaSource?.isTypeSupported(mime) ?? false;
-        };
-
-        let videoCodecs = []
-        let audioCodecs = []
-
-        if (test('video/mp4; codecs="avc1.42E01E,mp4a.40.2"')) {
-            if (test('video/mp4; codecs="avc1.42E01E"')) videoCodecs.push("h264");
-            if (test('video/mp4; codecs="hvc1.1.6.L93.B0"')) videoCodecs.push("hevc");
-            if (test('video/mp4; codecs="av01.0.05M.08"')) videoCodecs.push("av1");
-
-            if (test('audio/mp4; codecs="mp4a.40.2"')) audioCodecs.push("aac");
-            if (test('audio/mp4; codecs="ac-3"')) audioCodecs.push("ac3");
-            if (test('audio/mp4; codecs="ec-3"')) audioCodecs.push("eac3");
-        }
-
-        return {
-            videoCodecs: videoCodecs.join(","),
-            audioCodecs: audioCodecs.join(","),
-        }
-    }
 
 
-    const getPlaybackUrl = (info: Playback_Info, hls: boolean) => {
-        if (hls) {
-            const { videoCodecs, audioCodecs } = detectPlaybackCapabilities();
-            return `api/media/${info.jellyfinId}/${0}/stream.m3u8?videoCodecs=${videoCodecs}&audioCodecs=${audioCodecs}`;
-        }
 
-        return `api/media/${info.jellyfinId}/${0}/stream.mkv`;
-    }
-
-    const drawPlayer = (info: Playback_Info): ReactNode => {
-        const source = info.sources[0];
-
-        return (
-            <Player.Provider>
-                <Container className="VideoPlayer_Container">
-                    {
-                        hlsPlayback ? <HlsVideo src={getPlaybackUrl(info, true)} ref={videoRef} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={(e) => onMetadataLoad(e.currentTarget)} />
-                            : <Video src={getPlaybackUrl(info, false)} ref={videoRef} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={(e) => onMetadataLoad(e.currentTarget)} />
-                    }
-
-
-                    <BufferingIndicator className="VideoPlayer_Buffering" />
-                    <Gesture action="togglePaused" type="tap" />
-                    <Gesture action="toggleFullscreen" type="doubletap" />
-
-                    <WatchtimeSyncerPlayerControl syncFunc={syncPlaybackTime} />
-                    <SubtitlesPlayerControl url={source.subs[selectedSub]?.uri} offset={subtitleOffset} />
-
-                    <SegmentSkipperPlayerControl video={videoRef} info={info} />
-
-                    <Controls.Root className="VideoPlayer_Controls">
-                        <TimeSlider.Root className="VideoPlayer_Controls_TimeSlider">
-                            <TimeSlider.Track className="VideoPlayer_Controls_TimeSlider_track">
-                                <TimeSlider.Buffer className="VideoPlayer_Controls_TimeSlider_buffer" />
-
-                                {
-                                    info.segments.map((s, i) => <div className="VideoPlayer_Controls_TimeSlider_Segment" style={{ left: `${s.start}%`, width: `${s.duration}%` }} key={i} />)
-                                }
-
-                                <TimeSlider.Fill className="VideoPlayer_Controls_TimeSlider_fill" />
-                                <TimeSlider.Thumb className="VideoPlayer_Controls_TimeSlider_thumb" />
-                            </TimeSlider.Track>
-                        </TimeSlider.Root>
-
-                        <Controls.Group className="VideoPlayer_Controls_Bottom">
-                            <div className="VideoPlayer_Controls_Left">
-                                <PlayButton className="VideoPlayer_Controls_Play">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" aria-hidden="true" viewBox="0 0 18 18" className="VideoPlayer_Controls_Play_Pause">
-                                        <rect width="5" height="14" x="2" y="2" rx="1.75" />
-                                        <rect width="5" height="14" x="11" y="2" rx="1.75" />
-                                    </svg>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" aria-hidden="true" viewBox="0 0 18 18" className="VideoPlayer_Controls_Play_Play">
-                                        <path d="m14.051 10.723-7.985 4.964a1.98 1.98 0 0 1-2.758-.638A2.06 2.06 0 0 1 3 13.964V4.036C3 2.91 3.895 2 5 2c.377 0 .747.109 1.066.313l7.985 4.964a2.057 2.057 0 0 1 .627 2.808c-.16.257-.373.475-.627.637" />
-                                    </svg>
-                                </PlayButton>
-                                <VolumePlayerControl />
-                                <TimePlayerControl />
-                            </div>
-
-                            <div className="VideoPlayer_Controls_Right">
-                                <SubtitleSelectorPlayerControl
-                                    selectedSub={selectedSub}
-                                    selectSub={setSelectedSub}
-                                    subtitleOffset={subtitleOffset}
-                                    setSubtitleOffset={setSubtitleOffset}
-                                    subs={source.subs}
-                                />
-                                <FullscreenButton className="VideoPlayer_Controls_Fullscreen">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" aria-hidden="true" viewBox="0 0 18 18" className="VideoPlayer_Controls_Fullscreen_Activate">
-                                        <path d="M9.57 3.617A1 1 0 0 0 8.646 3H4c-.552 0-1 .449-1 1v4.646a.996.996 0 0 0 1.001 1 1 1 0 0 0 .706-.293l4.647-4.647a1 1 0 0 0 .216-1.089m4.812 4.812a1 1 0 0 0-1.089.217l-4.647 4.647a.998.998 0 0 0 .708 1.706H14c.552 0 1-.449 1-1V9.353a1 1 0 0 0-.618-.924" />
-                                    </svg>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" aria-hidden="true" viewBox="0 0 18 18" className="VideoPlayer_Controls_Fullscreen_Deactivate">
-                                        <path d="M7.883 1.93a.99.99 0 0 0-1.09.217L2.146 6.793A.998.998 0 0 0 2.853 8.5H7.5c.551 0 1-.449 1-1V2.854a1 1 0 0 0-.617-.924m7.263 7.57H10.5c-.551 0-1 .449-1 1v4.646a.996.996 0 0 0 1.001 1.001 1 1 0 0 0 .706-.293l4.646-4.646a.998.998 0 0 0-.707-1.707z" />
-                                    </svg>
-                                </FullscreenButton>
-                            </div>
-                        </Controls.Group>
-
-                    </Controls.Root>
-                </Container>
-            </Player.Provider >
-        )
-    }
 
     return (
         <div className="MediaPlayer">
             <div className="MediaPlayer_Container">
                 {playbackInfo != undefined && isPlaying ? (
-                    drawPlayer(playbackInfo)
+                    <PlayerControl mediaInfo={props.mediaInfo} episodeInfo={props.episode!} playbackInfo={playbackInfo} />
                 ) :
                     (
                         <div className="MediaPlayer_Container_Request" onClick={() => setIsPlaying(true)}>
@@ -334,10 +182,6 @@ export default function (props: Props) {
                 <div className="MediaPlayer_Controls_ExternalControls">
                     {playbackInfo && (<>
                         <button onClick={() => drawSubtitlesEditor(playbackInfo)}>Subtitles</button>
-                        <div>
-                            <a>HLS</a>
-                            <input checked={hlsPlayback} onChange={e => setHlsPlayback(e.currentTarget.checked)} type="checkbox" />
-                        </div>
                     </>)}
                 </div>
             </div>

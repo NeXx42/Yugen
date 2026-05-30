@@ -214,8 +214,9 @@ export interface PlaybackInfo_Segment {
 }
 
 export interface Playback_Info_Source {
-    id: string
-    subs: Playback_Info_Subtitle[]
+    id: string,
+    subs: Playback_Info_Subtitle[],
+    audio: Playback_Info_AudioSource[]
 }
 
 export interface Playback_Info_Subtitle {
@@ -224,4 +225,10 @@ export interface Playback_Info_Subtitle {
     language: string | undefined,
     uri: string
     isExternal: boolean,
+}
+
+export interface Playback_Info_AudioSource {
+    id: number,
+    title: string | undefined,
+    isDefault: boolean
 }

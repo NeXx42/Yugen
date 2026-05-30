@@ -13,7 +13,7 @@ public interface IMediaProvider
     public Task UploadSubtitle(string jellyfinId, string language, string format, string data);
 
     public Task<string> ProxyUrl(string relative, bool includeApiKey = false);
-    public Task<string> GetPlaybackUrl(string jellyfinId, int source, bool hls, long? maxBitrate, string? videoCodecs, string? audioCodecs);
+    public Task<string> GetPlaybackUrl(string jellyfinId, int source, bool hls, long? maxBitrate, string? videoCodecs, string? audioCodecs, int? audioIndex);
     public Task<string> GetSubtitleUrl(string jellyfinId, string mediaId, int subtitleId);
 
     public Task<string?[]?> MapPathToJellyfinId(ICollection<Model_DownloadedEpisode> episodes);
