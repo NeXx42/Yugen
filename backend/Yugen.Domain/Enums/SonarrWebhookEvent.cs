@@ -12,6 +12,8 @@ public enum SonarrWebhookEventType
     Health,
     ApplicationUpdate,
     HealthRestored,
-    ManualInteractionRequired
+    ManualInteractionRequired,
+
+    EpisodeRelease
 }
 

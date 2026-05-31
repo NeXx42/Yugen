@@ -16,6 +16,7 @@ public class AniListResponse_Search
             public class PageInfo
             {
                 public int total { get; set; }
+                public bool hasNextPage { get; set; }
             }
         }
     }

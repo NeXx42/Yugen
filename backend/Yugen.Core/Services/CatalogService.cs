@@ -426,4 +426,73 @@ public class CatalogService
         await _db.BulkInsertAsync(tags);
         await _db.BulkInsertAsync(genres);
     }
+
+    public async Task CheckForOutOfDateEpisodes()
+    {
+        long currentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+        int[] watchingBookmarks = [
+            (int)BookmarkType.Watching,
+            (int)BookmarkType.OnHold,
+            (int)BookmarkType.Planning,
+        ];
+
+        Model_UserBookmark[] bookmarks = await _db.userBookmarks.Where(m => watchingBookmarks.Contains(m.BookmarkId)).ToArrayAsync();
+
+        List<int> distinctMedia = new List<int>();
+        Dictionary<int, List<Guid>> userMediaLookup = new Dictionary<int, List<Guid>>();
+
+        foreach (Model_UserBookmark bookmark in bookmarks)
+        {
+            if (!userMediaLookup.TryGetValue(bookmark.MediaId, out var list))
+            {
+                list = new List<Guid>();
+                userMediaLookup[bookmark.MediaId] = list;
+                distinctMedia.Add(bookmark.MediaId);
+            }
+
+            list.Add(bookmark.UserId);
+        }
+
+        MediaCard[] mediaCards = await GetOrCreateMediaCardsFromIds(distinctMedia);
+
+        List<int> mediaOfInterest = mediaCards.Where(m => m.nextReleaseDate.HasValue && m.nextReleaseDate < currentTime).Select(m => m.aniListId).ToList();
+
+        Dictionary<int, long?> newEpisodes = await _currentProvider.GetTimeOfNextEpisodes(mediaOfInterest);
+        Dictionary<int, Model_Media> dbEntries = await _db.media.Where(m => mediaOfInterest.Contains(m.Id)).ToDictionaryAsync(m => m.Id, m => m);
+
+        List<Model_Notification> newNotifications = new List<Model_Notification>();
+
+        Model_Media? media = null;
+        List<Guid>? users = null;
+
+        foreach (KeyValuePair<int, long?> episodeUpdate in newEpisodes)
+        {
+            if (dbEntries.TryGetValue(episodeUpdate.Key, out media) && media != null)
+            {
+                _cache.Remove(GetCardCacheId(media.Id));
+                _cache.Remove(GetInfoCacheId(media.Id));
+
+                media.NextEpisodeReleaseDate = episodeUpdate.Value;
+
+                if (userMediaLookup.TryGetValue(episodeUpdate.Key, out users) && users?.Count > 0)
+                {
+                    foreach (Guid usr in users)
+                        newNotifications.Add(new Model_Notification()
+                        {
+                            Date = DateTime.UtcNow,
+                            EventType = SonarrWebhookEventType.EpisodeRelease,
+                            MediaId = media.Id,
+                            UserId = usr,
+                            Message = "New Episode",
+                        });
+                }
+            }
+        }
+
+        if (newNotifications.Count > 0)
+            await _db.AddRangeAsync(newNotifications);
+
+        await _db.SaveChangesAsync();
+    }
 }

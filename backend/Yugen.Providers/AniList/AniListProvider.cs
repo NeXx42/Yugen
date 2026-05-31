@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -140,14 +141,36 @@ public class AniListProvider : IMetaDataProvider
             }
         }";
 
-        AniListResponse_Search? res = await SendRequest<AniListResponse_Search>(query, new { idIn = aniListIds.ToArray(), perPage = aniListIds.Count });
+        const int MAX_PAGE_SIZE = 50;
+        List<AniListResponse_Media> responses = new List<AniListResponse_Media>();
 
-        if (res?.data?.page?.media == null)
-            throw new Exception("Failed");
+        List<int> lookups = aniListIds.ToList();
+
+        for (int i = 0; i < aniListIds.Count; i += MAX_PAGE_SIZE)
+        {
+            int elementCount = Math.Min(MAX_PAGE_SIZE, aniListIds.Count - i);
+            var batch = lookups.GetRange(i, elementCount);
+
+            try
+            {
+                AniListResponse_Search? res = await SendRequest<AniListResponse_Search>(query, new { idIn = batch, perPage = elementCount });
+
+                if (res?.data?.page?.media == null)
+                    throw new Exception("Failed");
+
+                responses.AddRange(res.data.page.media);
+                await Task.Delay(200); // dont want to spam their servers
+            }
+            catch (Exception e)
+            {
+
+            }
+        }
+
 
         List<Model_Media> results = new List<Model_Media>();
 
-        foreach (AniListResponse_Media media in res.data.page.media)
+        foreach (AniListResponse_Media media in responses)
         {
             Model_Media result = new Model_Media()
             {

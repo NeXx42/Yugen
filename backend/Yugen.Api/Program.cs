@@ -8,6 +8,7 @@ using Yugen.Core.Services;
 using Yugen.Data;
 using Yugen.Domain.Data.Users;
 using Yugen.Domain.Models;
+using Yugen.YugenBackgroundService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -93,6 +94,7 @@ builder.Services.AddSingleton<SettingsCache>();
 builder.Services.AddSingleton<EndpointDeduplicator>();
 
 builder.Services.AddHostedService<SettingsInit>();
+builder.Services.AddHostedService<YugenBackgroundService>();
 
 var app = builder.Build();
 

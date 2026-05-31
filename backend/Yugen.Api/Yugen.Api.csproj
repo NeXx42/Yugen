@@ -14,5 +14,6 @@
     <ProjectReference Include="..\Yugen.Core\Yugen.Core.csproj" />
     <ProjectReference Include="..\Yugen.Data\Yugen.Data.csproj" />
     <ProjectReference Include="..\Yugen.Domain\Yugen.Domain.csproj" />
+    <ProjectReference Include="..\Yugen.BackgroundService\Yugen.BackgroundService.csproj" />
   </ItemGroup>
 </Project>
