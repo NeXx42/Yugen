@@ -36,7 +36,11 @@ public class MediaService
 
         if (episodeNumber.HasValue && anilistId.HasValue)
         {
-            Model_WatchedEpisode? episodeWatchData = await _db.watchedEpisodes.FirstOrDefaultAsync(e => e.MediaId == anilistId && e.EpisodeNumber == episodeNumber);
+            Model_WatchedEpisode? episodeWatchData = await _db.watchHistory
+                .Where(w => w.UserId == usr.User.Id && w.MediaId == anilistId)
+                .Include(w => w.WatchedEpisodes)
+                .SelectMany(w => w.WatchedEpisodes)
+                .FirstOrDefaultAsync(e => e.EpisodeNumber == episodeNumber);
 
             if (episodeWatchData != null)
                 info.historicalTicks = episodeWatchData.PlaybackPositionTicks;
@@ -74,32 +78,29 @@ public class MediaService
 
         if (history == null)
         {
-            // should be empty
-            _db.RemoveRange(_db.watchedEpisodes.Where(e => e.MediaId == AniListId));
-
-            history = new Model_WatchHistory()
+            await _db.AddAsync(new Model_WatchHistory()
             {
                 MediaId = AniListId,
                 UpdatedTime = DateTime.UtcNow,
-                WatchedEpisode = epNumber,
+                LastWatchedEpisodeNumber = epNumber,
+                UserId = usr.User.Id,
 
                 WatchedEpisodes = [
                     new Model_WatchedEpisode(){
-                        MediaId = AniListId,
                         EpisodeNumber = epNumber,
 
                         PlaybackPositionTicks = ticks,
                         WatchPercentage = percentage,
                     }
                 ]
-            };
+            });
 
             await _db.SaveChangesAsync();
             return;
         }
 
         history.UpdatedTime = DateTime.UtcNow;
-        history.WatchedEpisode = epNumber;
+        history.LastWatchedEpisodeNumber = epNumber;
 
         Model_WatchedEpisode? ep = history.WatchedEpisodes.FirstOrDefault(e => e.EpisodeNumber == epNumber);
 
@@ -107,7 +108,7 @@ public class MediaService
         {
             history.WatchedEpisodes.Add(new Model_WatchedEpisode()
             {
-                MediaId = AniListId,
+                HistoryId = history.Id,
                 EpisodeNumber = epNumber,
 
                 PlaybackPositionTicks = ticks,

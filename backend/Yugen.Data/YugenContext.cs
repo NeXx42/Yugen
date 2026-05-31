@@ -53,8 +53,8 @@ public class YugenContext : DbContext
         modelBuilder.Entity<Model_DownloadedEpisode>().HasKey(e => new { e.MediaId, e.EpisodeNumber });
         modelBuilder.Entity<Model_DownloadedEpisode>().HasOne(e => e.DownloadedMedia).WithMany(e => e.downloadedEpisodes);
 
-        modelBuilder.Entity<Model_WatchedEpisode>().HasKey(w => new { w.MediaId, w.EpisodeNumber });
-        modelBuilder.Entity<Model_WatchedEpisode>().HasOne(w => w.WatchedHistory).WithMany(w => w.WatchedEpisodes);
+        modelBuilder.Entity<Model_WatchedEpisode>().HasKey(w => new { w.HistoryId, w.EpisodeNumber });
+        modelBuilder.Entity<Model_WatchedEpisode>().HasOne(w => w.History).WithMany(w => w.WatchedEpisodes).HasForeignKey(w => w.HistoryId);
 
         modelBuilder.Entity<Model_UserBookmark>().HasKey(e => new { e.MediaId, e.UserId });
 

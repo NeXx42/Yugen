@@ -109,16 +109,16 @@ public class LibraryService
         return downloadedMedia;
     }
 
-    public async Task<PageResponse<MediaCard>> GetWatchHistory(int page, int pageSize)
+    public async Task<PageResponse<MediaCard>> GetWatchHistory(UserSession usr, int page, int pageSize)
     {
         var query = _db.watchHistory
             .Include(w => w.WatchedEpisodes)
-            .Where(w => w.WatchedEpisode.HasValue)
+            .Where(w => w.UserId == usr.User.Id && w.LastWatchedEpisodeNumber.HasValue)
             .OrderByDescending(w => w.UpdatedTime)
             .Select(w => new
             {
                 Media = w,
-                Episode = w.WatchedEpisodes.FirstOrDefault(e => e.EpisodeNumber == w.WatchedEpisode)
+                Episode = w.WatchedEpisodes.FirstOrDefault(e => e.EpisodeNumber == w.LastWatchedEpisodeNumber)
             })
             .Where(x => x.Episode != null);
 
@@ -169,8 +169,8 @@ public class LibraryService
         if (media.ProviderType != LibraryProviderType.Radarr)
             throw new Exception("Cannot get film from non Radarr source");
 
-        Model_WatchedEpisode? history = await _db.watchedEpisodes.FirstOrDefaultAsync(w => w.MediaId == aniListId && w.EpisodeNumber == media.downloadedEpisodes.ElementAt(0).EpisodeNumber);
-        return EpisodeInfo.Map(null, media.downloadedEpisodes.ElementAt(0), history);
+        Model_WatchHistory? history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.User.Id && w.MediaId == aniListId);
+        return EpisodeInfo.Map(null, media.downloadedEpisodes.ElementAt(0), history?.WatchedEpisodes.FirstOrDefault());
     }
 
     public async Task<EpisodeInfo[]> GetMediaEpisodesForUser(UserSession usr, int aniListId, bool refetch, bool clearOld)
@@ -186,6 +186,8 @@ public class LibraryService
             await RecheckDownloads(usr, aniListId, true);
         }
 
+        Model_WatchHistory? history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.User.Id && w.MediaId == aniListId);
+
         var results = await (
             from m in _db.mediaEpisodes
 
@@ -195,23 +197,16 @@ public class LibraryService
                 into downloads
             from de in downloads.DefaultIfEmpty()
 
-            join wh in _db.watchedEpisodes
-                on new { m.MediaId, m.EpisodeNumber }
-                equals new { wh.MediaId, wh.EpisodeNumber }
-                into watch
-            from wh in watch.DefaultIfEmpty()
-
             where m.MediaId == aniListId
 
             select new
             {
                 Episode = m,
                 DownloadData = de,
-                WatchHistory = wh,
             }
         ).ToArrayAsync();
 
-        return results.Select(r => EpisodeInfo.Map(r.Episode, r.DownloadData, r.WatchHistory)).ToArray();
+        return results.Select(r => EpisodeInfo.Map(r.Episode, r.DownloadData, history?.WatchedEpisodes?.FirstOrDefault(e => e.EpisodeNumber == r.Episode.EpisodeNumber))).ToArray();
     }
 
     public async Task<PageResponse<MediaCard>> SearchLibrary(UserSession session, int page, int pageSize, string group)
@@ -221,7 +216,7 @@ public class LibraryService
         switch (group.ToLower())
         {
             case "continuewatching":
-                return await GetWatchHistory(page, pageSize);
+                return await GetWatchHistory(session, page, pageSize);
 
             case "downloaded":
                 query = _db.downloadedMedia.Include(m => m.downloadedEpisodes).Where(m => m.downloadedEpisodes.Any(e => e.fileId.HasValue)).Select(m => m.MediaId);
@@ -435,8 +430,7 @@ public class LibraryService
 
     public async Task ClearMediaHistory(UserSession usr, int aniListId)
     {
-        _db.RemoveRange(_db.watchedEpisodes.Where(e => e.MediaId == aniListId));
-        _db.RemoveRange(_db.watchHistory.Where(e => e.MediaId == aniListId));
+        _db.RemoveRange(_db.watchHistory.Include(h => h.WatchedEpisodes).Where(e => e.UserId == usr.User.Id && e.MediaId == aniListId));
 
         await _db.SaveChangesAsync();
 

@@ -33,7 +33,7 @@ public class EpisodeInfo
             score = episode?.Score,
 
             jellyfinId = download?.JellyfinId,
-            watchDate = watchTime?.WatchedHistory?.UpdatedTime != null ? new DateTimeOffset(watchTime.WatchedHistory.UpdatedTime.Value).ToUnixTimeSeconds() : null,
+            watchDate = watchTime?.History?.UpdatedTime != null ? new DateTimeOffset(watchTime.History.UpdatedTime.Value).ToUnixTimeSeconds() : null,
             watchPercentage = watchTime?.WatchPercentage,
         };
     }

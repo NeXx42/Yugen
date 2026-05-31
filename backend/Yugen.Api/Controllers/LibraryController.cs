@@ -42,7 +42,8 @@ public class LibraryController : ControllerBase
     [HttpGet("WatchHistory")]
     public async Task<PageResponse<MediaCard>> GetWatchHistory([FromQuery] int? page, [FromQuery] int? pageSize)
     {
-        return await _libraryService.GetWatchHistory(page ?? 0, pageSize ?? 10);
+        HttpContext.GetUserFromSession(out UserSession usr);
+        return await _libraryService.GetWatchHistory(usr, page ?? 0, pageSize ?? 10);
     }
 
     [HttpPost("Sync/Library")]
