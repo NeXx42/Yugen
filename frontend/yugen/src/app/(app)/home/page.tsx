@@ -23,8 +23,8 @@ export default async function () {
             </div>
 
             <div>
-                <h1 style={{ marginBottom: "5px" }}>Continue Watching</h1>
-                <CardRow cards={watching.data?.data.sort((a, b) => (b.watchLastTime ?? 0) - (a.watchLastTime ?? 0)).slice(0, 7) ?? []} />
+                <h1 style={{ marginBottom: "10px", fontSize: "26px" }}>Watch History</h1>
+                <CardRow cards={watching.data?.data.sort((a, b) => (b.watchLastTime ?? 0) - (a.watchLastTime ?? 0)).slice(0, 7) ?? []} viewMoreLink={"library"} />
             </div>
 
             <div className="HomePage_Body">

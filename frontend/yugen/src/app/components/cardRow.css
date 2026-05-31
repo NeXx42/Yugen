@@ -1,9 +1,20 @@
 .CardRow_Cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(190px, 200px));
-    gap: 25px;
+    gap: 22px;
 
     white-space: nowrap;
 
     box-sizing: border-box;
+}
+
+.CardRow_Cards_ViewMore {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    border: 1px solid var(--global-border-color);
+    color: var(--global-text-muted);
 }

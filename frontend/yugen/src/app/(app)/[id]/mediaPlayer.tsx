@@ -3,152 +3,32 @@
 import * as api from "@lib/api.local"
 
 import { ReactNode, SubmitEvent, useEffect, useRef, useState } from "react"
-
 import { MediaEpisodeInfo, MediaInfo, Playback_Info } from "@shared/types"
 
 import "./mediaPlayer.css"
-import { useModals } from "@/app/context/modalContext";
+
 import PlayerControl from "@/app/components/playerControls/playerControl"
-
-interface Props {
-    mediaInfo: MediaInfo
-    episode: MediaEpisodeInfo | undefined
-}
-
-export default function (props: Props) {
-    const { showModal, closeModal } = useModals();
-
-    const thumbnail = props.episode?.thumbnail ?? props.mediaInfo.thumbnailImage;
+import { SelectedEpisodeInfo } from "./mediaContainer"
 
 
-    const [playbackInfo, setPlaybackInfo] = useState<Playback_Info | undefined>(undefined);
+export default function ({ selectedEpisode }: { selectedEpisode: SelectedEpisodeInfo | undefined }) {
+    const thumbnail = selectedEpisode?.episodeInfo?.thumbnail ?? selectedEpisode?.mediaInfo?.thumbnailImage;
     const [isPlaying, setIsPlaying] = useState(false);
 
-
-    useEffect(() => fetchPlaybackInfo(), [props.mediaInfo, props.episode])
-
-
-    const fetchPlaybackInfo = () => {
-        setIsPlaying(false);
-
-        if (props.episode?.jellyfinId) {
-            api.media_PlaybackInfo(props.mediaInfo.id, props.episode.number, props.episode?.jellyfinId).then(setPlaybackInfo).catch(() => setPlaybackInfo(undefined));
-        }
-        else {
-            setPlaybackInfo(undefined);
-        }
-    }
-
-
-    const drawSubtitlesEditor = (playbackInfo: Playback_Info) => {
-        const uploadSubtitle = async (e: SubmitEvent<HTMLFormElement>) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            const form = e.currentTarget;
-            const formData = new FormData(form);
-            const lang = formData.get("language") as string;
-
-            await api.media_UploadSubtitle(
-                playbackInfo.jellyfinId,
-                lang,
-                formData
-            );
-
-            fetchPlaybackInfo();
-            closeModal();
-        };
-
-        const deleteExternalSubtitle = async (id: number) => {
-            await api.media_DeleteSubtitle(playbackInfo.jellyfinId, id);
-
-            fetchPlaybackInfo();
-            closeModal();
-        }
-
-        const subs = playbackInfo.sources[0].subs.filter(s => s.isExternal);
-
-        showModal(
-            <div className="MediaPlayer_SubtitlesEdit">
-                <h2>Episode {props.episode?.number}</h2>
-                <form onSubmit={uploadSubtitle}>
-                    <div>
-                        <select name="language">
-                            <option value="eng">English</option>
-                            <option value="spa">Spanish</option>
-                            <option value="fra">French</option>
-                            <option value="deu">German</option>
-                            <option value="ita">Italian</option>
-                            <option value="por">Portuguese</option>
-                            <option value="nld">Dutch</option>
-                            <option value="swe">Swedish</option>
-                            <option value="nor">Norwegian</option>
-                            <option value="dan">Danish</option>
-                            <option value="fin">Finnish</option>
-                            <option value="pol">Polish</option>
-                            <option value="rus">Russian</option>
-                            <option value="tur">Turkish</option>
-                            <option value="ara">Arabic</option>
-                            <option value="zho">Chinese</option>
-                            <option value="jpn">Japanese</option>
-                            <option value="kor">Korean</option>
-                        </select>
-                        <input type="file" name="subtitle" accept=".srt,.vtt,.ass,.ssa" />
-                    </div>
-
-                    <button type="submit">Upload</button>
-                </form>
-
-                <div>
-                    {
-                        subs.length > 0 ? (
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Title</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {
-                                        subs.map(s => < tr key={s.id}>
-                                            <td>
-                                                {s.title}
-                                            </td>
-                                            <td className="MediaPlayer_SubtitlesEdit_Existing_Action">
-                                                <button onClick={() => deleteExternalSubtitle(s.id)}>Delete</button>
-                                            </td>
-                                        </tr>)
-                                    }
-                                </tbody>
-                            </table>
-                        ) :
-                            (
-                                <p>No External Subs</p>
-                            )
-                    }
-                </div>
-            </div>
-        );
-    }
-
-
-
-
-
+    useEffect(() => setIsPlaying(false), [selectedEpisode])
 
     return (
         <div className="MediaPlayer">
             <div className="MediaPlayer_Container">
-                {playbackInfo != undefined && isPlaying ? (
-                    <PlayerControl mediaInfo={props.mediaInfo} episodeInfo={props.episode!} playbackInfo={playbackInfo} />
+                {selectedEpisode?.downloadInfo != undefined && isPlaying ? (
+                    <PlayerControl mediaInfo={selectedEpisode.mediaInfo} episodeInfo={selectedEpisode.episodeInfo} playbackInfo={selectedEpisode.downloadInfo} />
                 ) :
                     (
                         <div className="MediaPlayer_Container_Request" onClick={() => setIsPlaying(true)}>
                             {thumbnail != undefined && <img src={thumbnail ?? ""} />}
 
                             {
-                                playbackInfo == undefined ? (
+                                selectedEpisode?.downloadInfo?.jellyfinId == undefined ? (
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         width="1em"
@@ -177,13 +57,6 @@ export default function (props: Props) {
                         </div>
                     )
                 }
-            </div>
-            <div className="MediaPlayer_Controls ViewPageContainer">
-                <div className="MediaPlayer_Controls_ExternalControls">
-                    {playbackInfo && (<>
-                        <button onClick={() => drawSubtitlesEditor(playbackInfo)}>Subtitles</button>
-                    </>)}
-                </div>
             </div>
         </div >
     )

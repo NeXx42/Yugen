@@ -36,7 +36,7 @@
     gap: 8px;
 }
 
-
+.Episode_Skeleton,
 .Episode {
     height: 35px;
 
@@ -128,4 +128,94 @@
 .EpisodeList_Unaired>h1 {
     color: white;
     font-size: clamp(3rem, 11vw, 5.75rem);
+}
+
+.Episode_Skeleton {
+    position: relative;
+    width: 100%;
+
+    outline: 1px solid rgba(245, 245, 245, .1);
+    background-color: #141414;
+    border-radius: 10px;
+    border: none;
+    padding: 5px;
+
+    overflow: hidden;
+}
+
+.Episode_Skeleton::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(200%);
+    }
+}
+
+.EpisodeList_Titlebar>div {
+    position: relative;
+
+    outline: 1px solid rgba(245, 245, 245, .1);
+    background-color: #141414;
+    border-radius: 10px;
+
+    padding: 5px 10px;
+
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.EpisodeList_Titlebar>div>button {
+    background: transparent;
+    border: none;
+    outline: none;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+}
+
+.EpisodeList_Titlebar_RefreshMenu {
+    z-index: 5;
+
+    position: absolute;
+    top: 130%;
+    right: 0px;
+    width: 150px;
+
+    outline: 1px solid rgba(245, 245, 245, .1);
+    background-color: #141414;
+    border-radius: 10px;
+
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.EpisodeList_Titlebar_RefreshMenu>button {
+    border: none;
+    background: none;
+    outline: none;
+
+    text-align: left;
+    padding: 5px;
+}
+
+.EpisodeList_Titlebar_RefreshMenu>button:nth-child(even) {
+    background-color: var(--global-border-color);
 }

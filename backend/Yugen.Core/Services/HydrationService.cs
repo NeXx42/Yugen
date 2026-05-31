@@ -53,16 +53,26 @@ public class HydrationService
         return media[0];
     }
 
-    public async Task HydrateEpisodes(Model_Media media)
+    public async Task HydrateEpisodes(Model_Media media, bool clearOld)
     {
         Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == media.Id);
 
         if (link?.mal_id == null)
             return;
 
-        Model_MediaEpisode[] providedEpisodes = await _metaDataProvider.GetEpisodeData(link!.mal_id.Value);
-        Model_MediaEpisode[] existingEpisodes = await _db.mediaEpisodes.Where(e => e.MediaId == media.Id).ToArrayAsync();
+        Model_MediaEpisode[] existingEpisodes = [];
 
+        if (clearOld)
+        {
+            _db.RemoveRange(_db.mediaEpisodes.Where(e => e.MediaId == media.Id));
+            await _db.SaveChangesAsync();
+        }
+        else
+        {
+            existingEpisodes = await _db.mediaEpisodes.Where(e => e.MediaId == media.Id).ToArrayAsync();
+        }
+
+        Model_MediaEpisode[] providedEpisodes = await _metaDataProvider.GetEpisodeData(link!.mal_id.Value);
         List<Model_MediaEpisode> toAdd = [.. providedEpisodes];
 
         foreach (Model_MediaEpisode existingEpisode in existingEpisodes)

@@ -173,7 +173,7 @@ public class LibraryService
         return EpisodeInfo.Map(null, media.downloadedEpisodes.ElementAt(0), history);
     }
 
-    public async Task<EpisodeInfo[]> GetMediaEpisodesForUser(UserSession usr, int aniListId, bool refetch)
+    public async Task<EpisodeInfo[]> GetMediaEpisodesForUser(UserSession usr, int aniListId, bool refetch, bool clearOld)
     {
         Model_Media? media = await _db.media.FirstOrDefaultAsync(m => m.Id == aniListId);
 
@@ -182,7 +182,7 @@ public class LibraryService
 
         if (refetch || !(media.Hydrated ?? false))
         {
-            await _hydrationService.HydrateEpisodes(media);
+            await _hydrationService.HydrateEpisodes(media, clearOld);
             await RecheckDownloads(usr, aniListId, true);
         }
 

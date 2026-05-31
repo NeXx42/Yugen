@@ -9,7 +9,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface Props {
     mediaInfo: MediaInfo,
-    setSelectedItem: Dispatch<SetStateAction<MediaEpisodeInfo | undefined>>,
+    setSelectedItem: (info: MediaEpisodeInfo | undefined) => void,
 }
 
 const daysOfTheWeek = [
@@ -41,13 +41,16 @@ export default function (props: Props) {
     const searchParams = useSearchParams();
 
     const [episodes, setEpisodes] = useState<MediaEpisodeInfo[]>([]);
+    const [loadingEpisodes, setLoadingEpisodes] = useState(false);
 
     const [timeUntil, setTimeUntil] = useState("")
     const [selectedEpisodeIndex, setSelectedEpisodeIndex] = useState<number | null>(null);
 
+    const [refreshMenuOpen, setRefreshMenuOpen] = useState(false);
+
 
     useEffect(() => {
-        fetchEpisodes(false);
+        fetchEpisodes(false, false);
 
         if (props.mediaInfo.upcomingEpisode == null) return;
 
@@ -108,8 +111,13 @@ export default function (props: Props) {
         props.setSelectedItem(pos == null ? undefined : episodes[pos]);
     }
 
-    const fetchEpisodes = (recache: boolean) => {
-        api.library_GetEpisodes(props.mediaInfo.id, recache).then(r => setEpisodes(r.sort((a, b) => a.number - b.number)));
+    const fetchEpisodes = (recache: boolean, clearOld: boolean) => {
+        setRefreshMenuOpen(false);
+        setLoadingEpisodes(true);
+
+        api.library_GetEpisodes(props.mediaInfo.id, recache, clearOld)
+            .then(r => setEpisodes(r.sort((a, b) => a.number - b.number)))
+            .finally(() => setLoadingEpisodes(false));
     }
 
     const drawEpisode = (ep: MediaEpisodeInfo, pos: number): React.ReactNode => {
@@ -152,17 +160,56 @@ export default function (props: Props) {
                                         <span>{daysOfTheWeek[date?.getDate()]} · {date?.getFullYear()}</span>
                                     </>
                                 ) : (
-                                    <>Unkown</>
+                                    <>Unknown</>
                                 )
                         }
                     </div>
                 ) : (<>
                     <div className="EpisodeList_Titlebar">
                         <h2>Episodes</h2>
-                        <button onClick={() => fetchEpisodes(true)}>refetch</button>
+                        <div>
+                            <button onClick={() => fetchEpisodes(false, false)}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path fillRule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z" />
+                                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
+                                </svg>
+                            </button>
+                            <button onClick={() => setRefreshMenuOpen(true)}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3" />
+                                </svg>
+                            </button>
+
+                            {
+                                refreshMenuOpen && (<div className="EpisodeList_Titlebar_RefreshMenu">
+                                    <button onClick={() => fetchEpisodes(true, false)}>Recache</button>
+                                    <button onClick={() => fetchEpisodes(true, true)}>Clear And Refetch</button>
+                                </div>)
+                            }
+                        </div>
                     </div>
                     <div className="EpisodeList_Entries">
-                        {episodes?.map(drawEpisode)}
+                        {
+                            loadingEpisodes ? (
+                                <>
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                </>
+                            ) : (
+                                episodes?.map(drawEpisode)
+                            )
+                        }
                     </div>
                     {
                         props.mediaInfo.upcomingEpisode != null && (

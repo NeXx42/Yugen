@@ -42,8 +42,8 @@ export async function library_Upload(file: FormData) {
 export async function library_UpdateBookmark(mediaId: number, bookmarkId: number) {
     await post(`library/${mediaId}/UpdateBookmark?id=${bookmarkId}`);
 }
-export async function library_GetEpisodes(mediaId: number, refetch: boolean): Promise<MediaEpisodeInfo[]> {
-    return (await get<MediaEpisodeInfo[]>(`library/${mediaId}/Episodes?refetch=${refetch}`))!
+export async function library_GetEpisodes(mediaId: number, refetch: boolean, clearOld: boolean): Promise<MediaEpisodeInfo[]> {
+    return (await get<MediaEpisodeInfo[]>(`library/${mediaId}/Episodes?refetch=${refetch}&clearOld=${clearOld}`))!
 }
 export async function library_GetFilm(mediaId: number, refetch: boolean): Promise<MediaEpisodeInfo | null> {
     return (await get<MediaEpisodeInfo | null>(`library/${mediaId}/Film?refetch=${refetch}`))!

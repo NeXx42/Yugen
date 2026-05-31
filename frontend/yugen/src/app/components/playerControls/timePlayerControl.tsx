@@ -4,6 +4,9 @@ import "./timePlayerControl.css"
 export default function () {
     const time = usePlayer(selectTime);
 
+    const currentTimeTxt = formatTime(time?.currentTime ?? 0);
+    const durationTxt = formatTime(time?.duration ?? 0);
+
     function formatTime(seconds: number) {
         seconds = Math.abs(seconds);
 
@@ -21,6 +24,6 @@ export default function () {
     }
 
     return (
-        <a className="TimePlayerControl">{formatTime(time?.currentTime ?? 0)}</a>
+        <a className="TimePlayerControl">{currentTimeTxt} / {durationTxt}</a>
     )
 }

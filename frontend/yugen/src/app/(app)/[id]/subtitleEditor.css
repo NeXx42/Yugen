@@ -1,0 +1,75 @@
+.MediaPlayer_SubtitlesEdit {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    width: 500px;
+}
+
+.MediaPlayer_SubtitlesEdit>h2 {
+    text-align: center;
+}
+
+
+.MediaPlayer_SubtitlesEdit>form {
+    background: var(--global-div);
+    border: 1px solid var(--global-border-color);
+    border-radius: 8px;
+
+    padding: 5px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.MediaPlayer_SubtitlesEdit>form>div {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+
+.MediaPlayer_SubtitlesEdit>form>div>select,
+.MediaPlayer_SubtitlesEdit_Existing_Action>button,
+.MediaPlayer_SubtitlesEdit>form>button {
+    margin-left: auto;
+
+    border: 1px solid var(--global-border-color);
+    border-radius: 8px;
+    padding: 5px 8px;
+
+    cursor: pointer;
+}
+
+.MediaPlayer_SubtitlesEdit>form>div>select {
+    width: 100%;
+    border-radius: 8px;
+}
+
+
+.MediaPlayer_SubtitlesEdit>div {
+    background: var(--global-div);
+    border: 1px solid var(--global-border-color);
+    border-radius: 8px;
+
+    padding: 5px;
+}
+
+.MediaPlayer_SubtitlesEdit>div>p {
+    text-align: center;
+    width: 100%;
+    font-size: 14px;
+}
+
+
+.MediaPlayer_SubtitlesEdit>div>table {
+    width: 100%;
+    text-align: left;
+}
+
+.MediaPlayer_SubtitlesEdit_Existing_Action>button {
+    width: 100%;
+    height: min-content;
+    background-color: red;
+}

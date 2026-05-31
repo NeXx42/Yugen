@@ -33,10 +33,10 @@ public class LibraryController : ControllerBase
     }
 
     [HttpGet("{id}/Episodes")]
-    public async Task<EpisodeInfo[]> GetMediaEpisodes(int id, [FromQuery] bool refetch = false)
+    public async Task<EpisodeInfo[]> GetMediaEpisodes(int id, [FromQuery] bool refetch = false, [FromQuery] bool clearOld = false)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        return await _libraryService.GetMediaEpisodesForUser(usr, id, refetch);
+        return await _libraryService.GetMediaEpisodesForUser(usr, id, refetch, clearOld);
     }
 
     [HttpGet("WatchHistory")]
