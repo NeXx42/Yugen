@@ -140,8 +140,7 @@ public class LibraryService
         if (ids == null)
             return null;
 
-        _db.sonarrEpisodes.RemoveRange(_db.sonarrEpisodes);
-        _db.downloadedMedia.RemoveRange(_db.downloadedMedia);
+        _db.downloadedMedia.RemoveRange(_db.downloadedMedia.Include(e => e.downloadedEpisodes));
         await _db.SaveChangesAsync();
 
         int importCount = 0;
@@ -159,7 +158,7 @@ public class LibraryService
         return importCount;
     }
 
-    public async Task<EpisodeInfo?> GetFilmEpisodeContainer(UserSession usr, int aniListId, bool refetch)
+    public async Task<EpisodeInfo?> GetFilmEpisodeContainer(UserSession? usr, int aniListId, bool refetch)
     {
         Model_DownloadedMedia? media = await _db.downloadedMedia.Include(m => m.downloadedEpisodes).FirstOrDefaultAsync(m => m.MediaId == aniListId);
 
@@ -169,11 +168,15 @@ public class LibraryService
         if (media.ProviderType != LibraryProviderType.Radarr)
             throw new Exception("Cannot get film from non Radarr source");
 
-        Model_WatchHistory? history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.User.Id && w.MediaId == aniListId);
+        Model_WatchHistory? history = null;
+
+        if (usr != null)
+            history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.User.Id && w.MediaId == aniListId);
+
         return EpisodeInfo.Map(null, media.downloadedEpisodes.ElementAt(0), history?.WatchedEpisodes.FirstOrDefault());
     }
 
-    public async Task<EpisodeInfo[]> GetMediaEpisodesForUser(UserSession usr, int aniListId, bool refetch, bool clearOld)
+    public async Task<EpisodeInfo[]> GetMediaEpisodesForUser(UserSession? usr, int aniListId, bool refetch, bool clearOld)
     {
         Model_Media? media = await _db.media.FirstOrDefaultAsync(m => m.Id == aniListId);
 
@@ -183,15 +186,20 @@ public class LibraryService
         if (refetch || !(media.Hydrated ?? false))
         {
             await _hydrationService.HydrateEpisodes(media, clearOld);
-            await RecheckDownloads(usr, aniListId, true);
+
+            if (usr != null)
+                await RecheckDownloads(usr, aniListId, true);
         }
 
-        Model_WatchHistory? history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.User.Id && w.MediaId == aniListId);
+        Model_WatchHistory? history = null;
+
+        if (usr != null)
+            history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.User.Id && w.MediaId == aniListId); ;
 
         var results = await (
             from m in _db.mediaEpisodes
 
-            join de in _db.sonarrEpisodes
+            join de in _db.downloadedEpisodes
                 on new { m.MediaId, m.EpisodeNumber }
                 equals new { de.MediaId, de.EpisodeNumber }
                 into downloads

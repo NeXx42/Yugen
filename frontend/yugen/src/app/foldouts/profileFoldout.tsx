@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import "./profileFoldout.css"
 
-export default function () {
+export default function ({ isAuthenticated }: { isAuthenticated: boolean }) {
     const navigate = useRouter();
 
     const logout = () => {
@@ -14,9 +14,21 @@ export default function () {
         });
     }
 
+    const login = () => {
+        window.location.pathname = "login";
+    }
+
     return (<div className="Profile" onClick={e => e.stopPropagation()}>
         <div className="Profile_Bottom">
-            <button onClick={logout}>Logout</button>
+            {
+                isAuthenticated ? (
+                    <button onClick={logout}>Logout</button>
+                ) : (
+                    <>
+                        <button onClick={logout}>Login</button>
+                    </>
+                )
+            }
         </div>
     </div >
     )

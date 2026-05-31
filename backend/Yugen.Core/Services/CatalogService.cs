@@ -71,12 +71,17 @@ public class CatalogService
         return pageResponse;
     }
 
-    public async Task<MediaInfo> GetMediaInfoForUser(UserSession usr, int aniListId)
+    public async Task<MediaInfo> GetMediaInfoForUser(UserSession? usr, int aniListId)
     {
         MediaInfo info = await GetMediaInfo(aniListId);
-        Model_UserBookmark? bookmark = await _db.userBookmarks.FirstOrDefaultAsync(b => b.UserId == usr.User.Id && b.MediaId == aniListId);
 
-        return info.RegisterBookmark(bookmark);
+        if (usr != null)
+        {
+            Model_UserBookmark? bookmark = await _db.userBookmarks.FirstOrDefaultAsync(b => b.UserId == usr.User.Id && b.MediaId == aniListId);
+            info.RegisterBookmark(bookmark);
+        }
+
+        return info;
     }
 
     public async Task<MediaInfo> GetMediaInfo(int aniListId)
@@ -131,6 +136,7 @@ public class CatalogService
 
         Model_Media[] dbEntries = await _db.media
             .Include(m => m.Tags)
+            .Include(m => m.Genres)
             .Include(m => m.RelatedMedia)
             .Where(m => remainingIds.Contains(m.Id)).ToArrayAsync();
 

@@ -33,6 +33,7 @@ public class HydrationService
 
         await _db.BulkInsertOrUpdateAsync(media);
         await _db.BulkInsertOrUpdateAsync(media.SelectMany(m => m.Tags));
+        await _db.BulkInsertOrUpdateAsync(media.SelectMany(m => m.Genres));
         await _db.BulkInsertOrUpdateAsync(media.SelectMany(m => m.Episodes));
         await _db.BulkInsertOrUpdateAsync(media.SelectMany(m => m.RelatedMedia));
 

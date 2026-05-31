@@ -23,14 +23,15 @@ public class YugenContext : DbContext
     // media
     public DbSet<Model_Media> media { get; set; }
     public DbSet<Model_MediaTag> mediaTags { get; set; }
+    public DbSet<Model_MediaGenre> mediaGenres { get; set; }
     public DbSet<Model_MediaEpisode> mediaEpisodes { get; set; }
     public DbSet<Model_MediaRelation> mediaRelations { get; set; }
 
     public DbSet<Model_Link> links { get; set; }
 
-    // from sonnar
+    // from download provider
     public DbSet<Model_DownloadedMedia> downloadedMedia { get; set; }
-    public DbSet<Model_DownloadedEpisode> sonarrEpisodes { get; set; }
+    public DbSet<Model_DownloadedEpisode> downloadedEpisodes { get; set; }
 
     // History
     public DbSet<Model_WatchHistory> watchHistory { get; set; }
@@ -69,6 +70,9 @@ public class YugenContext : DbContext
         modelBuilder.Entity<Model_MediaTag>().HasKey(t => new { t.MediaId, t.TagId });
         modelBuilder.Entity<Model_MediaTag>().HasOne(t => t.Media).WithMany(m => m.Tags).HasForeignKey(m => m.MediaId);
         modelBuilder.Entity<Model_MediaTag>().HasOne(t => t.Tag).WithMany();
+
+        modelBuilder.Entity<Model_MediaGenre>().HasKey(t => new { t.MediaId, t.Genre });
+        modelBuilder.Entity<Model_MediaGenre>().HasOne(t => t.Media).WithMany(m => m.Genres).HasForeignKey(m => m.MediaId);
 
         modelBuilder.Entity<Model_MediaRelation>().HasKey(r => new { r.MediaId, r.ConnectedMediaId });
         modelBuilder.Entity<Model_MediaRelation>().HasOne(r => r.Media).WithMany(m => m.RelatedMedia).HasForeignKey(r => r.MediaId);

@@ -22,10 +22,13 @@ export default async function () {
                 <TrendingList searchCriteria={searchCriteria} />
             </div>
 
-            <div>
-                <h1 style={{ marginBottom: "10px", fontSize: "26px" }}>Watch History</h1>
-                <CardRow cards={watching.data?.data.sort((a, b) => (b.watchLastTime ?? 0) - (a.watchLastTime ?? 0)).slice(0, 7) ?? []} viewMoreLink={"library"} />
-            </div>
+            {
+
+                !watching.error && (watching.data?.data?.length ?? 0) > 0 && (<div>
+                    <h1 style={{ marginBottom: "10px", fontSize: "26px" }}>Watch History</h1>
+                    <CardRow cards={watching.data?.data.sort((a, b) => (b.watchLastTime ?? 0) - (a.watchLastTime ?? 0)).slice(0, 7) ?? []} viewMoreLink={"library"} />
+                </div>)
+            }
 
             <div className="HomePage_Body">
                 <SearchList />

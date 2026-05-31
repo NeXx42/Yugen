@@ -174,7 +174,7 @@ public class AniListProvider : IMetaDataProvider
                 Colour = media.coverImage?.color,
                 thumbnailIcon = media.trailer?.thumbnail,
 
-                NextEpisodeReleaseDate = media?.nextAiringEpisode?.airingAt
+                NextEpisodeReleaseDate = media.nextAiringEpisode?.airingAt
             };
 
             for (int i = 0; i < (media.tags?.Length ?? 0); i++)
@@ -183,6 +183,15 @@ public class AniListProvider : IMetaDataProvider
                 {
                     MediaId = media.id,
                     TagId = media.tags![i].id
+                });
+            }
+
+            for (int i = 0; i < (media.genres?.Length ?? 0); i++)
+            {
+                result.Genres.Add(new Model_MediaGenre()
+                {
+                    MediaId = media.id,
+                    Genre = media.genres![i]
                 });
             }
 

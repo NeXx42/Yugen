@@ -14,7 +14,6 @@ using Yugen.Domain.Models;
 namespace Yugen.Api.Controllers;
 
 [ApiController]
-[Authorize]
 [Route("api/library")]
 public class LibraryController : ControllerBase
 {
@@ -28,18 +27,19 @@ public class LibraryController : ControllerBase
     [HttpGet("{id}/Film")]
     public async Task<EpisodeInfo?> GetFilmEpisodeContainer(int id, [FromQuery] bool refetch = false)
     {
-        HttpContext.GetUserFromSession(out UserSession usr);
+        HttpContext.TryGetUserFromSession(out UserSession? usr);
         return await _libraryService.GetFilmEpisodeContainer(usr, id, refetch);
     }
 
     [HttpGet("{id}/Episodes")]
     public async Task<EpisodeInfo[]> GetMediaEpisodes(int id, [FromQuery] bool refetch = false, [FromQuery] bool clearOld = false)
     {
-        HttpContext.GetUserFromSession(out UserSession usr);
+        HttpContext.TryGetUserFromSession(out UserSession? usr);
         return await _libraryService.GetMediaEpisodesForUser(usr, id, refetch, clearOld);
     }
 
     [HttpGet("WatchHistory")]
+    [Authorize]
     public async Task<PageResponse<MediaCard>> GetWatchHistory([FromQuery] int? page, [FromQuery] int? pageSize)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
@@ -47,6 +47,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost("Sync/Library")]
+    [Authorize]
     public async Task<int?> SyncExternalLibraries()
     {
         HttpContext.GetUserFromSession(out UserSession usr);
@@ -61,6 +62,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost("Search")]
+    [Authorize]
     public async Task<PageResponse<MediaCard>> SearchLibrary([FromBody] SearchLibraryFilter filter)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
@@ -68,6 +70,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost("Upload")]
+    [Authorize]
     public async Task<IResult> UploadLibrary(IFormFile? file)
     {
         if ((file?.Length ?? 0) == 0)
@@ -80,6 +83,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost("{mediaId}/UpdateBookmark")]
+    [Authorize]
     public async Task<IResult> UpdateBookmark(int mediaId, [FromQuery] int id)
     {
         try
@@ -96,6 +100,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost("{mediaId}/Request")]
+    [Authorize]
     public async Task<IResult> RequestSeries(int mediaId, [FromBody] DownloadRequest request)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
@@ -108,6 +113,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpGet("{mediaId}/Request")]
+    [Authorize]
     public async Task<DownloadRequestInfo> GetSeriesRequestInfo(int mediaId)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
@@ -115,6 +121,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost("{mediaId}/SyncDownloads")]
+    [Authorize]
     public async Task SyncMediaDownloads(int mediaId, [FromQuery] bool force)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
@@ -122,6 +129,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost("{mediaId}/ResearchDownloads")]
+    [Authorize]
     public async Task ResearchDownloads(int mediaId)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
@@ -129,6 +137,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpDelete("{mediaId}")]
+    [Authorize]
     public async Task Delete(int mediaId)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
@@ -136,6 +145,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost("{mediaId}/ClearHistory")]
+    [Authorize]
     public async Task<IResult> ClearSeriesHistory(int mediaId)
     {
         try

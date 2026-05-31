@@ -39,6 +39,7 @@ public class Model_Media
     public long? NextEpisodeReleaseDate { get; set; }
 
     public Collection<Model_MediaTag> Tags { get; set; } = new Collection<Model_MediaTag>();
+    public Collection<Model_MediaGenre> Genres { get; set; } = new Collection<Model_MediaGenre>();
     public Collection<Model_MediaEpisode> Episodes { get; set; } = new Collection<Model_MediaEpisode>();
     public Collection<Model_MediaRelation> RelatedMedia { get; set; } = new Collection<Model_MediaRelation>();
 }
