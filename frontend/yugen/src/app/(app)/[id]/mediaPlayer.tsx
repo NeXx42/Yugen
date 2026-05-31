@@ -9,13 +9,28 @@ import "./mediaPlayer.css"
 
 import PlayerControl from "@/app/components/playerControls/playerControl"
 import { SelectedEpisodeInfo } from "./mediaContainer"
+import SeriesRequestModal from "./seriesRequestModal"
 
 
 export default function ({ selectedEpisode }: { selectedEpisode: SelectedEpisodeInfo | undefined }) {
     const thumbnail = selectedEpisode?.episodeInfo?.thumbnail ?? selectedEpisode?.mediaInfo?.thumbnailImage;
-    const [isPlaying, setIsPlaying] = useState(false);
 
-    useEffect(() => setIsPlaying(false), [selectedEpisode])
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isManagingMedia, setIsManagingMedia] = useState(false);
+
+    useEffect(() => {
+        setIsPlaying(false);
+        setIsManagingMedia(false);
+    }, [selectedEpisode])
+
+    const attemptToPlay = () => {
+        if (selectedEpisode?.downloadInfo) {
+            setIsPlaying(true);
+        }
+        else {
+            setIsManagingMedia(true);
+        }
+    }
 
     return (
         <div className="MediaPlayer">
@@ -24,27 +39,13 @@ export default function ({ selectedEpisode }: { selectedEpisode: SelectedEpisode
                     <PlayerControl mediaInfo={selectedEpisode.mediaInfo} episodeInfo={selectedEpisode.episodeInfo} playbackInfo={selectedEpisode.downloadInfo} />
                 ) :
                     (
-                        <div className="MediaPlayer_Container_Request" onClick={() => setIsPlaying(true)}>
+                        <div className="MediaPlayer_Container_Request" onClick={attemptToPlay}>
                             {thumbnail != undefined && <img src={thumbnail ?? ""} />}
-
                             {
                                 selectedEpisode?.downloadInfo?.jellyfinId == undefined ? (
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="1em"
-                                        height="1em"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    >
-                                        {/* Arrow */}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" >
                                         <path d="M12 3v12" />
                                         <path d="M7 10l5 5 5-5" />
-
-                                        {/* Tray */}
                                         <path d="M5 21h14" />
                                     </svg>
                                 ) :
@@ -58,6 +59,9 @@ export default function ({ selectedEpisode }: { selectedEpisode: SelectedEpisode
                     )
                 }
             </div>
+            {
+                isManagingMedia && selectedEpisode?.mediaInfo && <SeriesRequestModal mediaInfo={selectedEpisode.mediaInfo} onUpdate={() => { }} onClose={() => setIsManagingMedia(false)} />
+            }
         </div >
     )
 }
