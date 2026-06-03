@@ -136,23 +136,27 @@ public class SettingsService
     public async Task TriggerUpdate(UserSession usr)
     {
         using var _ = _endpointDeduplicator.TryAcquire(usr, nameof(TriggerUpdate));
-
         string containerId = File.ReadAllText("/etc/hostname").Trim();
 
-        Process labelProcess = new Process()
+        var process = new Process
         {
-            StartInfo = new ProcessStartInfo()
+            StartInfo =
             {
                 FileName = "docker",
-                Arguments = $"inspect --format {{{{.Config.Labels.com.docker.compose.service}}}} {containerId}",
                 RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 UseShellExecute = false
             }
         };
 
-        labelProcess.Start();
-        string containerName = labelProcess.StandardOutput.ReadToEnd().Trim();
-        labelProcess.WaitForExit();
+        process.StartInfo.ArgumentList.Add("inspect");
+        process.StartInfo.ArgumentList.Add("--format");
+        process.StartInfo.ArgumentList.Add("{{ index .Config.Labels \"com.docker.compose.service\" }}");
+        process.StartInfo.ArgumentList.Add(containerId);
+
+        process.Start();
+        string containerName = process.StandardOutput.ReadToEnd().Trim();
+        process.WaitForExit();
 
         if (string.IsNullOrEmpty(containerName))
             throw new Exception("Couldnt determine container name");
@@ -161,7 +165,8 @@ public class SettingsService
         ProcessStartInfo StartInfo = new ProcessStartInfo()
         {
             FileName = "docker",
-            UseShellExecute = false
+            UseShellExecute = false,
+            WorkingDirectory = "apps/compose"
         };
 
         StartInfo.ArgumentList.Add("compose");
@@ -172,10 +177,10 @@ public class SettingsService
         StartInfo.ArgumentList.Add("--no-deps");
         StartInfo.ArgumentList.Add(containerName);
 
-        var p = new Process() { StartInfo = StartInfo };
+        process = new Process() { StartInfo = StartInfo };
 
-        p.Start();
-        p.WaitForExit();
+        process.Start();
+        process.WaitForExit();
     }
 }
 
