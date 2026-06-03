@@ -1,10 +1,7 @@
 using System.Net.Http.Json;
-using System.Xml;
-using Azure;
 using EFCore.BulkExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using NetTopologySuite.Noding;
 using Yugen.Core.Data;
 using Yugen.Data;
 using Yugen.Domain.Data;
@@ -89,6 +86,9 @@ public class CatalogService
 
     public async Task<MediaInfo[]> GetMediaInfo(ICollection<int> ids)
     {
+        if (ids?.Count == 0)
+            return [];
+
         List<int> remainingIds = new List<int>(ids);
         List<MediaInfo> results = new List<MediaInfo>();
 
@@ -287,24 +287,20 @@ public class CatalogService
     {
         string cacheKey = $"{nameof(GetTrending)}_{limit}";
 
-        if (_cache.TryGetValue(cacheKey, out MediaInfo[]? cards))
-            return cards ?? [];
+        List<int>? ids = [];
 
-        List<int>? ids = await _currentProvider.GetTrending(limit);
+        if (!_cache.TryGetValue(cacheKey, out ids))
+            ids = await _currentProvider.GetTrending(limit);
 
-        if (ids == null)
-            return [];
-
-        cards = await GetMediaInfo(ids);
-
-        _cache.Set(cacheKey, cards);
-        return cards;
+        _cache.Set(cacheKey, ids);
+        return await GetMediaInfo(ids ?? []);
     }
 
     public async Task ClearDatabaseCache()
     {
         _db.RemoveRange(await _db.mediaRelations.ToListAsync());
         _db.RemoveRange(await _db.mediaEpisodes.ToListAsync());
+        _db.RemoveRange(await _db.mediaGenres.ToListAsync());
         _db.RemoveRange(await _db.mediaTags.ToListAsync());
         _db.RemoveRange(await _db.media.ToListAsync());
         await _db.SaveChangesAsync();
@@ -481,10 +477,13 @@ public class CatalogService
                         newNotifications.Add(new Model_Notification()
                         {
                             Date = DateTime.UtcNow,
-                            EventType = SonarrWebhookEventType.EpisodeRelease,
-                            MediaId = media.Id,
-                            UserId = usr,
+                            EventName = "New Episode",
                             Message = "New Episode",
+
+                            MediaId = media.Id,
+                            MediaEpisode = media.EpisodeCount + 1,
+
+                            UserId = usr,
                         });
                 }
             }

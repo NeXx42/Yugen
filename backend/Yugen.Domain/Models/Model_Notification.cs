@@ -11,18 +11,19 @@ public class Model_Notification
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
 
-    [Required]
-    public required int MediaId { get; set; }
+    public int? MediaId { get; set; }
+    public int? MediaEpisode { get; set; }
 
     [Required]
     public required Guid UserId { get; set; }
 
     [Required]
-    public required SonarrWebhookEventType EventType { get; set; }
+    public required string EventName { get; set; }
 
     [Required]
     public required DateTime Date { get; set; }
 
     public string? Message { get; set; }
+    public string? Source { get; set; }
     public bool HasInteracted { get; set; }
 }

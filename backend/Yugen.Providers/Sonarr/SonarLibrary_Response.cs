@@ -71,3 +71,42 @@ public class SonarrLibrary_Response_Qualities
     public required int id { get; set; }
     public string? title { get; set; }
 }
+
+
+public class SonarrNotification_WebhookMessage
+{
+    public Series? series { get; set; }
+
+    public string? eventType { get; set; }
+    public string? instanceName { get; set; }
+
+    public class Series
+    {
+        public int? id { get; set; }
+        public string? title { get; set; }
+        public string? titleSlug { get; set; }
+        public string? path { get; set; }
+        public int? tvdbId { get; set; }
+        public int? tvMazeId { get; set; }
+        public int? tmdbId { get; set; }
+        public string? imdbId { get; set; }
+        public string? type { get; set; }
+        public int? year { get; set; }
+    }
+}
+
+
+public enum SonarrWebhookEventType
+{
+    Test,
+    Grab,
+    Download,
+    Rename,
+    SeriesAdd,
+    SeriesDelete,
+    EpisodeFileDelete,
+    Health,
+    ApplicationUpdate,
+    HealthRestored,
+    ManualInteractionRequired,
+}

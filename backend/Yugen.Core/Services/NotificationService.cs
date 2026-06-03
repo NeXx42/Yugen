@@ -6,6 +6,8 @@ using Yugen.Domain.Data.Users;
 using Yugen.Domain.Enums;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.Linking;
+using Yugen.Providers;
+using Yugen.Providers.Sonarr;
 
 namespace Yugen.Core.Services;
 
@@ -13,43 +15,73 @@ public class NotificationService
 {
     private readonly YugenContext _db;
     private readonly CatalogService _catalog;
+    private readonly LibraryService _library;
 
-    public NotificationService(YugenContext db, CatalogService catalog)
+    public NotificationService(YugenContext db, CatalogService catalog, LibraryService library)
     {
         _db = db;
         _catalog = catalog;
+        _library = library;
     }
 
-    public async Task SaveNotification(SonarrWebhookEventType type, int? tvdbId, int? tmdbId)
+    private INotificationService GetProvider(LibraryProviderType provider)
     {
-        Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.tvdb_id == tvdbId);
-
-        if (link?.anilist_id == null)
-            return;
-
-        Guid[] users = await _db.user.Select(u => u.Id).ToArrayAsync();
-
-        List<Model_Notification> toAdd = new List<Model_Notification>();
-
-        foreach (Guid usr in users)
+        switch (provider)
         {
-            toAdd.Add(new Model_Notification()
-            {
-                MediaId = link.anilist_id.Value,
-                EventType = type,
-                UserId = usr,
-                Date = DateTime.UtcNow,
-            });
+            case LibraryProviderType.Sonarr:
+                return new SonarrNotificationProvider();
         }
 
-        await _db.AddRangeAsync(toAdd);
-        await _db.SaveChangesAsync();
+        return null;
+    }
+
+    public async Task ConsumeWebhook(string json, LibraryProviderType provider)
+    {
+        Model_Notification[] notifications = await GetProvider(provider).Consume(json, FetchLinking, RefreshDownloads);
+
+        if (notifications.Length > 0)
+        {
+            Guid[] users = await _db.user.Select(u => u.Id).ToArrayAsync();
+            List<Model_Notification> notificationsToAdd = new List<Model_Notification>();
+
+            foreach (Model_Notification template in notifications)
+            {
+                foreach (Guid usr in users)
+                {
+                    notificationsToAdd.Add(new Model_Notification()
+                    {
+                        Date = DateTime.UtcNow,
+                        EventName = template.EventName,
+                        UserId = usr,
+                        MediaId = template.MediaId,
+                        MediaEpisode = template.MediaEpisode,
+                        Message = template.Message
+                    });
+                }
+            }
+
+            await _db.notifications.AddRangeAsync(notificationsToAdd);
+            await _db.SaveChangesAsync();
+        }
+
+        async Task<Model_Link?> FetchLinking(int? tvid)
+        {
+            if (!tvid.HasValue)
+                return null;
+
+            Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.tvdb_id == tvid);
+            return link;
+        }
+
+        async Task RefreshDownloads(int mediaId) => await _library.RecheckDownloads(UserSession.Master, mediaId, true);
     }
 
     public async Task<Notification[]> GetNotifications(UserSession usr)
     {
         Model_Notification[] notifis = await _db.notifications.Where(n => n.UserId == usr.User.Id).Take(99).ToArrayAsync();
-        MediaCard[] cards = await _catalog.GetOrCreateMediaCardsFromIds(notifis.Select(n => n.MediaId).Distinct().ToList());
+
+        List<int> requiredMediaInfo = notifis.Where(n => n.MediaId.HasValue).Select(n => n.MediaId!.Value).Distinct().ToList();
+        MediaCard[] cards = await _catalog.GetOrCreateMediaCardsFromIds(requiredMediaInfo);
 
         Notification[] results = new Notification[notifis.Length];
 
@@ -63,7 +95,7 @@ public class NotificationService
                 id = n.Id,
                 time = new DateTimeOffset(n.Date).ToUnixTimeMilliseconds(),
 
-                eventName = n.EventType.ToString(),
+                eventName = n.EventName,
                 reason = n.Message,
 
                 title = media?.Title,
@@ -72,7 +104,7 @@ public class NotificationService
 
                 hasBeenSeen = n.HasInteracted,
 
-                url = $"{n.MediaId}"
+                url = $"{n.MediaId}{(n.MediaEpisode.HasValue ? $"?episode={n.MediaEpisode}" : "")}"
             };
         }
 
