@@ -1,0 +1,13 @@
+.Search_Criteria {
+    display: flex;
+    gap: 15px;
+
+    width: 100%;
+    margin: auto;
+}
+
+.Search_Criteria>div {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}

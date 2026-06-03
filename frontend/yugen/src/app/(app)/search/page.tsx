@@ -1,9 +1,10 @@
 import * as api from "@lib/api.server"
 
 import SearchContainer from "./searchContainer";
-import MultiDropDownSearch from "@/app/components/multiDropDownSearch";
 
 import "./page.css"
+import GenericSearchContainer from "@/app/components/genericSearchContainer";
+
 
 export default async function ({ searchParams }: { searchParams: { query?: string } }) {
     const { query } = await searchParams;
@@ -14,10 +15,7 @@ export default async function ({ searchParams }: { searchParams: { query?: strin
         return <>Please enter a search query</>
 
     return (<div style={{ marginTop: "35px" }}>
-        <div className="Search_Criteria">
-            <MultiDropDownSearch title="Genres" placeholder="Select Genres" options={criteria.data?.genres ?? []} />
-            <MultiDropDownSearch title="Tags" placeholder="Select Tags" options={criteria.data?.tags.map(t => t.name) ?? []} />
-        </div>
+        <GenericSearchContainer criteria={criteria?.data} />
         <SearchContainer searchQuery={query} />
     </div>)
 }

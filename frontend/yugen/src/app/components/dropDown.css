@@ -1,4 +1,4 @@
-.MultiDropDownSearch {
+.DropDownSearch {
     position: relative;
 
     width: 250px;
@@ -6,7 +6,7 @@
 }
 
 
-.MultiDropDownSearch_Search {
+.DropDownSearch_Search {
     width: 100%;
     height: 100%;
 
@@ -23,15 +23,15 @@
     transition: all .25s;
 }
 
-.MultiDropDownSearch_Search[data-selected="true"],
-.MultiDropDownSearch_Search:hover {
+.DropDownSearch_Search[data-selected="true"],
+.DropDownSearch_Search:hover {
     color: var(--primary-accent);
     background-color: var(--primary-accent-tr);
     border-color: var(--primary-accent);
 }
 
 
-.MultiDropDownSearch_Container {
+.DropDownSearch_Container {
     padding: 10px;
     width: 100%;
 
@@ -42,15 +42,15 @@
     gap: 5px;
 }
 
-.MultiDropDownSearch_Container>span {
+.DropDownSearch_Container>span {
     position: absolute;
 }
 
-.MultiDropDownSearch_Container>* {
+.DropDownSearch_Container>* {
     font-size: 12px;
 }
 
-.MultiDropDownSearch_Container>input {
+.DropDownSearch_Container>input {
     all: unset;
 
     background-color: transparent;
@@ -61,7 +61,7 @@
     padding: 0px;
 }
 
-.MultiDropDownSearch_Container>div {
+.DropDownSearch_Container>div {
     background-color: var(--global-button-bg-light);
     border-radius: 15px;
 
@@ -75,11 +75,11 @@
     overflow: hidden;
 }
 
-.MultiDropDownSearch_Container>div>p {
+.DropDownSearch_Container>div>p {
     padding-left: 5px;
 }
 
-.MultiDropDownSearch_Container>div>div {
+.DropDownSearch_Container>div>div {
     display: flex;
     align-items: center;
     padding-right: 2px;
@@ -88,7 +88,7 @@
     cursor: pointer;
 }
 
-.MultiDropDownSearch_Container>div>div:hover {
+.DropDownSearch_Container>div>div:hover {
     background-color: red;
 }
 
@@ -96,7 +96,7 @@
 
 
 
-.MultiDropDownSearch_Options {
+.DropDownSearch_Options {
     z-index: 5;
     top: 110%;
 
@@ -114,17 +114,21 @@
     flex-direction: column;
 }
 
-.MultiDropDownSearch_Options>div {
+.DropDownSearch_Options>div {
     padding: 8px 12px;
     border: 5px;
     font-size: 14px;
 }
 
-.MultiDropDownSearch_Options>div:hover {
+.DropDownSearch_Options>div.Selected {
+    color: red;
+}
+
+.DropDownSearch_Options>div:hover {
     background-color: var(--global-tertiary-bg);
 }
 
-.MultiDropDownSearch_Options>P {
+.DropDownSearch_Options>P {
     padding: 10px 5px;
     text-align: center;
     font-size: 14px;

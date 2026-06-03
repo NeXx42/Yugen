@@ -135,52 +135,7 @@ public class SettingsService
 
     public async Task TriggerUpdate(UserSession usr)
     {
-        using var _ = _endpointDeduplicator.TryAcquire(usr, nameof(TriggerUpdate));
-        string containerId = File.ReadAllText("/etc/hostname").Trim();
-
-        var process = new Process
-        {
-            StartInfo =
-            {
-                FileName = "docker",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            }
-        };
-
-        process.StartInfo.ArgumentList.Add("inspect");
-        process.StartInfo.ArgumentList.Add("--format");
-        process.StartInfo.ArgumentList.Add("{{ index .Config.Labels \"com.docker.compose.service\" }}");
-        process.StartInfo.ArgumentList.Add(containerId);
-
-        process.Start();
-        string containerName = process.StandardOutput.ReadToEnd().Trim();
-        process.WaitForExit();
-
-        if (string.IsNullOrEmpty(containerName))
-            throw new Exception("Couldnt determine container name");
-
-        Console.WriteLine("Attempting pull of - " + containerName);
-        ProcessStartInfo StartInfo = new ProcessStartInfo()
-        {
-            FileName = "docker",
-            UseShellExecute = false,
-            WorkingDirectory = "apps/compose"
-        };
-
-        StartInfo.ArgumentList.Add("compose");
-        StartInfo.ArgumentList.Add("up");
-        StartInfo.ArgumentList.Add("-d");
-        StartInfo.ArgumentList.Add("--pull");
-        StartInfo.ArgumentList.Add("always");
-        StartInfo.ArgumentList.Add("--no-deps");
-        StartInfo.ArgumentList.Add(containerName);
-
-        process = new Process() { StartInfo = StartInfo };
-
-        process.Start();
-        process.WaitForExit();
+        // ;/
     }
 }
 

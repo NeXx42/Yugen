@@ -61,7 +61,9 @@
     position: relative;
 
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(170px, auto));
+    grid-template-columns: repeat(auto-fit, minmax(170px, 200px));
+    justify-content: center;
+
     gap: 25px;
     row-gap: 25px;
 

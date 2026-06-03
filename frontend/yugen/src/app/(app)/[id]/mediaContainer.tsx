@@ -68,11 +68,19 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
         if (selectedEpisode == undefined)
             return (<></>);
 
-        return (<div className="ViewPageContainer">
-            <h2>{`${selectedEpisode.episodeInfo.number}. ${selectedEpisode.episodeInfo.title}`}</h2>
-            <a>{selectedEpisode.episodeInfo.score}</a>
-
-            <SubtitleEditor mediaInfo={mediaInfo} episodeInfo={selectedEpisode.episodeInfo} playbackInfo={selectedEpisode.downloadInfo!} onUpdate={() => updatedSelectedEpisode(selectedEpisode?.episodeInfo)} />
+        return (<div className="ViewPageContainer MediaContainer_EpisodeInfo">
+            <div className="MediaContainer_EpisodeInfo_Left">
+                <span>{`${selectedEpisode.episodeInfo.number}. ${selectedEpisode.episodeInfo.title}`}</span>
+                <div>
+                    <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                    <a>{(selectedEpisode.episodeInfo.score ?? 0) * 2}</a>
+                </div>
+            </div>
+            <div className="MediaContainer_EpisodeInfo_Right">
+                <SubtitleEditor mediaInfo={mediaInfo} episodeInfo={selectedEpisode.episodeInfo} playbackInfo={selectedEpisode.downloadInfo!} onUpdate={() => updatedSelectedEpisode(selectedEpisode?.episodeInfo)} />
+            </div>
         </div>)
     }
 

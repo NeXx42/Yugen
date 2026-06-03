@@ -32,7 +32,7 @@ export default function (props: Props) {
         return `${minutes}m`
     }
 
-    return (<div key={props.card.aniListId} className={`MediaCardHorizontal ${props.selected ? "Selected" : ""}`} onClick={navigateToPage}>
+    return (<a key={props.card.aniListId} className={`MediaCardHorizontal ${props.selected ? "Selected" : ""}`} href={`${props.card.aniListId}`}>
         <div className="MediaCardHorizontal_Content">
             {props.card.cardImg && <img className="MediaCardHorizontal_Icon" src={props.card.cardImg} />}
             {props.card.banner &&
@@ -54,5 +54,5 @@ export default function (props: Props) {
                 </div>
             </div>
         </div>
-    </div>)
+    </a>)
 }

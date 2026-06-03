@@ -13,3 +13,46 @@
 }
 
 .MediaContainer_EpisodeInfo {}
+
+
+.MediaContainer_EpisodeInfo {
+    display: grid;
+    grid-template-columns: auto auto;
+
+    color: var(--global-text);
+    font-size: 1.15rem;
+}
+
+.MediaContainer_EpisodeInfo button {
+    background-color: var(--global-primary-bg);
+    border: 1px solid var(--global-border-color);
+    padding: 10px;
+    border-radius: 10px;
+
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    cursor: pointer;
+}
+
+.MediaContainer_EpisodeInfo_Left {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.MediaContainer_EpisodeInfo_Left>div {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    font-size: 14px;
+
+    color: #ca8a04;
+}
+
+.MediaContainer_EpisodeInfo_Right {
+    display: flex;
+    flex-direction: row-reverse;
+}

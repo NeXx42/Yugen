@@ -11,3 +11,18 @@
 
     height: min-content;
 }
+
+.CardColumn>button {
+    background: var(--global-div);
+    border: 1px solid transparent;
+    padding: 10px;
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    transition: all .5s;
+}
+
+.CardColumn>button:hover {
+    color: var(--primary-accent);
+}

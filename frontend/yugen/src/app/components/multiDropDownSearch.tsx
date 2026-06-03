@@ -1,9 +1,14 @@
 "use client"
 
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, Ref, useEffect, useImperativeHandle, useRef, useState } from "react";
 import "./multiDropDownSearch.css"
 
-export default function ({ options, title, placeholder }: { options: string[], title: string, placeholder: string }) {
+
+export interface MultiDropDownResults {
+    getValue: () => number[]
+}
+
+export default function ({ options, placeholder, ref }: { options: string[], placeholder: string, ref: Ref<MultiDropDownResults> }) {
     const [open, setOpen] = useState(false);
 
     const popupRef = useRef<HTMLDivElement | null>(null);
@@ -71,6 +76,10 @@ export default function ({ options, title, placeholder }: { options: string[], t
             return prev.filter(p => p !== pos);
         })
     }
+
+    useImperativeHandle(ref, () => ({
+        getValue: () => selectedEntries
+    }));
 
     return (
         <div ref={popupRef} className="MultiDropDownSearch" >

@@ -2,7 +2,7 @@
 
 import * as api from "@lib/api.local"
 
-import { MediaCardInfo, PageResponse } from "@shared/types"
+import { MediaCardInfo, PageResponse, SearchCriteria } from "@shared/types"
 import { ReactNode, useEffect, useState } from "react"
 
 import MediaCard from "@comps/mediaCard"
@@ -10,10 +10,11 @@ import PageContainer from "@comps/pageContainer"
 
 import "./page.css"
 import { useSearchParams } from "next/navigation"
+import GenericSearchContainer from "@/app/components/genericSearchContainer"
 
 type LibraryGroup = "ContinueWatching" | "Downloaded" | "Watching" | "OnHold" | "Planning" | "Completed" | "Dropped";
 
-export default function () {
+export default function ({ criteria }: { criteria: SearchCriteria | null }) {
     const searchParams = useSearchParams();
     const pageSize = 56;
 
@@ -73,6 +74,8 @@ export default function () {
     }
     return (
         <div className="Library">
+            <GenericSearchContainer criteria={criteria} />
+
             <div className="Library_Filters">
                 {drawGroupBtn("ContinueWatching", "Continue Watching")}
                 {drawGroupBtn("Downloaded")}
