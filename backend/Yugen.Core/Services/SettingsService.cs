@@ -1,5 +1,9 @@
+using System.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Yugen.Core.Helpers;
 using Yugen.Data;
+using Yugen.Domain.Data.Users;
 using Yugen.Domain.Models;
 
 namespace Yugen.Core.Services;
@@ -23,21 +27,27 @@ public enum ConfigKeys
 
     Radarr_Url,
     Radarr_ApiKey,
+
+    BuildNumber,
+    CommitSha,
 }
 
 public class SettingsService
 {
     private readonly YugenContext _db;
     private readonly SettingsCache _cache;
+    private readonly EndpointDeduplicator _endpointDeduplicator;
 
     public SettingsCache getCache => _cache;
 
     public static string GetCacheKey(ConfigKeys key) => $"SETTINGSCACHE_{key}";
 
-    public SettingsService(YugenContext db, SettingsCache cache)
+    public SettingsService(YugenContext db, EndpointDeduplicator endpointDeduplicator, SettingsCache cache)
     {
         _db = db;
         _cache = cache;
+
+        _endpointDeduplicator = endpointDeduplicator;
     }
 
     public async Task SetConfigValue(ConfigKeys key, bool? value)
@@ -89,6 +99,84 @@ public class SettingsService
     }
 
     public async Task<Dictionary<ConfigKeys, string?>> GetAllCache() => _cache.cache;
+
+    public async Task OnLoad()
+    {
+        await RecacheAll();
+
+        string? commit = Environment.GetEnvironmentVariable("GIT_COMMIT");
+        string? build = Environment.GetEnvironmentVariable("BUILD_NUMBER");
+
+        if (string.IsNullOrEmpty(commit) || string.IsNullOrEmpty(build))
+            return;
+
+        string currentCommit = _cache.Get(ConfigKeys.CommitSha);
+
+        if (currentCommit != commit)
+        {
+            List<Model_Notification> notifications = new List<Model_Notification>();
+            Guid[] users = await _db.user.Select(u => u.Id).ToArrayAsync();
+
+            foreach (Guid usr in users)
+                notifications.Add(new Model_Notification()
+                {
+                    Date = DateTime.UtcNow,
+                    EventName = "Update",
+                    UserId = usr,
+                    Source = "System",
+                    Message = $"v{build}",
+                });
+
+            await _db.AddRangeAsync(notifications);
+            await SetConfigValue(ConfigKeys.CommitSha, commit);
+            await SetConfigValue(ConfigKeys.BuildNumber, build);
+        }
+    }
+
+    public async Task TriggerUpdate(UserSession usr)
+    {
+        using var _ = _endpointDeduplicator.TryAcquire(usr, nameof(TriggerUpdate));
+
+        string containerId = File.ReadAllText("/etc/hostname").Trim();
+
+        Process labelProcess = new Process()
+        {
+            StartInfo = new ProcessStartInfo()
+            {
+                FileName = "docker",
+                Arguments = $"inspect --format {{{{.Config.Labels.com.docker.compose.service}}}} {containerId}",
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            }
+        };
+
+        labelProcess.Start();
+        string containerName = labelProcess.StandardOutput.ReadToEnd().Trim();
+        labelProcess.WaitForExit();
+
+        if (string.IsNullOrEmpty(containerName))
+            throw new Exception("Couldnt determine container name");
+
+        Console.WriteLine("Attempting pull of - " + containerName);
+        ProcessStartInfo StartInfo = new ProcessStartInfo()
+        {
+            FileName = "docker",
+            UseShellExecute = false
+        };
+
+        StartInfo.ArgumentList.Add("compose");
+        StartInfo.ArgumentList.Add("up");
+        StartInfo.ArgumentList.Add("-d");
+        StartInfo.ArgumentList.Add("--pull");
+        StartInfo.ArgumentList.Add("always");
+        StartInfo.ArgumentList.Add("--no-deps");
+        StartInfo.ArgumentList.Add(containerName);
+
+        var p = new Process() { StartInfo = StartInfo };
+
+        p.Start();
+        p.WaitForExit();
+    }
 }
 
 public class SettingsCache

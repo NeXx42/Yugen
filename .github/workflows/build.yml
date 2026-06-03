@@ -26,7 +26,10 @@ jobs:
         
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/nexx42/yugen ./
+          docker build \
+            --build-arg GIT_COMMIT=${{ github.sha }} \
+            --build-arg BUILD_NUMBER=${{ github.run_number }}
+            -t ghcr.io/nexx42/yugen ./
           
       # push  
         

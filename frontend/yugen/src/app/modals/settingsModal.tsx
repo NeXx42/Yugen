@@ -73,6 +73,7 @@ export default function () {
 
                     {renderSetting_Button("Clear cache", "Clear", "Negative", api.catalog_ClearCache)}
                     {renderSetting_Button("Clear database cache", "Clear", "Negative", api.catalog_ClearDatabase)}
+                    {renderSetting_Button("Update", "Update", "", api.settings_Update)}
                 </>)
 
             case "Jellyfin":

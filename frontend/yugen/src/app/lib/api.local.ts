@@ -17,7 +17,9 @@ export async function settings_Load() {
 export async function settings_Save(key: string, value: string | undefined) {
     return (await post(`Settings/${key}`, { value: value }))!;
 }
-
+export async function settings_Update(): Promise<void> {
+    return (await post(`Settings/Update`))!;
+}
 
 
 export async function library_sync(): Promise<number | undefined> {

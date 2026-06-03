@@ -17,7 +17,7 @@ public class SettingsInit : IHostedService
         using (var scope = _scopeFactory.CreateAsyncScope())
         {
             SettingsService service = scope.ServiceProvider.GetRequiredService<SettingsService>();
-            await service.RecacheAll();
+            await service.OnLoad();
         }
     }
 

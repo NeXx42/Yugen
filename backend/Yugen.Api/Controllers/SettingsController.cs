@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Yugen.Api.Helpers;
 using Yugen.Core.Services;
+using Yugen.Domain.Data.Users;
 
 namespace Yugen.Api.Controllers;
 
@@ -46,5 +47,21 @@ public class SettingsController : ControllerBase
             key = c.Key.ToString(),
             value = c.Value
         }).ToArray();
+    }
+
+    [HttpPost("Update")]
+    public async Task<IActionResult> TriggerUpdate()
+    {
+        try
+        {
+            HttpContext.GetUserFromSession(out UserSession usr);
+            await _settings.TriggerUpdate(usr);
+
+            return Ok();
+        }
+        catch
+        {
+            return BadRequest();
+        }
     }
 }

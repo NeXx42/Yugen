@@ -37,7 +37,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y curl && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs
+    apt-get install -y nodejs docker-cli docker-compose-plugin
 
 COPY --from=backend-build /app/publish ./backend
 COPY --from=frontend-build /app/frontend ./frontend
@@ -46,6 +46,12 @@ WORKDIR /app/frontend
 RUN npm install --omit=dev
 
 EXPOSE 3000
+
+ARG GIT_COMMIT=unknown
+ENV GIT_COMMIT=$GIT_COMMIT
+
+ARG BUILD_NUMBER=0
+ENV BUILD_NUMBER=$BUILD_NUMBER
 
 # start script
 COPY start.sh /start.sh
