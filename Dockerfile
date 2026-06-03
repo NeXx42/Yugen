@@ -35,9 +35,14 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y curl && \
+RUN apt-get update && apt-get install -y curl gnupg && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian bookworm stable" \
+    | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && apt-get install -y docker-ce-cli docker-compose-plugin && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs docker-cli docker-compose-plugin
+    apt-get install -y nodejs && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=backend-build /app/publish ./backend
 COPY --from=frontend-build /app/frontend ./frontend
