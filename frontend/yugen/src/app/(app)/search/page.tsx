@@ -4,6 +4,7 @@ import SearchContainer from "./searchContainer";
 
 import "./page.css"
 import GenericSearchContainer from "@/app/components/genericSearchContainer";
+import Results from "./results";
 
 
 export default async function ({ searchParams }: { searchParams: { query?: string } }) {
@@ -11,11 +12,7 @@ export default async function ({ searchParams }: { searchParams: { query?: strin
 
     const criteria = await api.catalog_SearchCriteria();
 
-    if (query === undefined)
-        return <>Please enter a search query</>
-
-    return (<div style={{ marginTop: "35px" }}>
-        <GenericSearchContainer criteria={criteria?.data} />
-        <SearchContainer searchQuery={query} />
+    return (<div className="SearchPage" style={{ marginTop: "35px" }}>
+        <Results criteria={criteria?.data} query={query} />
     </div>)
 }

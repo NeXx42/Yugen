@@ -4,7 +4,6 @@ import { Dispatch, ReactNode, SetStateAction, useEffect, useState } from "react"
 import { PageResponse } from "../shared/types";
 
 import "./pageContainer.css"
-import MediaCard from "./mediaCard";
 import MediaCardSkeleton from "./mediaCardSkeleton";
 import { usePathname } from "next/navigation";
 

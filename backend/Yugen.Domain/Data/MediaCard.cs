@@ -1,3 +1,4 @@
+using Yugen.Domain.Data;
 using Yugen.Domain.Models.History;
 using Yugen.Domain.Models.Media;
 
@@ -9,7 +10,7 @@ public class MediaCard
     public string? Title { get; set; }
     public string? type { get; set; }
 
-    public bool releasing { get; set; }
+    public string? status { get; set; }
     public long? nextReleaseDate { get; set; }
 
     public int? year { get; set; }
@@ -33,7 +34,7 @@ public class MediaCard
             year = dbData.Year,
             season = dbData.Season,
 
-            releasing = dbData.Status == "RELEASING" || dbData.Status == "NOT_YET_RELEASED",
+            status = dbData.Status,
             nextReleaseDate = dbData.NextEpisodeReleaseDate,
 
             colour = dbData.Colour,
@@ -60,5 +61,25 @@ public class MediaCard
         watchLastTime = res.his?.UpdatedTime != null ? new DateTimeOffset(res.his.UpdatedTime.Value).ToUnixTimeSeconds() : null;
 
         return this;
+    }
+
+    public bool IsInFilter(MediaSearchQuery? query)
+    {
+        if (query == null)
+            return true;
+
+        if (!string.IsNullOrEmpty(query.season) && !(season?.Equals(query.season) ?? false))
+            return false;
+
+        if (!string.IsNullOrEmpty(query.format) && !(type?.Equals(query.format) ?? false))
+            return false;
+
+        if (!string.IsNullOrEmpty(query.status) && !(status?.Equals(query.status) ?? false))
+            return false;
+
+        if (query.year.HasValue && year != query.year)
+            return false;
+
+        return true;
     }
 }

@@ -30,7 +30,7 @@ export interface MediaCardInfo {
     title: string,
     type: string | null,
 
-    releasing: boolean,
+    status: string | null,
     nextReleaseDate: number | undefined,
 
     year: number | null,
@@ -149,6 +149,8 @@ export interface SearchRequest {
     lesserStartDate?: number,
     season?: Season,
     year?: number,
+    format?: string,
+    status?: string,
 }
 
 

@@ -1,5 +1,7 @@
 .Search_Criteria {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+
     gap: 15px;
 
     width: 100%;
@@ -10,4 +12,20 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.Search_Criteria_Controls>a {
+    color: transparent
+}
+
+.Search_Criteria>div>button {
+    position: relative;
+    background-color: var(--global-secondary-bg);
+    border: solid 1px var(--global-border-color);
+    border-radius: 8px;
+
+    height: 100%;
+    padding: 0px 50px;
+
+    cursor: pointer;
 }

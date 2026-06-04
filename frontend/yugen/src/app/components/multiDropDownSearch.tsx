@@ -6,6 +6,7 @@ import "./multiDropDownSearch.css"
 
 export interface MultiDropDownResults {
     getValue: () => number[]
+    setValue: (val: string) => void;
 }
 
 export default function ({ options, placeholder, ref }: { options: string[], placeholder: string, ref: Ref<MultiDropDownResults> }) {
@@ -78,8 +79,9 @@ export default function ({ options, placeholder, ref }: { options: string[], pla
     }
 
     useImperativeHandle(ref, () => ({
-        getValue: () => selectedEntries
-    }));
+        getValue: () => selectedEntries,
+        setValue: (val: string) => setSearch(val)
+    }), [selectedEntries]);
 
     return (
         <div ref={popupRef} className="MultiDropDownSearch" >

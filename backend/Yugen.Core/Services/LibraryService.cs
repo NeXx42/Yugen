@@ -1,3 +1,4 @@
+using System.DirectoryServices.Protocols;
 using EFCore.BulkExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -109,7 +110,7 @@ public class LibraryService
         return downloadedMedia;
     }
 
-    public async Task<PageResponse<MediaCard>> GetWatchHistory(UserSession usr, int page, int pageSize)
+    public async Task<PageResponse<MediaCard>> GetWatchHistory(UserSession usr, MediaSearchQuery? req)
     {
         var query = _db.watchHistory
             .Include(w => w.WatchedEpisodes)
@@ -122,13 +123,16 @@ public class LibraryService
             })
             .Where(x => x.Episode != null);
 
-        int totalResults = await query.CountAsync();
-        var results = await query.Skip(page * pageSize).Take(pageSize).ToArrayAsync();
+        var results = await query.ToArrayAsync();
 
         Dictionary<int, (Model_WatchHistory, Model_WatchedEpisode?)> historyLookup = results.ToDictionary(x => x.Media.MediaId, x => (x.Media, x.Episode));
-        MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds(results.Select(r => r.Media.MediaId).ToList());
+        MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds(results.Select(r => r.Media.MediaId).ToList(), req);
 
-        return new PageResponse<MediaCard>(cards.Select(c => c.WithWatchInfo(historyLookup[c.aniListId])).ToArray(), page, pageSize, totalResults);
+        int page = req?.page ?? 1;
+        int pageSize = req?.pageSize ?? 10;
+
+        var res = cards.Skip(page * pageSize).Take(pageSize).Select(c => c.WithWatchInfo(historyLookup[c.aniListId])).ToArray();
+        return new PageResponse<MediaCard>(res, page, pageSize, cards.Length);
     }
 
     public async Task<int?> ResyncLibrary(UserSession usr)
@@ -217,14 +221,14 @@ public class LibraryService
         return results.Select(r => EpisodeInfo.Map(r.Episode, r.DownloadData, history?.WatchedEpisodes?.FirstOrDefault(e => e.EpisodeNumber == r.Episode.EpisodeNumber))).ToArray();
     }
 
-    public async Task<PageResponse<MediaCard>> SearchLibrary(UserSession session, int page, int pageSize, string group)
+    public async Task<PageResponse<MediaCard>> SearchLibrary(UserSession session, MediaSearchQuery? req, string group)
     {
         IQueryable<int>? query = null;
 
         switch (group.ToLower())
         {
             case "continuewatching":
-                return await GetWatchHistory(session, page, pageSize);
+                return await GetWatchHistory(session, req);
 
             case "downloaded":
                 query = _db.downloadedMedia.Include(m => m.downloadedEpisodes).Where(m => m.downloadedEpisodes.Any(e => e.fileId.HasValue)).Select(m => m.MediaId);
@@ -243,10 +247,15 @@ public class LibraryService
         if (query == null)
             return PageResponse<MediaCard>.Empty();
 
-        int totalCount = await query.CountAsync();
-        List<int> results = await query.Skip(page * pageSize).Take(pageSize).ToListAsync();
+        List<int> ids = await query.ToListAsync();
 
-        return new PageResponse<MediaCard>((await _catalogService.GetOrCreateMediaCardsFromIds(results)).OrderBy(c => c.Title).ToArray(), page, pageSize, totalCount);
+        int page = Math.Max(req?.page ?? 1, 1);
+        int pageSize = req?.pageSize ?? 10;
+
+        MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds(ids, req);
+
+        var results = cards.Skip((page - 1) * pageSize).Take(pageSize).OrderBy(c => c.Title).ToArray();
+        return new PageResponse<MediaCard>(results, page, pageSize, cards.Length);
     }
 
     public async Task UpdateBookmark(UserSession usr, int mediaId, int bookmarkId)

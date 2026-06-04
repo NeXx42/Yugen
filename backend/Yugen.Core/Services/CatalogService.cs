@@ -59,7 +59,9 @@ public class CatalogService
             }
         }
 
-        (int total, int[] media) = await _currentProvider.SearchMedia(query, _settings.getCache.Get(ConfigKeys.AdultContent, false));
+        query.allowAdultContent = _settings.getCache.Get(ConfigKeys.AdultContent, false);
+
+        (int total, int[] media) = await _currentProvider.SearchMedia(query);
         pageResponse = new PageResponse<MediaCard>(await GetOrCreateMediaCardsFromIds(media.ToList()), query.page ?? 1, query.pageSize ?? 10, total);
 
         _cache.Set(CACHE_KEY, pageResponse);
@@ -247,7 +249,7 @@ public class CatalogService
         return media.Select(x => x.WithReleaseDate(upcoming[x.aniListId])).OrderBy(x => x.nextReleaseDate).Take(take).ToArray();
     }
 
-    public async Task<MediaCard[]> GetOrCreateMediaCardsFromIds(List<int> ids)
+    public async Task<MediaCard[]> GetOrCreateMediaCardsFromIds(List<int> ids, MediaSearchQuery? req = null)
     {
         MediaCard? card;
         List<MediaCard> results = new List<MediaCard>();
@@ -256,8 +258,10 @@ public class CatalogService
         {
             if (_cache.TryGetValue(GetCardCacheId(ids[i]), out card) && card != null)
             {
-                results.Add(card);
                 ids.RemoveAt(i);
+
+                if (card.IsInFilter(req))
+                    results.Add(card);
             }
         }
 
@@ -272,10 +276,12 @@ public class CatalogService
             _cache.Set(GetCardCacheId(card.aniListId), card);
 
             ids.Remove(media.Id);
-            results.Add(card);
+
+            if (card.IsInFilter(req))
+                results.Add(card);
         }
 
-        IEnumerable<MediaCard> newCards = (await _hydrationService.SaveMedia(ids)).Select(MediaCard.Map);
+        IEnumerable<MediaCard> newCards = (await _hydrationService.SaveMedia(ids, req)).Select(MediaCard.Map);
 
         foreach (MediaCard newCard in newCards)
             _cache.Set(GetCardCacheId(newCard.aniListId), newCard);

@@ -27,36 +27,43 @@ public class AniListProvider : IMetaDataProvider
         _episodeProvider = new JikanMetadataProvider();
     }
 
-    public async Task<Model_Media[]> GetMediaInfo(ICollection<int> aniListIds)
+    public async Task<Model_Media[]> GetMediaInfo(MediaSearchQuery filter)
     {
-        if (aniListIds.Count == 0)
+        if ((filter.ids?.Count ?? 0) == 0)
             return [];
 
-        string query = @"query Media($page: Int, $perPage: Int, $idIn: [Int]) {
-            Page(page: $page, perPage: $perPage) {
-                media(id_in: $idIn) {
+        filter.pageSize ??= 50;
+        List<AniListResponse_Media> responses = new List<AniListResponse_Media>();
+
+        for (int i = 0; i < filter.ids!.Count; i += filter.pageSize.Value)
+        {
+            filter.page = i + 1;
+
+            try
+            {
+                AniListResponse_Search? res = await GenerateGraphqlQuery($@"
                     id
                     idMal
-                    title {
+                    title {{
                         romaji
                         english
                         native
                         userPreferred
-                    }
+                    }}
                     type
                     format
                     status
                     description
-                    startDate {
+                    startDate {{
                         year
                         month
                         day
-                    }
-                    endDate {
+                    }}
+                    endDate {{
                         year
                         month
                         day
-                    }
+                    }}
                     season
                     seasonYear
                     episodes
@@ -67,18 +74,18 @@ public class AniListProvider : IMetaDataProvider
                     isLicensed
                     source
                     hashtag
-                    trailer {
+                    trailer {{
                         id
                         site
                         thumbnail
-                    }
+                    }}
                     updatedAt
-                    coverImage {
+                    coverImage {{
                         extraLarge
                         large
                         medium
                         color
-                    }
+                    }}
                     bannerImage
                     genres
                     synonyms
@@ -88,13 +95,13 @@ public class AniListProvider : IMetaDataProvider
                     isLocked
                     trending
                     favourites
-                    tags {
+                    tags {{
                         id
-                    }
+                    }}
                     isFavourite
                     isFavouriteBlocked
                     isAdult
-                    externalLinks {
+                    externalLinks {{
                         id
                         url
                         site
@@ -105,14 +112,14 @@ public class AniListProvider : IMetaDataProvider
                         icon
                         notes
                         isDisabled
-                    }
-                    streamingEpisodes {
+                    }}
+                    streamingEpisodes {{
                         title
                         thumbnail
                         url
                         site
-                    }
-                    rankings {
+                    }}
+                    rankings {{
                         id
                         rank
                         type
@@ -121,39 +128,23 @@ public class AniListProvider : IMetaDataProvider
                         season
                         allTime
                         context
-                    }
-                    recommendations {
-                        nodes {
-                            mediaRecommendation{
+                    }}
+                    recommendations {{
+                        nodes {{
+                            mediaRecommendation{{
                                 id
-                            }
-                        }
-                    }
+                            }}
+                        }}
+                    }}
                     siteUrl
                     autoCreateForumThread
                     isRecommendationBlocked
                     isReviewBlocked
                     modNotes
-                    nextAiringEpisode {
+                    nextAiringEpisode {{
                         airingAt
-                    }
-                }
-            }
-        }";
-
-        const int MAX_PAGE_SIZE = 50;
-        List<AniListResponse_Media> responses = new List<AniListResponse_Media>();
-
-        List<int> lookups = aniListIds.ToList();
-
-        for (int i = 0; i < aniListIds.Count; i += MAX_PAGE_SIZE)
-        {
-            int elementCount = Math.Min(MAX_PAGE_SIZE, aniListIds.Count - i);
-            var batch = lookups.GetRange(i, elementCount);
-
-            try
-            {
-                AniListResponse_Search? res = await SendRequest<AniListResponse_Search>(query, new { idIn = batch, perPage = elementCount });
+                    }}
+                ", filter);
 
                 if (res?.data?.page?.media == null)
                     throw new Exception("Failed");
@@ -248,76 +239,97 @@ public class AniListProvider : IMetaDataProvider
         return results.ToArray();
     }
 
-    public async Task<(int, int[])> SearchMedia(MediaSearchQuery searchQuery, bool allowAdult)
+    public async Task<(int, int[])> SearchMedia(MediaSearchQuery searchQuery)
     {
-        string inputs = "";
-        string vars = "type: $type";
-
-        if (!string.IsNullOrEmpty(searchQuery.text))
-        {
-            inputs += ", $search: String!";
-            vars += ", search: $search";
-        }
-
-        if (!allowAdult)
-        {
-            inputs += ", $isAdult: Boolean";
-            vars += ", isAdult: $isAdult";
-        }
-
-        if (searchQuery.sort.HasValue)
-        {
-            inputs += ", $sort: [MediaSort]";
-            vars += ", sort: $sort";
-        }
-
-        if (searchQuery.lesserStartDate.HasValue)
-        {
-            inputs += ", $startDateLesser: FuzzyDateInt";
-            vars += ", startDate_lesser: $startDateLesser";
-        }
-
-        if (searchQuery.year.HasValue)
-        {
-            inputs += ", $seasonYear: Int";
-            vars += ", seasonYear: $seasonYear";
-        }
-
-        if (!string.IsNullOrEmpty(searchQuery.season))
-        {
-            inputs += ", $season: MediaSeason";
-            vars += ", season: $season";
-        }
-
-        string query = @$"query Page($perPage: Int, $page: Int, $type: MediaType{inputs}) {{
-            Page(perPage: $perPage, page: $page) {{
-                media({vars}) {{
-                    id
-                }}
-                pageInfo {{
-                    total
-                }}
-            }}
-        }}";
-
-        AniListResponse_Search? res = await SendRequest<AniListResponse_Search>(query, new
-        {
-            search = searchQuery.text,
-            perPage = searchQuery.pageSize ?? 10,
-            page = searchQuery.page ?? 1,
-            type = "ANIME",
-            isAdult = false,
-            sort = searchQuery.sort?.ToString() ?? "",
-
-            startDate_lesser = searchQuery.lesserStartDate,
-            season = searchQuery.season,
-            seasonYear = searchQuery.year
-        });
+        AniListResponse_Search? res = await GenerateGraphqlQuery(@"
+            id
+        ", searchQuery);
 
         if (res == null)
             return (0, []);
 
         return (res.data.page?.pageInfo?.total ?? 0, res.data.page?.media?.Select(m => m.id).ToArray() ?? []);
+    }
+
+    private async Task<AniListResponse_Search?> GenerateGraphqlQuery(string fields, MediaSearchQuery? searchQuery)
+    {
+        List<string> inputs = new List<string>();
+        List<string> vars = new List<string>()
+        {
+            "type: ANIME"
+        };
+
+        if (!string.IsNullOrEmpty(searchQuery?.text))
+        {
+            inputs.Add("$search: String!");
+            vars.Add("search: $search");
+        }
+
+        if (searchQuery?.sort.HasValue ?? false)
+        {
+            inputs.Add("$sort: [MediaSort]");
+            vars.Add("sort: $sort");
+        }
+
+        if (searchQuery?.lesserStartDate.HasValue ?? false)
+        {
+            inputs.Add("$startDateLesser: FuzzyDateInt");
+            vars.Add("startDate_lesser: $startDateLesser");
+        }
+
+        if (searchQuery?.year.HasValue ?? false)
+        {
+            inputs.Add("$seasonYear: Int");
+            vars.Add("seasonYear: $seasonYear");
+        }
+
+        if (!string.IsNullOrEmpty(searchQuery?.season))
+        {
+            inputs.Add("$season: MediaSeason");
+            vars.Add("season: $season");
+        }
+
+        if (!string.IsNullOrEmpty(searchQuery?.format))
+        {
+            inputs.Add("$format: MediaFormat");
+            vars.Add("format: $format");
+        }
+
+        if (!(searchQuery?.allowAdultContent ?? true))
+        {
+            inputs.Add("$isAdult: Boolean");
+            vars.Add("isAdult: $isAdult");
+        }
+
+        if (searchQuery?.ids != null)
+        {
+            inputs.Add("$idIn: [Int]");
+            vars.Add("id_in: $idIn");
+        }
+
+        return await SendRequest<AniListResponse_Search>(@$"query Page{(inputs.Count > 0 ? $"({string.Join(",", inputs)})" : "")} {{
+            Page(perPage: {searchQuery?.pageSize ?? 10}, page: {searchQuery?.page ?? 1}) {{
+                media ({string.Join(",", vars)}) {{
+                    {fields}
+                }}
+                pageInfo {{
+                    total
+                }}
+            }}
+        }}", new
+        {
+            isAdult = false,
+            sort = searchQuery?.sort?.ToString() ?? "",
+
+            search = searchQuery?.text,
+            idIn = searchQuery?.ids,
+
+            startDate_lesser = searchQuery?.lesserStartDate,
+            seasonYear = searchQuery?.year,
+            season = searchQuery?.season,
+            status = searchQuery?.status,
+            format = searchQuery?.format
+        });
     }
 
     public async Task<Dictionary<int, long>> UpcomingMedia()

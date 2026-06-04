@@ -31,10 +31,9 @@ export async function library_SyncWatchHistory() {
 export async function library_SyncMediaDownloads(mediaId: number, force: boolean = false) {
     await post(`Library/${mediaId}/SyncDownloads?force=${force}`)
 }
-export async function library_Search(page: number, pageSize: number, group: string): Promise<PageResponse<MediaCardInfo>> {
+export async function library_Search(req: SearchRequest, group: string): Promise<PageResponse<MediaCardInfo>> {
     return (await post<PageResponse<MediaCardInfo>>("library/Search", {
-        page,
-        pageSize,
+        req,
         group,
     }))!
 }

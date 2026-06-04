@@ -34,7 +34,7 @@ public class JikanMetadataProvider : IMetaDataProvider
         }).ToArray();
     }
 
-    public Task<Model_Media[]> GetMediaInfo(ICollection<int> aniListIds)
+    public Task<Model_Media[]> GetMediaInfo(MediaSearchQuery req)
     {
         throw new NotImplementedException();
     }
@@ -59,7 +59,7 @@ public class JikanMetadataProvider : IMetaDataProvider
         throw new NotImplementedException();
     }
 
-    public Task<(int, int[])> SearchMedia(MediaSearchQuery query, bool allowAdult)
+    public Task<(int, int[])> SearchMedia(MediaSearchQuery req)
     {
         throw new NotImplementedException();
     }

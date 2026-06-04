@@ -2,7 +2,7 @@
 
 import * as api from "@lib/api.local"
 
-import { MediaCardInfo, PageResponse, SearchCriteria } from "@shared/types"
+import { MediaCardInfo, PageResponse, SearchCriteria, SearchRequest } from "@shared/types"
 import { ReactNode, useEffect, useState } from "react"
 
 import MediaCard from "@comps/mediaCard"
@@ -18,6 +18,7 @@ export default function ({ criteria }: { criteria: SearchCriteria | null }) {
     const searchParams = useSearchParams();
     const pageSize = 56;
 
+    const [searchRequest, setSearchRequest] = useState<SearchRequest>();
     const [refresh, setRefresh] = useState<number>(0);
 
     const [selectedGroup, setSelectedGroup] = useState<LibraryGroup>(() => {
@@ -58,7 +59,12 @@ export default function ({ criteria }: { criteria: SearchCriteria | null }) {
         window.history.replaceState(null, "", selectedGroup != null ? `?group=${selectedGroup}&page=${currentPage}` : "");
     }, [selectedGroup, currentPage])
 
-    const search = (): Promise<PageResponse<MediaCardInfo>> => api.library_Search(currentPage - 1, pageSize, selectedGroup);
+    const search = (): Promise<PageResponse<MediaCardInfo>> => api.library_Search({
+        ...searchRequest,
+        page: currentPage,
+        pageSize: pageSize
+    }, selectedGroup);
+
 
     const drawGroupBtn = (group: LibraryGroup, label: string | undefined = undefined): ReactNode => {
         const callback = () => {
@@ -74,7 +80,7 @@ export default function ({ criteria }: { criteria: SearchCriteria | null }) {
     }
     return (
         <div className="Library">
-            <GenericSearchContainer criteria={criteria} />
+            <GenericSearchContainer criteria={criteria} onSearch={setSearchRequest} />
 
             <div className="Library_Filters">
                 {drawGroupBtn("ContinueWatching", "Continue Watching")}
@@ -87,7 +93,7 @@ export default function ({ criteria }: { criteria: SearchCriteria | null }) {
             </div>
 
             <div className="Library_Items">
-                {<PageContainer search={search} currentPage={currentPage} setCurrentPage={setCurrentPage} pageSize={pageSize} drawElement={drawCard} track={[selectedGroup, refresh]} />}
+                {<PageContainer search={search} currentPage={currentPage} setCurrentPage={setCurrentPage} pageSize={pageSize} drawElement={drawCard} track={[selectedGroup, searchRequest, refresh]} />}
             </div>
         </div >
     )

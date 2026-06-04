@@ -4,8 +4,9 @@ import "./genericSearchContainer.css"
 
 import MultiDropDownSearch, { MultiDropDownResults } from "@/app/components/multiDropDownSearch";
 import DropDown, { DropDownResults } from "@/app/components/dropDown";
-import { useRef } from "react";
-import { SearchCriteria } from "../shared/types";
+import { Ref, useEffect, useRef } from "react";
+import { SearchCriteria, SearchRequest } from "../shared/types";
+import { useSearchParams } from "next/navigation";
 
 const status = [
     "Finished",
@@ -13,6 +14,14 @@ const status = [
     "Not yet released",
     "Cancelled",
     "Hiatus"
+]
+
+const statusLookup = [
+    "FINISHED",
+    "RELEASING",
+    "NOT_YET_RELEASED",
+    "CANCELLED",
+    "HIATUS"
 ]
 
 const formats = [
@@ -25,8 +34,30 @@ const formats = [
     "Music"
 ]
 
+const formatLookup = [
+    "TV",
+    "TV_SHORT",
+    "MOVIE",
+    "SPECIAL",
+    "OVA",
+    "ONA",
+    "MUSIC"
+]
 
-export default function ({ criteria }: { criteria: SearchCriteria | null }) {
+const getYears = (): string[] => {
+    const y: string[] = [];
+    const year = new Date().getFullYear();
+
+    for (let i = year + 1; i >= 1950; i--)
+        y.push(i.toString());
+
+    return y;
+}
+
+const years = getYears();
+
+export default function ({ criteria, onSearch }: { criteria: SearchCriteria | null, onSearch: (req: SearchRequest) => void }) {
+    const searchParams = useSearchParams();
 
     const genreRef = useRef<MultiDropDownResults>(null);
     const tagsRef = useRef<MultiDropDownResults>(null);
@@ -36,22 +67,32 @@ export default function ({ criteria }: { criteria: SearchCriteria | null }) {
     const formatRef = useRef<DropDownResults>(null);
 
     const search = () => {
-        console.log(genreRef?.current?.getValue());
-        console.log(tagsRef?.current?.getValue());
-        console.log(yearsRef?.current?.getValue());
-        console.log(statusRef?.current?.getValue());
-        console.log(formatRef?.current?.getValue());
+
+        const yearIndex = yearsRef?.current?.getValue();
+        const statusIndex = statusRef?.current?.getValue();
+        const formatIndex = formatRef?.current?.getValue();
+
+        const req: SearchRequest = {
+            page: 0,
+            pageSize: 0,
+
+            year: yearIndex != undefined ? Number.parseInt(years[yearIndex]) : undefined,
+            status: statusIndex != undefined ? statusLookup[statusIndex] : undefined,
+            format: formatIndex != undefined ? formatLookup[formatIndex] : undefined,
+        }
+
+        onSearch?.(req);
     }
 
-    const getYears = (): string[] => {
-        const y: string[] = [];
-        const year = new Date().getFullYear();
+    useEffect(() => {
+        const format: string | null = searchParams.get("format");
+        const status: string | null = searchParams.get("status");
+        const year: string | null = searchParams.get("year");
 
-        for (let i = year + 1; i >= 1950; i--)
-            y.push(i.toString());
-
-        return y;
-    }
+        if (format) formatRef.current?.setValue(formatLookup.indexOf(format));
+        if (status) statusRef.current?.setValue(statusLookup.indexOf(status));
+        if (year) yearsRef.current?.setValue(years.indexOf(year));
+    }, [])
 
     return (
         <div className="Search_Criteria">
@@ -80,9 +121,9 @@ export default function ({ criteria }: { criteria: SearchCriteria | null }) {
                 <DropDown options={formats} unselected="Any format" ref={formatRef} />
             </div>
 
-
-            <div>
-                <button onClick={search}>Search</button>
+            <div className="Search_Criteria_Controls">
+                <a>_</a>
+                <button onClick={search}>Apply</button>
             </div>
         </div>
     )

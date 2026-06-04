@@ -5,6 +5,7 @@ import "./dropDown.css"
 
 export interface DropDownResults {
     getValue: () => number | undefined
+    setValue: (val: number | undefined) => void
 }
 
 export default function ({ options, unselected, ref }: { options: string[], unselected: string, ref: Ref<DropDownResults> }) {
@@ -64,8 +65,9 @@ export default function ({ options, unselected, ref }: { options: string[], unse
     }
 
     useImperativeHandle(ref, () => ({
-        getValue: () => selectedEntry
-    }));
+        getValue: () => selectedEntry,
+        setValue: (val: number | undefined) => setSelectedEntry(val)
+    }), [selectedEntry]);
 
     return (
         <div ref={popupRef} className="DropDownSearch" >

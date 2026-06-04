@@ -59,7 +59,7 @@ export default function ({ Card, requestRefresh }: { Card: MediaCardInfo, reques
             </div>
             <div className={`MediaCard_Content`}>
                 <div className="MediaCard_Content_Title">
-                    {Card.releasing ? <div /> : <></>}
+                    {Card.status === "RELEASING" ? <div /> : <></>}
                     <h3 >{Card.title}</h3>
                 </div>
                 <div className="MediaCard_Content_Items">

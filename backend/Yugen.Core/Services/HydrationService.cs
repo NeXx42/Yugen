@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Yugen.Core.Configs;
 using Yugen.Core.Data;
 using Yugen.Data;
+using Yugen.Domain.Data;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Enums;
 using Yugen.Domain.Models;
@@ -27,9 +28,12 @@ public class HydrationService
         _metaDataProvider = new AniListProvider();
     }
 
-    public async Task<Model_Media[]> SaveMedia(ICollection<int> aniListId)
+    public async Task<Model_Media[]> SaveMedia(ICollection<int> aniListId, MediaSearchQuery? req = null)
     {
-        Model_Media[] media = await _metaDataProvider.GetMediaInfo(aniListId);
+        req ??= new MediaSearchQuery();
+        req.ids = aniListId;
+
+        Model_Media[] media = await _metaDataProvider.GetMediaInfo(req);
 
         await _db.BulkInsertOrUpdateAsync(media);
         await _db.BulkInsertOrUpdateAsync(media.SelectMany(m => m.Tags));
@@ -40,9 +44,12 @@ public class HydrationService
         return media;
     }
 
-    public async Task<Model_Media?> SaveMedia(int aniListId)
+    public async Task<Model_Media?> SaveMedia(int aniListId, MediaSearchQuery? req = null)
     {
-        Model_Media[] media = await _metaDataProvider.GetMediaInfo([aniListId]);
+        req ??= new MediaSearchQuery();
+        req.ids = [aniListId];
+
+        Model_Media[] media = await _metaDataProvider.GetMediaInfo(req);
 
         if (media.Length != 1)
             return null;

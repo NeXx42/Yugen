@@ -1,3 +1,4 @@
+using System.DirectoryServices.Protocols;
 using Azure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,7 +44,12 @@ public class LibraryController : ControllerBase
     public async Task<PageResponse<MediaCard>> GetWatchHistory([FromQuery] int? page, [FromQuery] int? pageSize)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        return await _libraryService.GetWatchHistory(usr, page ?? 0, pageSize ?? 10);
+
+        return await _libraryService.GetWatchHistory(usr, new MediaSearchQuery
+        {
+            page = page,
+            pageSize = pageSize
+        });
     }
 
     [HttpPost("Sync/Library")]
@@ -56,9 +62,8 @@ public class LibraryController : ControllerBase
 
     public class SearchLibraryFilter
     {
-        public int? page { get; set; }
-        public int? pageSize { get; set; }
         public string? group { get; set; }
+        public MediaSearchQuery? req { get; set; }
     }
 
     [HttpPost("Search")]
@@ -66,7 +71,7 @@ public class LibraryController : ControllerBase
     public async Task<PageResponse<MediaCard>> SearchLibrary([FromBody] SearchLibraryFilter filter)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        return await _libraryService.SearchLibrary(usr, filter.page ?? 0, filter.pageSize ?? 10, filter.group ?? "all");
+        return await _libraryService.SearchLibrary(usr, filter.req, filter.group ?? "all");
     }
 
     [HttpPost("Upload")]
