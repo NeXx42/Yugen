@@ -131,7 +131,7 @@ public class LibraryService
         int page = req?.page ?? 1;
         int pageSize = req?.pageSize ?? 10;
 
-        var res = cards.Skip(page * pageSize).Take(pageSize).Select(c => c.WithWatchInfo(historyLookup[c.aniListId])).ToArray();
+        var res = cards.Skip((page - 1) * pageSize).Take(pageSize).Select(c => c.WithWatchInfo(historyLookup[c.aniListId])).ToArray();
         return new PageResponse<MediaCard>(res, page, pageSize, cards.Length);
     }
 
