@@ -70,7 +70,7 @@ export default async function ({ params }: { params: { id: number } }) {
                         <div className="ViewPage_Info_Info">
                             <h2>{media.title}</h2>
                             <div className="ViewPage_Info_Info_Tags">
-                                {media.genres?.map(t => <a key={t} style={{ backgroundColor: media.colour ?? "" }}>{t}</a>)}
+                                {media.genres?.map(t => <a key={t} style={{ backgroundColor: media.colour ?? "" }} href={`search?genres=${t}`}>{t}</a>)}
                             </div>
                             <p dangerouslySetInnerHTML={{ __html: media.description ?? "" }} />
 

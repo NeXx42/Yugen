@@ -1,27 +1,18 @@
 "use client"
 
-import GenericSearchContainer from "@/app/components/genericSearchContainer";
+import GenericSearchContainer, { DecodeSearchParams } from "@/app/components/genericSearchContainer";
 import SearchContainer from "./searchContainer";
 
 import { SearchCriteria, SearchRequest } from "@/app/shared/types";
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 
-export default function ({ criteria, query }: { criteria: SearchCriteria | null, query: string | undefined }) {
-    const [searchQuery, setSearchQuery] = useState<SearchRequest>({
-        page: 1,
-        pageSize: 1,
-        text: query
-    })
-
-    const onSearch = (req: SearchRequest) => {
-        setSearchQuery({
-            ...req,
-            text: query,
-        });
-    }
+export default function ({ criteria, }: { criteria: SearchCriteria | null }) {
+    const searchParams = useSearchParams();
+    const [searchQuery, setSearchQuery] = useState<SearchRequest>(() => DecodeSearchParams(searchParams))
 
     return (<>
-        <GenericSearchContainer criteria={criteria} onSearch={onSearch} />
+        <GenericSearchContainer criteria={criteria} existingQuery={searchQuery} onSearch={setSearchQuery} />
         <SearchContainer searchQuery={searchQuery} />
     </>
     )

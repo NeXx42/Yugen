@@ -131,12 +131,7 @@ export interface UserNotification {
 
 export interface SearchCriteria {
     genres: string[],
-    tags: SearchCriteria_LookupPair[],
-}
-
-export interface SearchCriteria_LookupPair {
-    id: number,
-    name: string
+    tags: string[],
 }
 
 export interface SearchRequest {
@@ -151,6 +146,8 @@ export interface SearchRequest {
     year?: number,
     format?: string,
     status?: string,
+    genres?: string[],
+    tags?: string[],
 }
 
 

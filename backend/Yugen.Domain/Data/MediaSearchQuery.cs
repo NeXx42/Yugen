@@ -18,5 +18,8 @@ public class MediaSearchQuery
     public string? format { get; set; }
     public string? status { get; set; }
 
-    public string GetCacheKey() => $"{page}_{pageSize}_{text}_{sort}_{allowAdultContent}_{lesserStartDate}_{season}_{year}_{format}_{status}";
+    public string[]? tags { get; set; }
+    public string[]? genres { get; set; }
+
+    public string GetCacheKey() => $"{page}_{pageSize}_{text}_{sort}_{allowAdultContent}_{lesserStartDate}_{season}_{year}_{format}_{status}_{tags?.GetHashCode()}_{genres?.GetHashCode()}";
 }

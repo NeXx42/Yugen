@@ -404,11 +404,7 @@ public class CatalogService
         }
 
         string[] genres = await _db.genres.Select(g => g.Genre).ToArrayAsync();
-        SearchCriteria.LookupPair[] tags = (await _db.tags.ToArrayAsync()).Select(t => new SearchCriteria.LookupPair()
-        {
-            id = t.Id,
-            name = t.Name ?? "ERROR",
-        }).ToArray();
+        string[] tags = await _db.tags.Select(t => t.Name ?? "").ToArrayAsync();
 
         return new SearchCriteria()
         {

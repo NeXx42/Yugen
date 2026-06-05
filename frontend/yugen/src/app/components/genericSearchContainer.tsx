@@ -6,7 +6,7 @@ import MultiDropDownSearch, { MultiDropDownResults } from "@/app/components/mult
 import DropDown, { DropDownResults } from "@/app/components/dropDown";
 import { Ref, useEffect, useRef } from "react";
 import { SearchCriteria, SearchRequest } from "../shared/types";
-import { useSearchParams } from "next/navigation";
+import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 
 const status = [
     "Finished",
@@ -56,7 +56,39 @@ const getYears = (): string[] => {
 
 const years = getYears();
 
-export default function ({ criteria, onSearch }: { criteria: SearchCriteria | null, onSearch: (req: SearchRequest) => void }) {
+interface Props {
+    criteria: SearchCriteria | null,
+    existingQuery?: SearchRequest,
+    onSearch: (req: SearchRequest) => void,
+}
+
+export function DecodeSearchParams(searchParams: ReadonlyURLSearchParams): SearchRequest {
+    const pageTxt: string | null = searchParams.get("page");
+    const filter: string | null = searchParams.get("query");
+
+    const format: string | null = searchParams.get("format");
+    const status: string | null = searchParams.get("status");
+    const year: string | null = searchParams.get("year");
+
+    const genres: string[] | undefined = searchParams.get("genres")?.split(",");
+    const tags: string[] | undefined = searchParams.get("tags")?.split(",");
+
+    return {
+        pageSize: 0,
+        page: Number.isInteger(pageTxt ?? "NotANumber") ? Number.parseInt(pageTxt!) : 1,
+
+        text: filter ?? undefined,
+
+        format: format ?? undefined,
+        status: status ?? undefined,
+        year: Number.isInteger(year ?? "NotANumber") ? Number.parseInt(year!) : undefined,
+
+        genres: genres ?? undefined,
+        tags: tags ?? undefined,
+    }
+}
+
+export default function ({ criteria, existingQuery, onSearch }: Props) {
     const searchParams = useSearchParams();
 
     const genreRef = useRef<MultiDropDownResults>(null);
@@ -72,6 +104,8 @@ export default function ({ criteria, onSearch }: { criteria: SearchCriteria | nu
         const statusIndex = statusRef?.current?.getValue();
         const formatIndex = formatRef?.current?.getValue();
 
+        const genres = genreRef?.current?.getValue();
+
         const req: SearchRequest = {
             page: 0,
             pageSize: 0,
@@ -79,19 +113,20 @@ export default function ({ criteria, onSearch }: { criteria: SearchCriteria | nu
             year: yearIndex != undefined ? Number.parseInt(years[yearIndex]) : undefined,
             status: statusIndex != undefined ? statusLookup[statusIndex] : undefined,
             format: formatIndex != undefined ? formatLookup[formatIndex] : undefined,
+
+            genres: genres?.map(g => criteria!.genres[g])
         }
 
         onSearch?.(req);
     }
 
     useEffect(() => {
-        const format: string | null = searchParams.get("format");
-        const status: string | null = searchParams.get("status");
-        const year: string | null = searchParams.get("year");
+        if (existingQuery?.format) formatRef.current?.setValue(formatLookup.indexOf(existingQuery.format));
+        if (existingQuery?.status) statusRef.current?.setValue(statusLookup.indexOf(existingQuery.status));
+        if (existingQuery?.year) yearsRef.current?.setValue(years.indexOf(existingQuery.year.toString()));
 
-        if (format) formatRef.current?.setValue(formatLookup.indexOf(format));
-        if (status) statusRef.current?.setValue(statusLookup.indexOf(status));
-        if (year) yearsRef.current?.setValue(years.indexOf(year));
+        if (existingQuery?.genres) genreRef.current?.setValue(existingQuery.genres.map(g => criteria!.genres.indexOf(g)));
+        if (existingQuery?.tags) genreRef.current?.setValue(existingQuery.tags.map(t => criteria!.tags.indexOf(t)));
     }, [])
 
     return (
@@ -103,7 +138,7 @@ export default function ({ criteria, onSearch }: { criteria: SearchCriteria | nu
 
             <div>
                 <a>Tags</a>
-                <MultiDropDownSearch placeholder="Select Tags" options={criteria?.tags.map(t => t.name) ?? []} ref={tagsRef} />
+                <MultiDropDownSearch placeholder="Select Tags" options={criteria?.tags ?? []} ref={tagsRef} />
             </div>
 
             <div>

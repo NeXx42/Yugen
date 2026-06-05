@@ -31,6 +31,9 @@ export default function ({ searchQuery }: { searchQuery: SearchRequest }) {
         if (searchQuery.status) val.push(`status=${searchQuery.status}`);
         if (searchQuery.year) val.push(`year=${searchQuery.year}`);
 
+        if ((searchQuery.genres?.length ?? 0) > 0) val.push(`genres=${searchQuery.genres!.join(",")}`);
+        if ((searchQuery.tags?.length ?? 0) > 0) val.push(`tags=${searchQuery.tags!.join(",")}`);
+
         window.history.replaceState(null, "", `?${val.join("&")}`);
     }
 

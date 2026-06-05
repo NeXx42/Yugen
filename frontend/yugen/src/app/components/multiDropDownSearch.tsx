@@ -6,7 +6,7 @@ import "./multiDropDownSearch.css"
 
 export interface MultiDropDownResults {
     getValue: () => number[]
-    setValue: (val: string) => void;
+    setValue: (val: number[]) => void;
 }
 
 export default function ({ options, placeholder, ref }: { options: string[], placeholder: string, ref: Ref<MultiDropDownResults> }) {
@@ -80,7 +80,9 @@ export default function ({ options, placeholder, ref }: { options: string[], pla
 
     useImperativeHandle(ref, () => ({
         getValue: () => selectedEntries,
-        setValue: (val: string) => setSearch(val)
+        setValue: (val: number[]) => {
+            setSelectedEntries(val.filter(v => v >= 0));
+        }
     }), [selectedEntries]);
 
     return (

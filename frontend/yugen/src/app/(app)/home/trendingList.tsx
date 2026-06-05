@@ -88,7 +88,7 @@ export default function ({ searchCriteria }: { searchCriteria: CaughtResponse<Se
                         </svg>
                     </button>
                     <div className="Trending_Genres_Scroll">
-                        {searchCriteria.data?.genres.map(g => (<a key={g}>{g}</a>))}
+                        {searchCriteria.data?.genres.map(g => (<a key={g} href={`search?genres=${g}`}>{g}</a>))}
                     </div>
                     <button type="button" >
                         <svg stroke="currentColor" fill="currentColor" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">

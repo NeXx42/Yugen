@@ -259,53 +259,18 @@ public class AniListProvider : IMetaDataProvider
             "type: ANIME"
         };
 
-        if (!string.IsNullOrEmpty(searchQuery?.text))
-        {
-            inputs.Add("$search: String!");
-            vars.Add("search: $search");
-        }
+        TryAddQueryFilter_String(searchQuery?.text, "search", "search", "String!");
+        TryAddQueryFilter_Generic(searchQuery?.sort, "sort", "sort", "[MediaSort]");
+        TryAddQueryFilter_String(searchQuery?.season, "season", "season", "MediaSeason");
+        TryAddQueryFilter_String(searchQuery?.format, "format", "format", "MediaFormat");
 
-        if (searchQuery?.sort.HasValue ?? false)
-        {
-            inputs.Add("$sort: [MediaSort]");
-            vars.Add("sort: $sort");
-        }
+        TryAddQueryFilter_Generic(searchQuery?.year, "seasonYear", "seasonYear", "Int");
+        TryAddQueryFilter_Generic(searchQuery?.allowAdultContent, "isAdult", "isAdult", "Boolean");
+        TryAddQueryFilter_Generic(searchQuery?.lesserStartDate, "startDate_lesser", "startDateLesser", "FuzzyDateInt");
 
-        if (searchQuery?.lesserStartDate.HasValue ?? false)
-        {
-            inputs.Add("$startDateLesser: FuzzyDateInt");
-            vars.Add("startDate_lesser: $startDateLesser");
-        }
-
-        if (searchQuery?.year.HasValue ?? false)
-        {
-            inputs.Add("$seasonYear: Int");
-            vars.Add("seasonYear: $seasonYear");
-        }
-
-        if (!string.IsNullOrEmpty(searchQuery?.season))
-        {
-            inputs.Add("$season: MediaSeason");
-            vars.Add("season: $season");
-        }
-
-        if (!string.IsNullOrEmpty(searchQuery?.format))
-        {
-            inputs.Add("$format: MediaFormat");
-            vars.Add("format: $format");
-        }
-
-        if (!(searchQuery?.allowAdultContent ?? true))
-        {
-            inputs.Add("$isAdult: Boolean");
-            vars.Add("isAdult: $isAdult");
-        }
-
-        if (searchQuery?.ids != null)
-        {
-            inputs.Add("$idIn: [Int]");
-            vars.Add("id_in: $idIn");
-        }
+        TryAddQueryFilter_Collection(searchQuery?.ids, "id_in", "idIn", "[Int]");
+        TryAddQueryFilter_Collection(searchQuery?.tags, "tag_in", "tagIn", "[String]");
+        TryAddQueryFilter_Collection(searchQuery?.genres, "genre_in", "genreIn", "[String]");
 
         return await SendRequest<AniListResponse_Search>(@$"query Page{(inputs.Count > 0 ? $"({string.Join(",", inputs)})" : "")} {{
             Page(perPage: {searchQuery?.pageSize ?? 10}, page: {searchQuery?.page ?? 1}) {{
@@ -328,8 +293,31 @@ public class AniListProvider : IMetaDataProvider
             seasonYear = searchQuery?.year,
             season = searchQuery?.season,
             status = searchQuery?.status,
-            format = searchQuery?.format
+            format = searchQuery?.format,
+            genreIn = searchQuery?.genres,
+            tagIn = searchQuery?.tags
         });
+
+        void TryAddQueryFilter_String(string? val, string propertyName, string varName, string type)
+        {
+            if (!string.IsNullOrEmpty(val)) AddQueryFilter(propertyName, varName, type);
+        }
+
+        void TryAddQueryFilter_Generic<T>(T? val, string propertyName, string varName, string type)
+        {
+            if (val != null) AddQueryFilter(propertyName, varName, type);
+        }
+
+        void TryAddQueryFilter_Collection<T>(ICollection<T>? val, string propertyName, string varName, string type)
+        {
+            if ((val?.Count ?? 0) > 0) AddQueryFilter(propertyName, varName, type);
+        }
+
+        void AddQueryFilter(string propertyName, string varName, string type)
+        {
+            inputs.Add($"${varName}: {type}");
+            vars.Add($"{propertyName}: ${varName}");
+        }
     }
 
     public async Task<Dictionary<int, long>> UpcomingMedia()
