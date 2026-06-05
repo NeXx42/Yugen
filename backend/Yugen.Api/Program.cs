@@ -96,6 +96,11 @@ builder.Services.AddSingleton<EndpointDeduplicator>();
 builder.Services.AddHostedService<SettingsInit>();
 builder.Services.AddHostedService<YugenBackgroundService>();
 
+if (builder.Environment.IsProduction())
+{
+    builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Critical);
+}
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -108,10 +113,6 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.UseCors("localhost");
-}
-else
-{
-    builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Critical);
 }
 
 app.UseAuthentication();
