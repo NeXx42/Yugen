@@ -8,6 +8,9 @@
 
     left: 0px;
     animation: .3s ease SettingsSlideIn;
+
+    display: grid;
+    grid-template-rows: min-content auto min-content;
 }
 
 @keyframes SettingsSlideIn {
@@ -21,6 +24,8 @@
 }
 
 .Settings_Foldout_Top {
+    grid-row: 0;
+
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -44,7 +49,15 @@
 }
 
 
+.Settings_Foldout_Controls {
+    display: flex;
+    flex-direction: column;
 
+    justify-content: space-between;
+    height: 100%;
+}
+
+.Settings_Foldout_External,
 .Settings_Foldout_Navigation {
     display: flex;
     flex-direction: column;
@@ -53,6 +66,7 @@
 
 }
 
+.Settings_Foldout_External a,
 .Settings_Foldout_Navigation button {
     height: 50px;
     background-color: transparent;
@@ -72,10 +86,18 @@
     transition: all .2s;
 }
 
+.Settings_Foldout_External>a>img {
+    width: 25px;
+    aspect-ratio: 1/1;
+}
+
+.Settings_Foldout_External a:nth-child(even),
 .Settings_Foldout_Navigation button:nth-child(even) {
     background-color: var(--global-div);
 }
 
+.Settings_Foldout_External a.Selected,
+.Settings_Foldout_External a:hover,
 .Settings_Foldout_Navigation button.Selected,
 .Settings_Foldout_Navigation button:hover {
     filter: brightness(1.05);
@@ -85,8 +107,6 @@
 }
 
 .Settings_Foldout_Bottom {
-    position: absolute;
-    bottom: 0px;
     padding: 15px;
 
     height: 80px;

@@ -109,6 +109,10 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.UseCors("localhost");
 }
+else
+{
+    builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Critical);
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

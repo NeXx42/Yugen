@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Yugen.Api.Helpers;
 using Yugen.Core.Services;
+using Yugen.Domain.Data;
 using Yugen.Domain.Data.Users;
 
 namespace Yugen.Api.Controllers;
@@ -64,4 +65,7 @@ public class SettingsController : ControllerBase
             return BadRequest();
         }
     }
+
+    [HttpGet("Links")]
+    public async Task<Links> GetLinks() => await _settings.GetLinks();
 }

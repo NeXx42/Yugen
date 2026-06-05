@@ -20,6 +20,9 @@ export async function settings_Save(key: string, value: string | undefined) {
 export async function settings_Update(): Promise<void> {
     return (await post(`Settings/Update`))!;
 }
+export async function settings_Links(): Promise<{ jellyfin: string | null, sonarr: string | null, radarr: string | null }> {
+    return (await get(`Settings/Links`))!;
+}
 
 
 export async function library_sync(): Promise<number | undefined> {
