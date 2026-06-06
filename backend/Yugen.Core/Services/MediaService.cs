@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Yugen.Core.Configs;
 using Yugen.Data;
+using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Data.Users;
 using Yugen.Domain.Models;
@@ -145,5 +146,10 @@ public class MediaService
     public async Task DeleteSubtitle(string jellyfinId, int id)
     {
         await _mediaProvider.DeleteSubtitle(jellyfinId, id);
+    }
+
+    public async Task<DownloadedEpisodeSubtitles[]> GetSubtitles(string[] jellyfinIds)
+    {
+        return await _mediaProvider.GetSubtitles(jellyfinIds);
     }
 }

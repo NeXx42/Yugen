@@ -8,12 +8,17 @@ import { MediaInfo } from "@shared/types";
 import { useState } from "react";
 
 import "./seriesControls.css"
+
 import SeriesRequestModal from "./seriesRequestModal";
+import MassSubtitleEditor from "./massSubtitleEditor";
+import { useModals } from "@/app/context/modalContext";
+
+type MenuType = "None" | "Subtitles" | "Requests";
 
 export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
     const { showToast } = useToast();
+    const { showModal, closeModals } = useModals();
 
-    const [isMenuOpen, setMenuOpen] = useState(false);
     const [bookmarkId, setBookmarkId] = useState(mediaInfo.bookmark);
 
     const changeBookmarkId = (val: string) => {
@@ -23,6 +28,18 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
             setBookmarkId(newBookmarkId);
             showToast("Updated bookmark");
         }).catch(() => showToast("Failed to update", "Error"))
+    }
+
+    const openMenu = (type: MenuType) => {
+        switch (type) {
+            case "Requests":
+                showModal(<SeriesRequestModal mediaInfo={mediaInfo} onUpdate={() => { }} onClose={() => { }} />)
+                break;
+
+            case "Subtitles":
+                showModal(<MassSubtitleEditor mediaInfo={mediaInfo} />);
+                break;
+        }
     }
 
     return (
@@ -36,11 +53,9 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
                     <option value={4}>Completed</option>
                     <option value={5}>Dropped</option>
                 </select>
-                <button className="ViewPage_SeriesControl" onClick={() => setMenuOpen(true)}>+</button>
+                <button className="ViewPage_SeriesControl" onClick={() => openMenu("Requests")}>+</button>
             </div>
-            {
-                isMenuOpen && <SeriesRequestModal mediaInfo={mediaInfo} onClose={() => setMenuOpen(false)} onUpdate={() => { }} />
-            }
+            <button className="ViewPage_SeriesControl" onClick={() => openMenu("Subtitles")}>Subtitles</button>
         </>
     )
 }

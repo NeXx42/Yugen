@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using Yugen.Api.Helpers;
 using Yugen.Core.Services;
+using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Data.Users;
 
@@ -140,10 +141,34 @@ public class MediaController : ControllerBase
         return Ok();
     }
 
+    [HttpPost("UploadSubtitles")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> Upload([FromForm] List<IFormFile> files, [FromForm] List<string> jellyfinIds, [FromQuery] string language)
+    {
+        if (string.IsNullOrEmpty(language))
+            return BadRequest("Invalid language");
+
+        for (int i = 0; i < files.Count; i++)
+        {
+            IFormFile file = files[i];
+            string id = jellyfinIds[i];
+
+            await _mediaService.UploadSubtitle(id, language, file);
+        }
+
+        return Ok();
+    }
+
     [HttpDelete("{jellyfinId}/{subtitleId}/Subtitle")]
     public async Task<IActionResult> DeleteSubtitle(string jellyfinId, int subtitleId)
     {
         await _mediaService.DeleteSubtitle(jellyfinId, subtitleId);
         return Ok();
+    }
+
+    [HttpGet("Subtitles")]
+    public async Task<DownloadedEpisodeSubtitles[]> GetAllSeriesSubtitles([FromQuery] string[] jellyfinIds)
+    {
+        return await _mediaService.GetSubtitles(jellyfinIds);
     }
 }

@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Models.History;
 using Yugen.Domain.Models.Library;
@@ -134,19 +135,18 @@ public class JellyfinMediaService : IMediaProvider
         //AddVidParam("AudioCodec", "aac,opus,flac");
         //AddVidParam("videoCodec", "av1,h264,vp9");
 
-        //AddVidParam("TranscodingMaxAudioChannels", "2");
-        //AddVidParam("RequireAvc", "false");
-        //AddVidParam("EnableAudioVbrEncoding", "true");
-        //AddVidParam("h264-level", "51");
-        //AddVidParam("h264-videobitdepth", "10");
+        AddVidParam("TranscodingMaxAudioChannels", "2");
+        AddVidParam("RequireAvc", "false");
+        AddVidParam("EnableAudioVbrEncoding", "true");
+        AddVidParam("h264-level", "51");
+        AddVidParam("h264-videobitdepth", "10");
         AddVidParam("h264-profile", "high,main,baseline,constrainedbaseline");
-        //AddVidParam("av1-profile", "main");
-        //AddVidParam("av1-rangetype", "SDR");
-        //AddVidParam("av1-level", "19");
-
-        //AddVidParam("vp9-rangetype", "SDR");
-        //AddVidParam("h264-rangetype", "SDR");
-        //AddVidParam("h264-deinterlace", "SDR");
+        AddVidParam("av1-profile", "main");
+        AddVidParam("av1-rangetype", "SDR");
+        AddVidParam("av1-level", "19");
+        AddVidParam("vp9-rangetype", "SDR");
+        AddVidParam("h264-rangetype", "SDR");
+        AddVidParam("h264-deinterlace", "SDR");
 
         return await ProxyUrl($"Videos/{jellyfinId}/master.m3u8?{FormatVidParams()}", true);
 
@@ -240,5 +240,37 @@ public class JellyfinMediaService : IMediaProvider
     public async Task DeleteSubtitle(string jellyfinId, int id)
     {
         await _http.SendRequest($"Videos/{jellyfinId}/Subtitles/{id}", HttpMethod.Delete);
+    }
+
+    public async Task<DownloadedEpisodeSubtitles[]> GetSubtitles(ICollection<string> jellyfinIds)
+    {
+        if (jellyfinIds.Count == 0)
+            return [];
+
+        Dictionary<string, Task<JellyfinResponse_MediaInfo>> playbackInfoTasks = new Dictionary<string, Task<JellyfinResponse_MediaInfo>>();
+
+        foreach (string str in jellyfinIds)
+            playbackInfoTasks.Add(str, GetPlaybackInfoInternal(str));
+
+        await Task.WhenAll(playbackInfoTasks.Values);
+
+        List<DownloadedEpisodeSubtitles> results = new List<DownloadedEpisodeSubtitles>();
+
+        Parallel.ForEach(playbackInfoTasks, (KeyValuePair<string, Task<JellyfinResponse_MediaInfo>> info) =>
+        {
+            // not sure when there are multiple sources / havent encountered it yet
+            JellyfinResponse_MediaInfo.MediaSource.MediaStream[] subs = info.Value.Result.MediaSources?.FirstOrDefault()?.MediaStreams?.Where(s => s.Type?.Equals("Subtitle") ?? false).ToArray() ?? [];
+
+            results.AddRange(subs.Select(s => new DownloadedEpisodeSubtitles()
+            {
+                jellyfinEpisodeId = info.Key,
+                subtitleId = s.Index,
+
+                title = s.DisplayTitle,
+                languageCode = s.Language
+            }));
+        });
+
+        return results.ToArray();
     }
 }

@@ -1,35 +1,40 @@
-.MediaRequest_Menu {
-    display: grid;
-    grid-template-rows: 70px auto;
-    overflow: hidden;
-    gap: 15px;
+.MassSubtitlesEditor {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    min-width: 50vw;
 }
 
-
-
-.MediaRequest_Menu>h1 {
+.MassSubtitlesEditor>h1 {
     justify-content: center;
     text-align: center;
 }
 
-.MediaRequest_Menu_Ids {
-    display: flex;
-    justify-content: center;
-    gap: 5px;
-}
-
-.MediaRequest_Menu_Ids>* {
+.MassSubtitlesEditor_Settings {
     background: var(--global-div);
     border: 1px solid var(--global-border-color);
-    border-radius: 12px;
-    padding: 5px 8px;
+    border-radius: 8px;
+
+    padding: 10px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.MediaRequest_Menu_Ids>button {
+.MassSubtitlesEditor_Settings>Select {
+    border: 1px solid var(--global-border-color);
+    border-radius: 8px;
+    padding: 5px 8px;
+
     cursor: pointer;
 }
 
-.MediaRequest_Menu_Ids>div>select {
+
+.MassSubtitlesEditor_Ids>div>select {
     margin-left: 5px;
     border-radius: 8px;
     outline: none;
@@ -41,7 +46,7 @@
 }
 
 
-.MediaRequest_Menu_Status {
+.MassSubtitlesEditor_Status {
     background: var(--global-div);
     border: 1px solid var(--global-border-color);
     border-radius: 8px;
@@ -53,7 +58,7 @@
 }
 
 
-.MediaRequest_Menu_Episodes {
+.MassSubtitlesEditor_Episodes {
     background: var(--global-div);
     border: 1px solid var(--global-border-color);
     border-radius: 8px;
@@ -64,38 +69,58 @@
 
     max-height: 400px;
     overflow: scroll;
+
 }
 
-.MediaRequest_Menu_Episodes>p {
+.MassSubtitlesEditor_Episodes>p {
     margin: 10px;
     text-align: center;
 }
 
-.MediaRequest_Menu_Episodes_Header>th {
+.MassSubtitlesEditor_Episodes_Header>th {
     padding: 10px 0px;
     text-align: center;
 }
 
-.MediaRequest_Menu_Episodes_Entry {
+.MassSubtitlesEditor_Episodes_Header_EpisodeName {
+    width: 25%;
+}
+
+
+
+.MassSubtitlesEditor_Episodes_Entry {
     margin: 0px;
     text-align: center;
 }
 
-.MediaRequest_Menu_Episodes_Entry:nth-child(odd) {
+.MassSubtitlesEditor_Episodes_Entry:nth-child(odd) {
     background-color: var(--global-div-tr);
 }
 
-.MediaRequest_Menu_Episodes_Entry>* {
+.MassSubtitlesEditor_Episodes_Entry>* {
     padding: 5px 0px;
 }
 
+.MassSubtitlesEditor_Episodes_Entry_Options>select {
+    border: 1px solid var(--global-border-color);
+    border-radius: 8px;
+    padding: 3px 8px;
 
-.MediaRequest_Menu_Controls {
+    width: calc(100% - 10px);
+
+    cursor: pointer;
+}
+
+
+
+
+
+.MassSubtitlesEditor_Controls {
     display: flex;
     justify-content: space-between;
 }
 
-.MediaRequest_Menu_Controls button {
+.MassSubtitlesEditor_Controls button {
     background-color: red;
     border: 1px solid var(--global-border-color);
     border-radius: 12px;
@@ -104,34 +129,11 @@
     cursor: pointer;
 }
 
-.MediaRequest_Menu_Controls>div {
+.MassSubtitlesEditor_Controls>div {
     display: flex;
     gap: 5px;
 }
 
-.MediaRequest_Menu_Controls>div>button {
+.MassSubtitlesEditor_Controls>div>button {
     background: var(--global-div);
-}
-
-
-.MediaRequest_Menu_DownloadMetadata {
-    background: var(--global-div);
-    border: 1px solid var(--global-border-color);
-    border-radius: 8px;
-
-    padding: 10px;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
-.MediaRequest_Menu_DownloadMetadata>button {
-    background: var(--global-div);
-    border: 1px solid var(--global-border-color);
-    border-radius: 12px;
-    padding: 5px 8px;
-
-    cursor: pointer;
 }

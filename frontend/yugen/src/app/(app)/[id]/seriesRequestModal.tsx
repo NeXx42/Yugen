@@ -1,8 +1,6 @@
 "use client"
 
-
 import * as api from "@lib/api.local"
-import { useToast } from "@context/toast";
 
 import { MediaInfo, DownloadRequestInfo, MediaRequest } from "@shared/types";
 import { ReactNode, useEffect, useState } from "react";
@@ -15,12 +13,12 @@ import "./seriesRequestModal.css"
 
 
 export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInfo, onUpdate: () => void, onClose: () => void }) {
-    const { showModal, closeModal } = useModals();
-
+    const [loading, setLoading] = useState(false);
     const [requestInfo, setRequestInfo] = useState<DownloadRequestInfo | null>(null)
     const [mediaRequest, setMediaRequest] = useState<MediaRequest | null>(null);
 
     useEffect(() => {
+        setLoading(true);
         api.library_GetSeriesRequest(mediaInfo.id).then(r => {
             setRequestInfo(r);
             setMediaRequest({
@@ -33,7 +31,7 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
 
                 monitorSeason: r.monitored
             });
-        });
+        }).finally(() => setLoading(false));
     }, [mediaInfo])
 
     const requestMedia = async (): Promise<any> => {
@@ -43,16 +41,35 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
             mediaRequest?.rootPath == null)
             throw new Error("Invalid argument");
 
+        setLoading(true);
         await api.library_RequestSeries(mediaInfo.id, mediaRequest!);
         await resync();
+        setLoading(false);
 
         onUpdate();
     }
 
     const resync = async (): Promise<void> => {
+        setLoading(true);
         await api.library_SyncMediaDownloads(mediaInfo.id, true);
         await api.library_GetSeriesRequest(mediaInfo.id).then(setRequestInfo);
+        setLoading(false);
     }
+
+    const research = async (): Promise<void> => {
+        setLoading(true);
+        await api.library_ResearchMonitored(mediaInfo.id);
+        setLoading(false);
+    }
+
+    const deleteMedia = async (): Promise<void> => {
+        setLoading(true);
+        await api.library_DeleteMedia(mediaInfo.id);
+        setLoading(false);
+    }
+
+
+
 
     const updateSelectedQuality = (val: number) => {
         if (val == Number.NaN)
@@ -153,7 +170,7 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
                     </select>
                 </div>
 
-                <button onClick={() => showModal(<LoadingModal loadingCall={() => resync()} closeRequest={closeModal} />)}>Refresh</button>
+                <button onClick={resync}>Refresh</button>
             </div>
 
             {
@@ -170,18 +187,18 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
                         </div>
 
                         <div className="MediaRequest_Menu_Controls">
-                            <button onClick={() => showModal(<LoadingModal loadingCall={() => api.library_DeleteMedia(mediaInfo.id)} closeRequest={closeModal} />)}>Delete</button>
+                            <button onClick={deleteMedia}>Delete</button>
 
                             <div>
-                                <button onClick={() => showModal(<LoadingModal loadingCall={() => api.library_ResearchMonitored(mediaInfo.id)} closeRequest={closeModal} />)}>Search Monitored</button>
-                                <button onClick={() => showModal(<LoadingModal loadingCall={() => requestMedia()} closeRequest={closeModal} />)}>Update Monitor Status</button>
+                                <button onClick={research}>Search Monitored</button>
+                                <button onClick={requestMedia}>Update Monitor Status</button>
                             </div>
                         </div>
                     </>
                 ) : (
                     <div className="MediaRequest_Menu_DownloadMetadata">
                         <p>Unknown series</p>
-                        <button onClick={() => showModal(<LoadingModal loadingCall={() => { toggleSeasonMonitor(true); return requestMedia(); }} closeRequest={closeModal} />)}>Download Provider data</button>
+                        <button onClick={() => { toggleSeasonMonitor(true); return requestMedia(); }}>Download Provider data</button>
                     </div>
                 )
             }
@@ -190,12 +207,14 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
         </>)
     }
 
-    return createPortal(
-        <div className="MediaRequest" onClick={() => onClose()}>
-            <div className="MediaRequest_Menu" onClick={e => e.stopPropagation()}>
-                <h1>{mediaInfo.title}</h1>
-                {requestInfo == null ? (<>Failed to load</>) : (drawMenuContent(requestInfo))}
-            </div>
-        </div >
-        , document.body)
+    return (
+        <div className="MediaRequest_Menu" >
+            <h1>{mediaInfo.title}</h1>
+            {
+                loading ? <>Loading</>
+                    : (
+                        requestInfo == null ? (<>Failed to load</>) : (drawMenuContent(requestInfo))
+                    )
+            }
+        </div>)
 }

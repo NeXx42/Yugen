@@ -1,7 +1,7 @@
 "use client"
 
 import { post, get, getPlain, upload, deleteReq } from "./api.shared";
-import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo, SearchRequest, DownloadRequestInfo, MediaRequest, Playback_Info, MediaInfo } from "@shared/types";
+import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo, SearchRequest, DownloadRequestInfo, MediaRequest, Playback_Info, MediaInfo, MediaSubtitle } from "@shared/types";
 
 export async function auth_Login(username: string, password: string) {
     return (await post<User>("auth/login", { username, password }))!;
@@ -107,9 +107,16 @@ export async function media_UpdateEpisodeTime(mediaId: number, episode: number, 
 export async function media_UploadSubtitle(jellyfinId: string, language: string, file: FormData) {
     await upload(`media/${jellyfinId}/UploadSubtitle?language=${language}`, file);
 }
+export async function media_UploadSubtitles(language: string, file: FormData) {
+    await upload(`media/UploadSubtitles?language=${language}`, file);
+}
 export async function media_DeleteSubtitle(jellyfinId: string, id: number) {
     await deleteReq(`media/${jellyfinId}/${id}/Subtitle`);
 }
+export async function media_Subtitles(jellyfinIds: string[]): Promise<MediaSubtitle[]> {
+    return (await get<MediaSubtitle[]>(`media/Subtitles?jellyfinIds=${jellyfinIds.join("&jellyfinIds=")}`))!
+}
+
 
 export async function notification_Count(): Promise<number> {
     return (await get<number>("Notifications/Count"))!;

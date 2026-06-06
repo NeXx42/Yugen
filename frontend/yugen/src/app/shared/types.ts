@@ -232,3 +232,12 @@ export interface Playback_Info_AudioSource {
     title: string | undefined,
     isDefault: boolean
 }
+
+
+export interface MediaSubtitle {
+    subtitleId: number;
+    jellyfinEpisodeId: string;
+
+    languageCode?: string;
+    title?: string;
+}
