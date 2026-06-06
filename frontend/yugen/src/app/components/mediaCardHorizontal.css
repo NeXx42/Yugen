@@ -15,7 +15,7 @@
 }
 
 .MediaCardHorizontal:hover {
-
+    color: var(--hover-color);
     margin-left: 6px;
 }
 

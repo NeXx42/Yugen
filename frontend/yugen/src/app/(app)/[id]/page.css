@@ -45,11 +45,6 @@
     flex-direction: column;
 }
 
-#ViewPage_EpisodeInfo {
-    margin-bottom: 15px;
-}
-
-
 .ViewPage_Info {
     display: flex;
     gap: 15px;

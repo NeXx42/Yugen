@@ -117,15 +117,15 @@ export interface ConfigSetting {
 export interface UserNotification {
     id: number;
     time: number;
-    eventName: string;
 
-    title: string | undefined;
+    eventName: string;
     reason: string | undefined;
-    icon: string | undefined,
-    bannerIcon: string | undefined,
-    url: string | undefined;
+    source: string | undefined;
+
+    media?: MediaCardInfo;
 
     hasBeenSeen: boolean;
+    url: string | undefined;
 }
 
 

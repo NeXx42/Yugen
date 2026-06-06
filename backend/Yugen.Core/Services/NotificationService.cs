@@ -97,10 +97,9 @@ public class NotificationService
 
                 eventName = n.EventName,
                 reason = n.Message,
+                source = n.Source,
 
-                title = media?.Title,
-                icon = media?.cardImg,
-                bannerIcon = media?.banner,
+                media = media,
 
                 hasBeenSeen = n.HasInteracted,
 

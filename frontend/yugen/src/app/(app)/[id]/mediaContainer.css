@@ -12,9 +12,6 @@
     align-items: start;
 }
 
-.MediaContainer_EpisodeInfo {}
-
-
 .MediaContainer_EpisodeInfo {
     display: grid;
     grid-template-columns: auto auto;
@@ -55,4 +52,72 @@
 .MediaContainer_EpisodeInfo_Right {
     display: flex;
     flex-direction: row-reverse;
+}
+
+
+
+.MediaPlayer_Container {
+    position: relative;
+    aspect-ratio: 16/ 9;
+
+    border: 1px solid var(--global-border-color);
+    border-radius: 8px;
+
+    overflow: hidden;
+}
+
+.MediaPlayer_Container video {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    inset: 0px;
+
+    outline: none;
+    border: none;
+}
+
+.MediaPlayer_Controls {
+    border-radius: 0px 0px 8px 8px !important;
+    height: 40px;
+    padding: 0px !important;
+}
+
+.MediaPlayer_Container_Request {
+    position: relative;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    height: 100%;
+}
+
+.MediaPlayer_Container_Request img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    transform: scale(1.5);
+    opacity: .5;
+
+    filter: blur(5px);
+    transition: all .3s;
+
+    cursor: pointer;
+}
+
+.MediaPlayer_Container_Request:hover img {
+    transform: scale(1.52);
+    filter: blur(2px);
+}
+
+.MediaPlayer_Container_Request svg {
+    transform: scale(3);
+    transition: all .3s;
+
+    cursor: pointer;
+}
+
+.MediaPlayer_Container_Request:hover svg {
+    transform: scale(3.3);
 }

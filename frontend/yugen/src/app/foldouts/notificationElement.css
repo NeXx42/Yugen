@@ -1,0 +1,94 @@
+.Notification {
+    position: relative;
+
+    cursor: pointer;
+    transition: all .25s;
+}
+
+
+.Notification>div {
+    height: 100%;
+
+    background-color: var(--global-div);
+    outline: 1px solid var(--schedule-card-base-outline-color, var(--global-border-color));
+    border-radius: 8px;
+
+    display: flex;
+    overflow: hidden;
+
+    transition: all .25s;
+}
+
+
+.Notification:hover {
+    padding-left: 5px;
+    color: var(--hover-color);
+}
+
+.Notification:hover>div {
+    outline-color: var(--hover-color);
+}
+
+.Notification:hover .Notification_BG>img {
+    filter: grayscale(25%);
+}
+
+
+
+.Notification.Seen {
+    opacity: .5;
+}
+
+.Notification img {
+    height: 100%;
+    aspect-ratio: 4.25 / 6;
+}
+
+
+.Notification_BG {
+    position: absolute;
+    height: 100%;
+    width: 80%;
+
+    right: 0px;
+
+    filter: blur(1px);
+}
+
+.Notification_BG img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    filter: grayscale(100%);
+}
+
+.Notification_BG div {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(-70deg, transparent -200%, var(--global-div) 80%);
+}
+
+
+.Notification_Info {
+    width: 100%;
+    z-index: 1;
+    margin: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.Notification_Info div {
+    display: flex;
+    justify-content: space-between;
+}
+
+.Notification_Info div * {
+    background: var(--global-div-tr);
+    border: 1px solid var(--global-border-color);
+    border-radius: 8px;
+    padding: 5px;
+
+    font-size: 12px;
+}

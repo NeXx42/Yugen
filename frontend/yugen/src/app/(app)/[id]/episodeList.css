@@ -1,20 +1,26 @@
 .EpisodeList {
     position: relative;
-
     padding: 5px !important;
+
+    height: 100%;
+    min-height: 0px;
+
+    align-self: flex-start;
+}
+
+
+
+
+.EpisodeList_Container {
+    position: relative;
+    height: 100%;
+
     display: grid;
-    grid-template-rows: 40px auto;
-
-    min-height: 100%;
-    max-height: 0px;
-
-    overflow-y: scroll;
-    overflow-x: hidden;
+    grid-template-rows: min-content 1fr min-content;
 }
 
 
 .EpisodeList_Titlebar {
-    position: relative;
     display: flex;
 
     align-items: center;
@@ -28,24 +34,27 @@
     font-size: 16px;
 }
 
+.EpisodeList_EntriesContainer {
+    height: 100%;
+    overflow-y: scroll;
+}
+
 
 .EpisodeList_Entries {
     padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
 
-.Episode_Skeleton,
-.Episode {
-    height: 35px;
-
-    display: grid;
-    grid-template-columns: auto max-content;
-}
-
-.Episode button {
+    max-height: 0px;
     height: 100%;
+}
+
+.EpisodeList_Entries>* {
+    height: 35px;
+    width: 100%;
+
+    margin-bottom: 8px;
+}
+
+.Episode {
     position: relative;
     overflow: hidden;
 
@@ -55,12 +64,14 @@
     border-radius: 10px;
     padding: 5px;
 
-    display: flex;
     text-align: left;
+
+    display: grid;
+    grid-template-columns: 1fr auto;
     align-items: center;
 }
 
-.Episode button a {
+.Episode a {
     display: inline;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -68,7 +79,7 @@
     white-space: nowrap;
 }
 
-.Episode button.Selected {
+.Episode.Selected {
     background-color: #685bb2;
 }
 
@@ -79,26 +90,37 @@
     height: 100%;
 }
 
-.Episode button.Selected .Episode_WatchPercentage {
+.Episode.Selected .Episode_WatchPercentage {
     display: none;
 }
 
 
 
-.EpisodeList_Upcoming {
-    position: absolute;
 
+.EpisodeList_Upcoming {
     bottom: 0px;
     height: 40px;
     width: 100%;
 
+    background-color: var(--global-div-tr);
     border-top: 1px solid var(--global-border-color);
     margin: 0px;
 
     display: flex;
     align-items: center;
     justify-content: center;
+
+    gap: 4px;
 }
+
+.EpisodeList_Upcoming>span {
+    color: var(--global-text-muted);
+    font-size: 14px;
+}
+
+
+
+
 
 .Episode_Downloaded {
     width: max-content;

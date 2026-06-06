@@ -486,6 +486,7 @@ public class CatalogService
                             MediaEpisode = media.EpisodeCount + 1,
 
                             UserId = usr,
+                            Source = "System",
                         });
                 }
             }

@@ -22,7 +22,7 @@ const daysOfTheWeek = [
     "Saturday"
 ];
 
-const monthsOfThYear = [
+const monthsOfTheYear = [
     "January",
     "February",
     "March",
@@ -62,7 +62,11 @@ export default function (props: Props) {
             const hours = Math.floor(ms / (1000 * 60 * 60)) % 24;
             const days = Math.floor(ms / (1000 * 60 * 60 * 24));
 
-            setTimeUntil(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+            let lbl = `${minutes}m ${seconds}s`
+            if (hours > 0) lbl = `${hours}h ${minutes}m`;
+            if (days > 0) lbl = `${days}d ${hours}h`
+
+            setTimeUntil(lbl);
         };
 
         update();
@@ -124,26 +128,23 @@ export default function (props: Props) {
         const watchPercentage = (ep?.watchPercentage ?? 0) * 100;
 
         return (
-            <div className="Episode" key={ep.number} >
-                <button className={selectedEpisodeIndex == pos ? "Selected" : ""} onClick={() => onSelectEpisode(pos)}>
-                    <div style={{ width: `${watchPercentage}%` }} className="Episode_WatchPercentage" />
-                    <a>{`${ep.number}. ${ep.title}`}</a>
-                </button>
+            <button key={ep.number} className={selectedEpisodeIndex == pos ? "Episode Selected" : "Episode"} onClick={() => onSelectEpisode(pos)}>
+                <div style={{ width: `${watchPercentage}%` }} className="Episode_WatchPercentage" />
+                <a>{`${ep.number}. ${ep.title}`}</a>
                 {
                     ep.jellyfinId != undefined && (
-                        <button className="Episode_Downloaded">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <path d="M14 2v6h6" />
-                                <path d="M9 15l2 2 4-4" />
-                            </svg>
-                        </button>)
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <path d="M14 2v6h6" />
+                            <path d="M9 15l2 2 4-4" />
+                        </svg>)
                 }
-            </div>
+            </button>
         )
     }
 
-    const date = props.mediaInfo.startDate ? new Date(props.mediaInfo.startDate * 1000) : undefined;
+    const upcomingDateUnixTime = props.mediaInfo.upcomingEpisode ?? props.mediaInfo.startDate;
+    const upcomingDate = upcomingDateUnixTime ? new Date(upcomingDateUnixTime * 1000) : undefined;
 
     return (
         <div className="EpisodeList ViewPageContainer">
@@ -151,74 +152,83 @@ export default function (props: Props) {
                 props.mediaInfo.status === "NOT_YET_RELEASED" ? (
                     <div className="EpisodeList_Unaired">
                         {
-                            date != null ?
+                            upcomingDate != null ?
                                 (
                                     <>
                                         <span>PREMIERE</span>
-                                        <span>{monthsOfThYear[date?.getMonth()]}</span>
-                                        <h1>{date?.getDay()}</h1>
-                                        <span>{daysOfTheWeek[date?.getDate()]} · {date?.getFullYear()}</span>
+                                        <span>{monthsOfTheYear[upcomingDate?.getMonth()]}</span>
+                                        <h1>{upcomingDate?.getDay()}</h1>
+                                        <span>{daysOfTheWeek[upcomingDate?.getDay()]} · {upcomingDate?.getFullYear()}</span>
                                     </>
                                 ) : (
                                     <>Unknown</>
                                 )
                         }
                     </div>
-                ) : (<>
-                    <div className="EpisodeList_Titlebar">
-                        <h2>Episodes</h2>
-                        <div>
-                            <button onClick={() => fetchEpisodes(false, false)}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                    <path fillRule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z" />
-                                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
-                                </svg>
-                            </button>
-                            <button onClick={() => setRefreshMenuOpen(true)}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                    <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3" />
-                                </svg>
-                            </button>
+                ) : (
+                    <div className="EpisodeList_Container">
+                        <div className="EpisodeList_Titlebar">
+                            <h2>Episodes</h2>
+                            <div>
+                                <button onClick={() => fetchEpisodes(false, false)}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path fillRule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z" />
+                                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
+                                    </svg>
+                                </button>
+                                <button onClick={() => setRefreshMenuOpen(true)}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3" />
+                                    </svg>
+                                </button>
 
-                            {
-                                refreshMenuOpen && (<div className="EpisodeList_Titlebar_RefreshMenu">
-                                    <button onClick={() => fetchEpisodes(true, false)}>Recache</button>
-                                    <button onClick={() => fetchEpisodes(true, true)}>Clear And Refetch</button>
-                                </div>)
-                            }
+                                {
+                                    refreshMenuOpen && (<div className="EpisodeList_Titlebar_RefreshMenu">
+                                        <button onClick={() => fetchEpisodes(true, false)}>Recache</button>
+                                        <button onClick={() => fetchEpisodes(true, true)}>Clear And Refetch</button>
+                                    </div>)
+                                }
+                            </div>
                         </div>
-                    </div>
-                    <div className="EpisodeList_Entries">
+                        <div className="EpisodeList_EntriesContainer">
+                            <div className="EpisodeList_Entries">
+                                {
+                                    loadingEpisodes ? (
+                                        <>
+                                            <div className="Episode_Skeleton" />
+                                            <div className="Episode_Skeleton" />
+                                            <div className="Episode_Skeleton" />
+                                            <div className="Episode_Skeleton" />
+                                            <div className="Episode_Skeleton" />
+                                            <div className="Episode_Skeleton" />
+                                            <div className="Episode_Skeleton" />
+                                            <div className="Episode_Skeleton" />
+                                            <div className="Episode_Skeleton" />
+                                            <div className="Episode_Skeleton" />
+                                            <div className="Episode_Skeleton" />
+                                            <div className="Episode_Skeleton" />
+                                            <div className="Episode_Skeleton" />
+                                        </>
+                                    ) : (
+                                        episodes?.map(drawEpisode)
+                                    )
+                                }
+                            </div>
+                        </div>
                         {
-                            loadingEpisodes ? (
-                                <>
-                                    <div className="Episode_Skeleton" />
-                                    <div className="Episode_Skeleton" />
-                                    <div className="Episode_Skeleton" />
-                                    <div className="Episode_Skeleton" />
-                                    <div className="Episode_Skeleton" />
-                                    <div className="Episode_Skeleton" />
-                                    <div className="Episode_Skeleton" />
-                                    <div className="Episode_Skeleton" />
-                                    <div className="Episode_Skeleton" />
-                                    <div className="Episode_Skeleton" />
-                                    <div className="Episode_Skeleton" />
-                                    <div className="Episode_Skeleton" />
-                                    <div className="Episode_Skeleton" />
-                                </>
-                            ) : (
-                                episodes?.map(drawEpisode)
+                            props.mediaInfo.upcomingEpisode != null && (
+                                <div className="EpisodeList_Upcoming">
+                                    {timeUntil}
+                                    <span>·</span>
+                                    <span>{daysOfTheWeek[upcomingDate!.getDay()].slice(0, 3)},</span>
+                                    <span>{monthsOfTheYear[upcomingDate!.getMonth()].slice(0, 3)}</span>
+                                    <span>{upcomingDate!.getDay()},</span>
+                                    <span>{upcomingDate!.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</span>
+                                </div>
                             )
                         }
                     </div>
-                    {
-                        props.mediaInfo.upcomingEpisode != null && (
-                            <div className="EpisodeList_Upcoming">
-                                {timeUntil}
-                            </div>
-                        )
-                    }
-                </>)}
+                )}
         </div>
     )
 }

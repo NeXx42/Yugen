@@ -1,8 +1,4 @@
-"use client"
-
 import { MediaCardInfo } from "@shared/types";
-import { useRouter } from "next/navigation";
-
 import "./mediaCardHorizontal.css"
 
 interface Props {
@@ -12,12 +8,6 @@ interface Props {
 }
 
 export default function (props: Props) {
-    const navigate = useRouter();
-
-    const navigateToPage = () => {
-        navigate.push(`${props.card.aniListId}`)
-    };
-
     const getTimeTo = () => {
         const diff = (props.card.nextReleaseDate! * 1000) - Date.now();
 
@@ -32,7 +22,7 @@ export default function (props: Props) {
         return `${minutes}m`
     }
 
-    return (<a key={props.card.aniListId} className={`MediaCardHorizontal ${props.selected ? "Selected" : ""}`} href={`${props.card.aniListId}`}>
+    return (<a key={props.card.aniListId} className={`MediaCardHorizontal ${props.selected ? "Selected" : ""}`} href={`${props.card.aniListId}`} style={{ "--hover-color": props.card.colour } as React.CSSProperties}>
         <div className="MediaCardHorizontal_Content">
             {props.card.cardImg && <img className="MediaCardHorizontal_Icon" src={props.card.cardImg} />}
             {props.card.banner &&
