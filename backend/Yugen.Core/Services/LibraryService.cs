@@ -139,16 +139,37 @@ public class LibraryService
     {
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(ResyncLibrary));
 
-        List<int>? ids = await _library.GetFactory().GetDownloadedMedia();
+        List<int> tvdbIds = new List<int>();
+        List<int> tmdbIds = new List<int>();
 
-        if (ids == null)
+        foreach (ILibraryProvider provider in _library.GetFactories())
+        {
+            (string linkId, List<int> ids)? res = await provider.GetDownloadedMedia();
+
+            if (res.HasValue)
+            {
+                switch (res.Value.linkId)
+                {
+                    case nameof(Model_Link.tvdb_id):
+                        tvdbIds.AddRange(res.Value.ids);
+                        break;
+
+                    case nameof(Model_Link.themoviedb_id):
+                        tmdbIds.AddRange(res.Value.ids);
+                        break;
+                }
+
+            }
+        }
+
+        if (tvdbIds.Count + tmdbIds.Count == 0)
             return null;
 
         _db.downloadedMedia.RemoveRange(_db.downloadedMedia.Include(e => e.downloadedEpisodes));
         await _db.SaveChangesAsync();
 
         int importCount = 0;
-        List<int?> links = await _db.links.Where(l => ids.Contains(l.tvdb_id ?? -1)).Select(l => l.anilist_id).ToListAsync();
+        int?[] links = await _db.links.Where(l => tmdbIds.Contains(l.themoviedb_id ?? -1) || tvdbIds.Contains(l.tvdb_id ?? -1)).Select(l => l.anilist_id).ToArrayAsync();
 
         foreach (int? link in links)
         {

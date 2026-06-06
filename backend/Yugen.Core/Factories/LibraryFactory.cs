@@ -17,7 +17,7 @@ public class LibraryFactory
         _radarr = radarr;
     }
 
-    public ILibraryProvider GetFactory() => _sonarr;
+    public ILibraryProvider[] GetFactories() => [_sonarr, _radarr];
 
     public ILibraryProvider GetFactory(Model_Link link) => GetFactory(link.type);
     public ILibraryProvider GetFactory(Model_Media media) => GetFactory(media.MediaFormat);

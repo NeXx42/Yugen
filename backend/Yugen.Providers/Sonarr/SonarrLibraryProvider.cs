@@ -72,14 +72,17 @@ public class SonarrLibraryProvider : ILibraryProvider
         };
     }
 
-    public async Task<List<int>?> GetDownloadedMedia()
+    public async Task<(string, List<int>)?> GetDownloadedMedia()
     {
         SonarrLibrary_Response_Series[]? series = await _http.SendRequest<SonarrLibrary_Response_Series[]>("series", HttpMethod.Get);
 
         if (series == null)
             return null;
 
-        return series.Where(s => s.tvdbId > 0).Select(s => s.tvdbId).Distinct().ToList();
+        return (
+            nameof(Model_Link.tvdb_id),
+            series.Where(s => s.tvdbId > 0).Select(s => s.tvdbId).Distinct().ToList()
+        );
     }
 
     public async Task<DownloadRequestInfo> GetRequestInfo(Model_Link link)

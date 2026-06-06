@@ -3,6 +3,7 @@ namespace Yugen.Providers.Radarr;
 public class RadarrLibrary_Response_Movie
 {
     public required int id { get; set; }
+    public int? tmdbId { get; set; }
     public MoveFile? movieFile { get; set; }
 
     public string? rootFolderPath { get; set; }

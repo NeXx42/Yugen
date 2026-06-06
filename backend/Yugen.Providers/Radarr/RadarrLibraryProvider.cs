@@ -66,9 +66,17 @@ public class RadarrLibraryProvider : ILibraryProvider
         };
     }
 
-    public Task<List<int>?> GetDownloadedMedia()
+    public async Task<(string, List<int>)?> GetDownloadedMedia()
     {
-        throw new NotImplementedException();
+        RadarrLibrary_Response_Movie[]? res = await _http.SendRequest<RadarrLibrary_Response_Movie[]>("movie", HttpMethod.Get);
+
+        if (res == null)
+            return null;
+
+        return (
+            nameof(Model_Link.themoviedb_id),
+            res.Where(s => s.tmdbId.HasValue && s.movieFile != null).Select(s => s.tmdbId!.Value).Distinct().ToList()
+        );
     }
 
     public async Task<DownloadRequestInfo> GetRequestInfo(Model_Link link)
