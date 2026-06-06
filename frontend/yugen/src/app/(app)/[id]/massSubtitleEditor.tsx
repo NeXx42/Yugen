@@ -24,25 +24,26 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
         setLoading(false);
     }
 
+    const [selectedLanguage, setSelectedLanguage] = useState<string | undefined>(undefined);
     const [inspectingFiles, setInspectingFiles] = useState<File[] | undefined>(undefined);
     const [selectedSubFile, setSelectedSubFile] = useState<(number | undefined)[] | undefined>(undefined);
 
     const uploadSelectedSubs = () => {
-        if (inspectingFiles === undefined || selectedSubFile === undefined)
+        if (inspectingFiles === undefined || selectedSubFile === undefined || selectedLanguage === undefined)
             return;
 
         setLoading(true);
         const formData = new FormData();
 
         for (let i = 0; i < selectedSubFile.length; i++) {
-            if ((selectedSubFile[i] ?? -1) == -1)
+            if ((selectedSubFile[i] ?? -1) == -1 && episodes?.[i].jellyfinId)
                 continue;
 
             formData.append("files", inspectingFiles[selectedSubFile[i]!])
             formData.append("jellyfinIds", episodes![i].jellyfinId!)
         }
 
-        api.media_UploadSubtitles("jpn", formData).finally(() => setLoading(false));
+        api.media_UploadSubtitles(selectedLanguage, formData).finally(() => setLoading(false));
     }
 
     const drawUpload = () => {
@@ -67,7 +68,7 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
         return (
             <>
                 <div className="MassSubtitlesEditor_Settings">
-                    <select name="language">
+                    <select name="language" value={selectedLanguage} onChange={e => setSelectedLanguage(e.target.value)}>
                         <option value="eng">English</option>
                         <option value="spa">Spanish</option>
                         <option value="fra">French</option>

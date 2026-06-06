@@ -28,7 +28,7 @@ export default async function ({ params }: { params: { id: number } }) {
     const { id } = await params;
     const media: MediaInfo = await getMedia(id);
 
-    const seasons = media.connectedMedia?.sort((a, b) => (a.season ?? 0) - (b.season ?? 0)).filter(c => c.card != null);
+    const seasons = media.connectedMedia?.sort((a, b) => ((a?.card.year ?? a.season) ?? 0) - ((b?.card.year ?? b.season) ?? 0)).filter(c => c.card != null);
 
     const getDate = (unixSeconds: number | null): string => {
         if (unixSeconds == null)
@@ -95,12 +95,12 @@ export default async function ({ params }: { params: { id: number } }) {
                 <div className="ViewPage_Right">
                     {(media.connectedMedia?.length ?? 0) > 1 && (
                         <div className="ViewPage_Seasons ViewPageContainer">
-                            <h2>// Related</h2>
-                            {seasons.filter(m => m.card).map(m => <MediaCardHorizontal key={m.card.aniListId} card={m.card} selected={m.card.aniListId === media.id} />)}
+                            <h2>Related</h2>
+                            {seasons.filter(m => m.card).map(m => <MediaCardHorizontal key={m.card.aniListId} card={m.card} selected={m.card.aniListId === media.id} season={m.season} />)}
                         </div>
                     )}
 
-                    {media.recommended?.length > 0 && <CardColumn content={media.recommended} header="// Recommended" limit={5} />}
+                    {media.recommended?.length > 0 && <CardColumn content={media.recommended} header="Recommended" limit={5} />}
                 </div>
             </div>
 
