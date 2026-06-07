@@ -14,7 +14,6 @@ import { Video } from '@videojs/react/video';
 import { HlsVideo } from "@videojs/react/media/hls-video";
 
 import VolumePlayerControl from "@/app/components/playerControls/volumePlayerControl";
-import SubtitleSelectorPlayerControl from "@/app/components/playerControls/subtitleSelectorPlayerControl";
 import SubtitlesPlayerControl from "@/app/components/playerControls/subtitlesPlayerControl";
 import WatchtimeSyncerPlayerControl from "@/app/components/playerControls/watchtimeSyncerPlayerControl";
 import SegmentSkipperPlayerControl from "@/app/components/playerControls/segmentSkipperPlayerControl";
@@ -45,6 +44,7 @@ export default function ({ mediaInfo, episodeInfo, playbackInfo }: { mediaInfo: 
         return source.audio.find(a => a.isDefault)?.id ?? null;
     });
 
+    const [viewSubLogs, setViewSubLogs] = useState(false);
     const [selectedSub, setSelectedSub] = useState<number>(-1);
     const [subtitleOffset, setSubtitleOffset] = useState<number>(0);
 
@@ -64,16 +64,22 @@ export default function ({ mediaInfo, episodeInfo, playbackInfo }: { mediaInfo: 
     }, [videoRef.current, selectedSub])
 
     const drawSubMenu = () => {
+        const middleMan = (callback: () => void) => {
+            callback();
+            setActiveSubMenu("None");
+        }
+
         switch (activeSubMenu) {
             case "Subtitles":
                 return (<div className="SubMenu_Subs">
                     <div className="SubMenu_Subs_OffsetContainer">
-                        <p>{subtitleOffset}s</p>
+                        <input type="number" value={subtitleOffset} onChange={e => setSubtitleOffset(Number.parseInt(e.target.value))} />
                         <input type="range" min={-20} max={20} value={subtitleOffset} onChange={e => setSubtitleOffset(Number.parseFloat(e.target.value))} step={0.01} />
+                        <button onClick={() => setViewSubLogs(true)}>Logs</button>
                     </div>
                     <div className="SubMenu_Subs_Subs SubMenu_Generic_Container">
                         <div onClick={() => setSelectedSub(-1)} className={selectedSub === -1 ? "Selected" : ""}>Off</div>
-                        {source.subs.map((t, i) => <div key={i} onClick={() => setSelectedSub(i)} className={selectedSub === i ? "Selected" : ""}>{t.title}</div>)}
+                        {source.subs.map((t, i) => <div key={i} onClick={() => middleMan(() => setSelectedSub(i))} className={selectedSub === i ? "Selected" : ""}>{t.title}</div>)}
                     </div>
                 </div>)
 
@@ -103,8 +109,8 @@ export default function ({ mediaInfo, episodeInfo, playbackInfo }: { mediaInfo: 
 
                                 <button onClick={() => setSettingsMenu("None")}>Back</button>
                                 <div className="SubMenu_Options SubMenu_Generic_Container">
-                                    <button className={!hlsPlayback ? "Selected" : ""} onClick={() => setHlsPlayback(false)}>Direct Play</button>
-                                    <button className={hlsPlayback ? "Selected" : ""} onClick={() => setHlsPlayback(true)}>HLS</button>
+                                    <button className={!hlsPlayback ? "Selected" : ""} onClick={() => middleMan(() => setHlsPlayback(false))}>Direct Play</button>
+                                    <button className={hlsPlayback ? "Selected" : ""} onClick={() => middleMan(() => setHlsPlayback(true))}>HLS</button>
                                 </div>
                             </>
                         )
@@ -116,7 +122,7 @@ export default function ({ mediaInfo, episodeInfo, playbackInfo }: { mediaInfo: 
                 return (
                     <div className="SubMenu_Audio SubMenu_Generic_Container">
                         {
-                            source.audio.map(a => <div key={a.id} onClick={() => setSelectedAudio(a.id)} className={a.id === selectedAudio ? "Selected" : ""}>{a.title}</div>)
+                            source.audio.map(a => <div key={a.id} onClick={() => middleMan(() => setSelectedAudio(a.id))} className={a.id === selectedAudio ? "Selected" : ""}>{a.title}</div>)
                         }
                     </div>
                 )
@@ -207,7 +213,7 @@ export default function ({ mediaInfo, episodeInfo, playbackInfo }: { mediaInfo: 
                 <Gesture action="toggleFullscreen" type="doubletap" />
 
                 <WatchtimeSyncerPlayerControl syncFunc={syncPlaybackTime} />
-                <SubtitlesPlayerControl url={source.subs[selectedSub]?.uri} offset={subtitleOffset} />
+                <SubtitlesPlayerControl url={source.subs[selectedSub]?.uri} offset={subtitleOffset} viewLogs={viewSubLogs} setViewLogs={setViewSubLogs} setOffset={setSubtitleOffset} />
 
                 <SegmentSkipperPlayerControl video={videoRef} info={playbackInfo} />
 

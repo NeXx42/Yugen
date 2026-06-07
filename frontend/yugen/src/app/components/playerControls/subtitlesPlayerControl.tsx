@@ -1,7 +1,7 @@
 "use client"
 
 import { selectTime, usePlayer } from "@videojs/react";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import "./subtitlesPlayerControl.css"
 
@@ -13,7 +13,11 @@ interface Cue {
 
 interface Props {
     url: string | undefined,
-    offset: number
+    offset: number,
+    setOffset: Dispatch<SetStateAction<number>>,
+
+    viewLogs: boolean,
+    setViewLogs: Dispatch<SetStateAction<boolean>>
 }
 
 export default function (props: Props) {
@@ -44,6 +48,36 @@ export default function (props: Props) {
         const blocks = vtt.replace(/\r/g, "").split(/\n\s*\n/);
         const cues: Cue[] = [];
 
+        function vttToHtml(text: string): string {
+            return text
+                .replace(/<i>([\s\S]*?)<\/i>/g, "<em>$1</em>")
+                .replace(/<b>([\s\S]*?)<\/b>/g, "<strong>$1</strong>")
+                .replace(/<u>([\s\S]*?)<\/u>/g, "<u>$1</u>")
+                .replace(/<c[^>]*>([\s\S]*?)<\/c>/g, "$1")
+                .replace(/<v[^>]*>([\s\S]*?)<\/v>/g, "$1")
+                .replace(/<ruby>([\s\S]*?)<\/ruby>/g, "$1")
+                .replace(/<rt>[\s\S]*?<\/rt>/g, "")
+                .replace(/<\d{2}:\d{2}[^>]*>/g, "")
+                .replace(/&amp;/g, "&")
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/&nbsp;/g, " ")
+                .trim();
+        }
+
+        function isValidSubtitleText(text: string) {
+            if (text === "")
+                return false;
+
+            const cleaned = text.replace(/\{[^}]*\}/g, "").trim();
+
+            if (!cleaned) return false;
+            if (/^\{.*\}$/.test(text)) return false;
+            if (/\\(kf|bord|shad|t\(|an|pos|move)/i.test(text)) return false;
+
+            return true;
+        }
+
         for (const block of blocks) {
             const lines = block.trim().split("\n");
 
@@ -56,7 +90,7 @@ export default function (props: Props) {
 
             const timingLine = lines[timingIndex];
             const [startRaw, endRaw] = timingLine.split("-->").map(s => s.trim().split(" ")[0]);
-            const text = lines.slice(timingIndex + 1).join("\n");
+            const text = vttToHtml(lines.slice(timingIndex + 1).join("\n"));
 
             if (!isValidSubtitleText(text))
                 continue;
@@ -68,22 +102,7 @@ export default function (props: Props) {
             });
         }
 
-        SetCues(cues);
-    }
-
-    function isValidSubtitleText(text: string) {
-        const cleaned = text.replace(/\{[^}]*\}/g, "").trim();
-
-        // reject empty or pure ASS/automation garbage
-        if (!cleaned) return false;
-
-        // reject lines that are only tags or keyframe instructions
-        if (/^\{.*\}$/.test(text)) return false;
-
-        // reject obvious ASS automation fragments
-        if (/\\(kf|bord|shad|t\(|an|pos|move)/i.test(text)) return false;
-
-        return true;
+        SetCues(cues.sort((a, b) => a.start - b.start));
     }
 
     function WithinCue(time: number, pos: number): boolean {
@@ -104,7 +123,7 @@ export default function (props: Props) {
             credentials: "include",
         }).then((r) => r.text().then(parseVtt));
 
-    }, [props])
+    }, [props.url])
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -133,14 +152,26 @@ export default function (props: Props) {
         }, 10);
 
         return () => clearInterval(interval);
-    }, [cues, currentCue, player]);
+    }, [cues, player]);
 
     if (cues === undefined)
         return <></>;
 
+    if (props.viewLogs) {
+        const alignOffset = (cue: Cue) => {
+            props.setOffset(cue.start - (player?.currentTime ?? 0));
+        }
+
+        return <div className="VideoPlayer_SubtitlesContainer_Logs" onClick={e => { e.stopPropagation(); props.setViewLogs(false); }}>
+            {
+                cues.map((c, i) => <div className={lastCue === i ? "Selected" : ""} key={i} dangerouslySetInnerHTML={{ __html: c.text ?? "" }} onClick={e => { e.stopPropagation(); alignOffset(c); }} />)
+            }
+        </div>
+    }
+
     return (
         <div className="VideoPlayer_SubtitlesContainer">
-            <div>{currentCue?.text}</div>
+            <div dangerouslySetInnerHTML={{ __html: currentCue?.text ?? "" }}></div>
         </div>
     )
 }
