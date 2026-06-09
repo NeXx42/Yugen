@@ -198,7 +198,7 @@ public class LibraryService
         if (usr != null)
             history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.User.Id && w.MediaId == aniListId);
 
-        return EpisodeInfo.Map(null, media.downloadedEpisodes.ElementAt(0), history?.WatchedEpisodes.FirstOrDefault());
+        return EpisodeInfo.Map((null, media.downloadedEpisodes.ElementAt(0), history?.WatchedEpisodes.FirstOrDefault()));
     }
 
     public async Task<EpisodeInfo[]> GetMediaEpisodesForUser(UserSession? usr, int aniListId, bool refetch, bool clearOld)
@@ -216,30 +216,38 @@ public class LibraryService
                 await RecheckDownloads(usr, aniListId, true);
         }
 
+        List<Model_MediaEpisode> episodeMetadata = await _db.mediaEpisodes.Where(e => e.MediaId == aniListId).OrderBy(e => e.EpisodeNumber).ToListAsync();
+        List<Model_DownloadedEpisode> downloadMetadata = await _db.downloadedEpisodes.Where(e => e.MediaId == aniListId).OrderBy(e => e.EpisodeNumber).ToListAsync();
+
+        Dictionary<int, (Model_MediaEpisode? metaData, Model_DownloadedEpisode? downloadData, Model_WatchedEpisode? watchData)>
+            episodes = episodeMetadata.ToDictionary(e => e.EpisodeNumber, e => (metaData: e, downloadData: (Model_DownloadedEpisode?)null, watchData: (Model_WatchedEpisode?)null))!;
+
+        foreach (Model_DownloadedEpisode download in downloadMetadata)
+        {
+            if (episodes.TryGetValue(download.EpisodeNumber, out var existing))
+            {
+                episodes[download.EpisodeNumber] = (existing.metaData, download, existing.watchData);
+            }
+            else
+            {
+                episodes.Add(download.EpisodeNumber, (null, download, null));
+            }
+        }
+
         Model_WatchHistory? history = null;
 
         if (usr != null)
+        {
             history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.User.Id && w.MediaId == aniListId); ;
 
-        var results = await (
-            from m in _db.mediaEpisodes
-
-            join de in _db.downloadedEpisodes
-                on new { m.MediaId, m.EpisodeNumber }
-                equals new { de.MediaId, de.EpisodeNumber }
-                into downloads
-            from de in downloads.DefaultIfEmpty()
-
-            where m.MediaId == aniListId
-
-            select new
+            foreach (Model_WatchedEpisode watch in history?.WatchedEpisodes ?? [])
             {
-                Episode = m,
-                DownloadData = de,
+                if (episodes.TryGetValue(watch.EpisodeNumber, out var ep))
+                    episodes[watch.EpisodeNumber] = (ep.metaData, ep.downloadData, watch);
             }
-        ).ToArrayAsync();
+        }
 
-        return results.Select(r => EpisodeInfo.Map(r.Episode, r.DownloadData, history?.WatchedEpisodes?.FirstOrDefault(e => e.EpisodeNumber == r.Episode.EpisodeNumber))).ToArray();
+        return episodes.Values.Select(EpisodeInfo.Map).ToArray();
     }
 
     public async Task<PageResponse<MediaCard>> SearchLibrary(UserSession session, MediaSearchQuery? req, string group)

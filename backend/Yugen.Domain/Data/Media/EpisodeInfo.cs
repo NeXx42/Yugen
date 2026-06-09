@@ -19,12 +19,15 @@ public class EpisodeInfo
     public long? watchDate { get; set; }
     public float? watchPercentage { get; set; }
 
-    public static EpisodeInfo Map(Model_MediaEpisode? episode, Model_DownloadedEpisode? download, Model_WatchedEpisode? watchTime)
+    public static EpisodeInfo Map((Model_MediaEpisode?, Model_DownloadedEpisode?, Model_WatchedEpisode?) res)
     {
+        (Model_MediaEpisode? episode, Model_DownloadedEpisode? download, Model_WatchedEpisode? watchTime) = res;
+        int number = (episode?.EpisodeNumber ?? download?.EpisodeNumber)!.Value;
+
         return new EpisodeInfo()
         {
-            title = episode?.EpisodeTitle ?? "Film",
-            number = (episode?.EpisodeNumber ?? download?.EpisodeNumber!).Value,
+            title = episode?.EpisodeTitle ?? $"Episode {number}",
+            number = number,
             thumbnail = episode?.EpisodeIcon,
 
             isFiller = episode?.IsFiller ?? false,
@@ -37,4 +40,6 @@ public class EpisodeInfo
             watchPercentage = watchTime?.WatchPercentage,
         };
     }
+
+
 }
