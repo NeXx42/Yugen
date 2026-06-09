@@ -3,14 +3,15 @@ FROM node:20-alpine AS frontend-build
 
 WORKDIR /app/frontend
 
-COPY frontend/yugen/*.json ./
-RUN npm install
+COPY frontend/yugen/package.json frontend/yugen/package-lock.json ./
+RUN npm ci
 
 COPY frontend/yugen/public ./public
 COPY frontend/yugen/src ./src
 
 COPY frontend/yugen/*.ts ./
 COPY frontend/yugen/*.mjs ./
+COPY frontend/yugen/tsconfig.json ./
 
 COPY frontend/yugen/.env.docker .env
 
@@ -35,20 +36,16 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y curl gnupg && \
-    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian bookworm stable" \
-    | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
-    apt-get update && apt-get install -y docker-ce-cli docker-compose-plugin && \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# install ONLY what you actually need (optional, keep minimal)
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
+# backend
 COPY --from=backend-build /app/publish ./backend
-COPY --from=frontend-build /app/frontend ./frontend
 
-WORKDIR /app/frontend
-RUN npm install --omit=dev
+# frontend
+COPY --from=frontend-build /app/frontend/.next/standalone ./frontend
+COPY --from=frontend-build /app/frontend/.next/static ./frontend/.next/static
+COPY --from=frontend-build /app/frontend/public ./frontend/public
 
 EXPOSE 3000
 
