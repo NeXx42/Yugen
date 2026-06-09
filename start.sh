@@ -12,18 +12,21 @@ WEB_PID=$!
 shutdown() {
   echo "Stopping services..."
 
-  kill -TERM "$API_PID" 2>/dev/null
-  kill -TERM "$WEB_PID" 2>/dev/null
+  kill -TERM "$API_PID" 2>/dev/null || true
+  kill -TERM "$WEB_PID" 2>/dev/null || true
 
-  wait "$API_PID" 2>/dev/null
-  wait "$WEB_PID" 2>/dev/null
+  wait "$API_PID" 2>/dev/null || true
+  wait "$WEB_PID" 2>/dev/null || true
 
   echo "Shutdown complete"
 }
 
 trap shutdown INT TERM
 
-wait -n "$API_PID" "$WEB_PID"
+while kill -0 "$API_PID" 2>/dev/null && kill -0 "$WEB_PID" 2>/dev/null
+do
+  sleep 1
+done
 
 echo "One service exited, shutting down container..."
 shutdown
