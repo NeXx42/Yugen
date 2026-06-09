@@ -100,7 +100,7 @@
 
     background-image: linear-gradient(to top, #000000ab, #0000004d, #0000);
 
-    transition: all .5s;
+    transition: all .3s ease-in-out;
 }
 
 .VideoPlayer_Controls[data-visible] {
@@ -207,6 +207,13 @@
     background-color: #fdd253;
 }
 
+.VideoPlayer_Controls_TimeSlider_Chapter {
+    position: absolute;
+    height: 100%;
+
+    width: 3px;
+    background-color: #000000;
+}
 
 
 

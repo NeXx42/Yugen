@@ -222,11 +222,8 @@ export default function ({ mediaInfo, episodeInfo, playbackInfo }: { mediaInfo: 
                         <TimeSlider.Root className="VideoPlayer_Controls_TimeSlider">
                             <TimeSlider.Track className="VideoPlayer_Controls_TimeSlider_track">
                                 <TimeSlider.Buffer className="VideoPlayer_Controls_TimeSlider_buffer" />
-
-                                {
-                                    playbackInfo.segments.map((s, i) => <div className="VideoPlayer_Controls_TimeSlider_Segment" style={{ left: `${s.start}%`, width: `${s.duration}%` }} key={i} />)
-                                }
-
+                                {playbackInfo.segments.map((s, i) => <div className="VideoPlayer_Controls_TimeSlider_Segment" style={{ left: `${s.start}%`, width: `${s.duration}%` }} key={i} />)}
+                                {playbackInfo.chapters.map((s, i) => <div className="VideoPlayer_Controls_TimeSlider_Chapter" style={{ left: `${s}%` }} key={i} />)}
                                 <TimeSlider.Fill className="VideoPlayer_Controls_TimeSlider_fill" />
                                 <TimeSlider.Thumb className="VideoPlayer_Controls_TimeSlider_thumb" />
                             </TimeSlider.Track>

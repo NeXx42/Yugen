@@ -33,6 +33,7 @@ public class JellyfinMediaService : IMediaProvider
     public async Task<PlaybackInfo> GetPlaybackInfo(string jellyfinId)
     {
         List<PlaybackInfo.Segment> segments = new List<PlaybackInfo.Segment>();
+        List<double> chapters = new List<double>();
 
         try
         {
@@ -45,11 +46,18 @@ public class JellyfinMediaService : IMediaProvider
             long? endingEnd = null;
 
             var item = itemChapters?.items?.FirstOrDefault();
+            double runTimeTicks = item?.runTimeTicks ?? 1;
 
             if (item?.chapters != null)
             {
+
                 foreach (var chapter in item.chapters)
                 {
+                    double percentagePos = (chapter.startPositionTicks / runTimeTicks) * 100;
+
+                    if (percentagePos >= 1 && percentagePos <= 99) // no need to worry about start / end "chapters"
+                        chapters.Add(percentagePos);
+
                     switch (chapter.Name)
                     {
                         case "OP":
@@ -67,10 +75,10 @@ public class JellyfinMediaService : IMediaProvider
                 endingEnd ??= item.runTimeTicks;
 
                 if (introStart.HasValue && introEnd.HasValue)
-                    segments.Add(new PlaybackInfo.Segment(introStart.Value, introEnd.Value, item.runTimeTicks));
+                    segments.Add(new PlaybackInfo.Segment(introStart.Value, introEnd.Value, runTimeTicks));
 
                 if (endingStart.HasValue && endingEnd.HasValue)
-                    segments.Add(new PlaybackInfo.Segment(endingStart.Value, endingEnd.Value, item.runTimeTicks));
+                    segments.Add(new PlaybackInfo.Segment(endingStart.Value, endingEnd.Value, runTimeTicks));
             }
         }
         catch (Exception e)
@@ -85,6 +93,7 @@ public class JellyfinMediaService : IMediaProvider
         {
             jellyfinId = jellyfinId,
             segments = segments.ToArray(),
+            chapters = chapters.ToArray(),
 
             sources = playbackInfo.MediaSources?.Select(m => new PlaybackInfo.Source()
             {

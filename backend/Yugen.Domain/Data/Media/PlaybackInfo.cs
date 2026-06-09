@@ -4,6 +4,7 @@ public class PlaybackInfo
 {
     public long? historicalTicks { get; set; }
     public Segment[]? segments { get; set; }
+    public double[]? chapters { get; set; }
 
     public required string jellyfinId { get; set; }
     public required Source[] sources { get; set; }
@@ -13,10 +14,10 @@ public class PlaybackInfo
         public double start { get; set; }
         public double duration { get; set; }
 
-        public Segment(long start, long end, long duration)
+        public Segment(long start, long end, double duration)
         {
-            this.start = (start / (double)duration) * 100;
-            this.duration = ((end - start) / (double)duration) * 100;
+            this.start = (start / duration) * 100;
+            this.duration = ((end - start) / duration) * 100;
         }
     }
 

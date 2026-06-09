@@ -201,11 +201,12 @@ export interface DownloadRequestInfo_Quality {
 // playback
 
 export interface Playback_Info {
-    historicalTicks: number | null,
-    jellyfinId: string,
+    historicalTicks: number | null;
+    jellyfinId: string;
 
-    segments: PlaybackInfo_Segment[]
-    sources: Playback_Info_Source[]
+    chapters: number[];
+    segments: PlaybackInfo_Segment[];
+    sources: Playback_Info_Source[];
 }
 
 export interface PlaybackInfo_Segment {
