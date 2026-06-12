@@ -1,9 +1,10 @@
-import { exportPages } from "next/dist/export/worker";
-
 export type BookmarkType = "None" | "Watching" | "OnHold" | "Planning" | "Completed" | "Dropped";
 
 export type Season = "WINTER" | "SPRING" | "SUMMER" | "FALL";
 export const seasonLookup: Season[] = ["WINTER", "SPRING", "SUMMER", "FALL"]
+
+export const EpisodeCompletionThreshold = 0.9;
+
 
 export interface PageResponse<T> {
     page: number,
@@ -84,8 +85,7 @@ export interface MediaEpisodeInfo {
     score: number,
 
     jellyfinId: string | null
-
-    watchDate: number | null,
+    wasLastWatched: boolean;
     watchPercentage: number | null,
 }
 

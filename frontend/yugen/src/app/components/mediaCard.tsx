@@ -34,7 +34,7 @@ export default function ({ Card, requestRefresh }: { Card: MediaCardInfo, reques
         });
     }
 
-    return (<a key={Card.aniListId} className="MediCard" href={`${Card.aniListId}`} style={{ "--hover-color": Card.colour } as React.CSSProperties}>
+    return (<a key={Card.aniListId} className="MediCard" href={`${Card.aniListId}`} style={{ "--hover-color": Card.colour } as React.CSSProperties} title={Card.title}>
         <div className="MediaCard_Container">
             <div className="MediaCard_Img">
                 <img src={Card.cardImg} />

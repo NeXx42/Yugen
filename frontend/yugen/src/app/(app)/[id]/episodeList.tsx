@@ -4,7 +4,7 @@ import * as api from "@lib/api.local"
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import "./episodeList.css"
-import { MediaEpisodeInfo, MediaInfo } from "@/app/shared/types";
+import { EpisodeCompletionThreshold, MediaEpisodeInfo, MediaInfo } from "@/app/shared/types";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface Props {
@@ -86,18 +86,17 @@ export default function (props: Props) {
             return;
         }
 
-        var bestTime = 0;
         var bestIndex = null;
 
-        episodes.forEach((e, i) => {
-            if ((e.watchDate ?? -1) > bestTime) {
-                bestTime = e.watchDate!;
+        episodes.forEach((ep, i) => {
+            if (ep.wasLastWatched) {
                 bestIndex = i;
+                return;
             }
         })
 
         if (bestIndex != null) {
-            if (episodes[bestIndex].watchPercentage! >= .95 && bestIndex + 1 < episodes.length)
+            if (episodes[bestIndex].watchPercentage! >= EpisodeCompletionThreshold && bestIndex + 1 < episodes.length)
                 bestIndex++;
         }
         else if (episodes.length > 0) {
@@ -105,7 +104,6 @@ export default function (props: Props) {
         }
 
         onSelectEpisode(bestIndex);
-
     }, [episodes])
 
     const onSelectEpisode = (pos: number | null) => {
@@ -125,7 +123,7 @@ export default function (props: Props) {
     }
 
     const drawEpisode = (ep: MediaEpisodeInfo, pos: number): React.ReactNode => {
-        const watchPercentage = (ep?.watchPercentage ?? 0) * 100;
+        const watchPercentage = ((ep.watchPercentage ?? 0) >= EpisodeCompletionThreshold ? 100 : (ep.watchPercentage ?? 0)) * 100;
 
         return (
             <button key={ep.number} className={selectedEpisodeIndex == pos ? "Episode Selected" : "Episode"} onClick={() => onSelectEpisode(pos)}>
