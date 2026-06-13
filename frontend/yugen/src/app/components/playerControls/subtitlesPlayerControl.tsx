@@ -50,6 +50,7 @@ export default function (props: Props) {
 
         function vttToHtml(text: string): string {
             return text
+                .replace(/\{[^}]*\}/g, "")
                 .replace(/<i>([\s\S]*?)<\/i>/g, "<em>$1</em>")
                 .replace(/<b>([\s\S]*?)<\/b>/g, "<strong>$1</strong>")
                 .replace(/<u>([\s\S]*?)<\/u>/g, "<u>$1</u>")
@@ -71,10 +72,10 @@ export default function (props: Props) {
 
             const cleaned = text.replace(/\{[^}]*\}/g, "").trim();
 
-            if (!cleaned) return false;
-            if (/^\{.*\}$/.test(text)) return false;
-            if (/\\(kf|bord|shad|t\(|an|pos|move)/i.test(text)) return false;
+            if (!cleaned)
+                return false;
 
+            if (/\\(kf|bord|shad|t\(|an|pos|move)/i.test(cleaned)) return false;
             return true;
         }
 
