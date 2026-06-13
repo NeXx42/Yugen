@@ -15,6 +15,7 @@ public class YugenContext : DbContext
     public YugenContext(DbContextOptions<YugenContext> options) : base(options) { }
 
     public DbSet<Model_Config> config { get; set; }
+    public DbSet<Model_Exception> exceptions { get; set; }
 
     // Site
     public DbSet<Model_Tag> tags { get; set; }

@@ -316,17 +316,26 @@ public class CatalogService
 
     public async Task ClearCache() => _cache.Clear();
 
-    public async Task RedownloadLinks()
+    public async Task<Model_Link[]?> DownloadLinksFile()
     {
-        const string url = "https://raw.githubusercontent.com/Fribb/anime-lists/refs/heads/master/anime-list-full.json";
-
         using (HttpClient client = new HttpClient())
         {
-            HttpResponseMessage res = await client.GetAsync(url);
-            Link[]? links = await res.Content.ReadFromJsonAsync<Link[]>();
+            HttpResponseMessage res = await client.GetAsync("https://raw.githubusercontent.com/Fribb/anime-lists/refs/heads/master/anime-list-full.json");
+            res.EnsureSuccessStatusCode();
+
+            Link[]? links = [];
+
+            try
+            {
+                links = await res.Content.ReadFromJsonAsync<Link[]>();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
 
             if (links == null)
-                return;
+                return null;
 
             List<Model_Link> newLinks = new List<Model_Link>();
 
@@ -348,7 +357,7 @@ public class CatalogService
                     livechart_id = l.livechart_id,
                     mal_id = l.mal_id,
                     simkl_id = l.simkl_id,
-                    themoviedb_id = l.themoviedb_id,
+                    themoviedb_id = l.themoviedb_id?.movie ?? l.themoviedb_id?.tv,
                     tmdb_season = l.season?.tmdb,
                     tvdb_id = l.tvdb_id,
                     tvdb_season = l.season?.tvdb,
@@ -356,16 +365,25 @@ public class CatalogService
                 });
             }
 
-            try
-            {
-                await _db.BulkInsertOrUpdateAsync(newLinks);
-                await _db.SaveChangesAsync();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
+            return newLinks.ToArray();
         }
+    }
+
+    public async Task RedownloadLinks(bool force = false)
+    {
+        const double importThreshold = .9;
+        Model_Link[]? links = await DownloadLinksFile();
+
+        if (links == null)
+            throw new Exception("No links found!");
+
+        int existingCount = await _db.links.CountAsync();
+
+        if (!force && (links.Length <= existingCount * importThreshold))
+            throw new Exception($"Import would result in {links.Length} imports, this is {Math.Round((links.Length / (float)existingCount) * 100)}% of the existing total. Skipping to preserve integrity");
+
+        await _db.BulkInsertOrUpdateAsync(links);
+        await _db.SaveChangesAsync();
     }
 
     public class Link
@@ -383,7 +401,7 @@ public class CatalogService
         public int? livechart_id { get; set; }
         public int? mal_id { get; set; }
         public int? simkl_id { get; set; }
-        public int? themoviedb_id { get; set; }
+        public TheMovieDb? themoviedb_id { get; set; }
         public int? tvdb_id { get; set; }
 
         public Season? season { get; set; }
@@ -392,6 +410,12 @@ public class CatalogService
         {
             public int? tvdb { get; set; }
             public int? tmdb { get; set; }
+        }
+
+        public class TheMovieDb
+        {
+            public int? tv { get; set; }
+            public int? movie { get; set; }
         }
     }
 

@@ -9,6 +9,7 @@ using Yugen.Data;
 using Yugen.Domain.Data.Users;
 using Yugen.Domain.Models;
 using Yugen.YugenBackgroundService;
+using Yugen.YugenBackgroundService.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,6 +95,9 @@ builder.Services.AddSingleton<SettingsCache>();
 builder.Services.AddSingleton<EndpointDeduplicator>();
 
 builder.Services.AddHostedService<SettingsInit>();
+
+builder.Services.AddSingleton<IScheduledJob, LinkDownloadJob>();
+builder.Services.AddSingleton<IScheduledJob, EpisodeNotificationJob>();
 builder.Services.AddHostedService<YugenBackgroundService>();
 
 if (builder.Environment.IsProduction())

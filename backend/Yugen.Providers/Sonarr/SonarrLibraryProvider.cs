@@ -26,7 +26,7 @@ public class SonarrLibraryProvider : ILibraryProvider
         SonarrLibrary_Response_Series? series = (await _http.SendRequest<SonarrLibrary_Response_Series[]>($"series?tvdbId={link.tvdb_id}", HttpMethod.Get))?.FirstOrDefault();
         if (series == null) return null;
 
-        SonarrLibrary_Response_Series.Seasons? matchedSeason = series.seasons?.FirstOrDefault(s => s.seasonNumber == link.tmdb_season);
+        SonarrLibrary_Response_Series.Seasons? matchedSeason = series.seasons?.FirstOrDefault(s => s.seasonNumber == link.tvdb_season);
         if (matchedSeason == null) return null;
 
         SonarrLibrary_Response_Episode[]? episodes = await _http.SendRequest<SonarrLibrary_Response_Episode[]>($"episode?seriesId={series.id}&seasonNumber={matchedSeason.seasonNumber}", HttpMethod.Get);
