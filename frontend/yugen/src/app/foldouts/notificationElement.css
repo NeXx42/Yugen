@@ -3,6 +3,8 @@
 
     cursor: pointer;
     transition: all .25s;
+
+    margin-bottom: 10px;
 }
 
 
@@ -25,6 +27,10 @@
     color: var(--hover-color);
 }
 
+.Notification:hover .Notification_Remove {
+    transform: scale(1);
+}
+
 .Notification:hover>div {
     outline-color: var(--hover-color);
 }
@@ -37,6 +43,13 @@
 
 .Notification.Seen {
     opacity: .5;
+}
+
+.Notification.Hidden {
+    height: 0px;
+    outline-width: 0px;
+    overflow: hidden;
+    margin-bottom: 0px;
 }
 
 .Notification img {
@@ -91,4 +104,28 @@
     padding: 5px;
 
     font-size: 12px;
+}
+
+
+.Notification_Remove {
+    z-index: 50;
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    aspect-ratio: 1/1;
+    font-size: 10px;
+    width: 20px;
+
+    background: var(--global-div-tr);
+    border: 1px solid var(--global-border-color);
+    border-radius: 8px;
+    padding: 5px;
+
+    transform: scale(0);
+    transition: all .1s;
+}
+
+.Notification_Remove:hover {
+    border-color: white;
+    cursor: pointer;
 }

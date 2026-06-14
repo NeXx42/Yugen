@@ -62,7 +62,7 @@ export default function () {
 
     const renderFoldout = (): ReactNode => {
         switch (currentFoldout) {
-            case "Notifications": return <NotificationFoldout />
+            case "Notifications": return <NotificationFoldout refreshNumber={setNotificationCount} />
             case "Settings": return <SettingsFoldout isAuthenticated={authenticated} requestClose={() => toggleFoldout("None")} />
             case "Profile": return <ProfileFoldout isAuthenticated={authenticated} />
         }

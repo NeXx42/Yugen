@@ -90,7 +90,6 @@
 .Notifications_Notifs {
     display: flex;
     flex-direction: column;
-    gap: 10px;
 
     margin: 15px;
 }

@@ -17,7 +17,7 @@ type MenuType = "None" | "Subtitles" | "Requests";
 
 export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
     const { showToast } = useToast();
-    const { showModal, closeModals } = useModals();
+    const { showModal } = useModals();
 
     const [bookmarkId, setBookmarkId] = useState(mediaInfo.bookmark);
 

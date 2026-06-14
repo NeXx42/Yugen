@@ -55,7 +55,9 @@ public class NotificationService
                         UserId = usr,
                         MediaId = template.MediaId,
                         MediaEpisode = template.MediaEpisode,
-                        Message = template.Message
+                        Message = template.Message,
+                        Source = template.Source,
+                        HasInteracted = false
                     });
                 }
             }
@@ -123,15 +125,21 @@ public class NotificationService
         await _db.SaveChangesAsync();
     }
 
+    public async Task RemoveNotification(UserSession usr, int id)
+    {
+        _db.Remove(_db.notifications.First(n => n.Id == id && n.UserId == usr.User.Id));
+        await _db.SaveChangesAsync();
+    }
+
     public async Task ClearReadNotifications(UserSession usr)
     {
         _db.RemoveRange(_db.notifications.Where(n => n.UserId == usr.User.Id && n.HasInteracted));
         await _db.SaveChangesAsync();
     }
 
-    public async Task MarkAllAsRead(UserSession usr)
+    public async Task MarkAllAsRead(UserSession usr, string[] sources)
     {
-        Model_Notification[] notifications = await _db.notifications.Where(n => n.UserId == usr.User.Id && !n.HasInteracted).ToArrayAsync();
+        Model_Notification[] notifications = await _db.notifications.Where(n => n.UserId == usr.User.Id && !n.HasInteracted && (sources.Length == 0 || sources.Contains(n.Source))).ToArrayAsync();
 
         foreach (Model_Notification notification in notifications)
             notification.HasInteracted = true;

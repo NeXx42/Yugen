@@ -96,14 +96,15 @@ builder.Services.AddSingleton<EndpointDeduplicator>();
 
 builder.Services.AddHostedService<SettingsInit>();
 
-builder.Services.AddSingleton<IScheduledJob, LinkDownloadJob>();
-builder.Services.AddSingleton<IScheduledJob, EpisodeNotificationJob>();
-builder.Services.AddHostedService<YugenBackgroundService>();
 
 if (builder.Environment.IsProduction())
 {
+    builder.Services.AddSingleton<IScheduledJob, LinkDownloadJob>();
+    builder.Services.AddSingleton<IScheduledJob, EpisodeNotificationJob>();
     builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Critical);
 }
+
+builder.Services.AddHostedService<YugenBackgroundService>();
 
 var app = builder.Build();
 

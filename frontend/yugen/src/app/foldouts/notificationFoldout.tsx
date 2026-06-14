@@ -6,24 +6,29 @@ import { ReactNode, useEffect, useState } from "react"
 import "./notificationFoldout.css"
 import NotificationElement from "./notificationElement";
 
+const CategorySourceLookup: Record<NotificationSourceFilter, string[]> = {
+    Airing: ["System"],
+    System: ["System"],
+    Library: ["Sonarr", "Radarr"],
+    All: []
+}
 type NotificationSourceFilter = "Airing" | "Library" | "System" | "All";
 
-export default function () {
-
+export default function ({ refreshNumber }: { refreshNumber: (count: number) => void }) {
     const [loading, setLoading] = useState(true);
     const [notifications, setNotifications] = useState<UserNotification[] | undefined>()
     const [currentFilter, setCurrentFilter] = useState<NotificationSourceFilter>("Airing");
 
     const drawNotification = (): ReactNode => {
         return notifications?.filter(n => {
-            switch (currentFilter) {
-                case "Airing":
+            switch (currentFilter.toLowerCase()) {
+                case "airing":
                     return n.eventName === "New Episode";
 
-                case "System":
+                case "system":
                     return n.source === "System";
 
-                case "Library":
+                case "library":
                     return n.source === "Sonarr" || n.source === "Radarr";
 
                 default:
@@ -36,12 +41,15 @@ export default function () {
     }
 
     const clearRead = () => api.notification_ClearRead().then(refreshNotifications);
-    const readAll = () => api.notification_MarkAllAsRead().then(refreshNotifications);
+    const readAll = () => api.notification_MarkAllAsRead(CategorySourceLookup[currentFilter]).then(refreshNotifications);
 
     const refreshNotifications = () => {
         setLoading(true);
         api.notification_Get()
-            .then(r => setNotifications(r.sort((a, b) => b.time - a.time)))
+            .then(r => {
+                refreshNumber(r.length);
+                setNotifications(r.sort((a, b) => b.time - a.time))
+            })
             .finally(() => setLoading(false));
     }
 
@@ -51,7 +59,7 @@ export default function () {
         <div className="Notifications_Header">
             <h2>Notifications</h2>
             <div>
-                <button onClick={readAll}>Mark All as Read</button>
+                <button onClick={readAll}>Mark {currentFilter} as Read</button>
                 <button onClick={clearRead}>Clear read</button>
             </div>
         </div>

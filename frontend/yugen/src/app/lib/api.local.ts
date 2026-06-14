@@ -130,6 +130,6 @@ export async function notification_Read(id: number) {
 export async function notification_ClearRead() {
     await post(`Notifications/Clear`);
 }
-export async function notification_MarkAllAsRead() {
-    await post(`Notifications/ReadAll`);
+export async function notification_MarkAllAsRead(sources?: string[]) {
+    await post(`Notifications/ReadAll${sources && `?sources=${sources.join("&sources=")}`}`);
 }

@@ -11,6 +11,7 @@ import { createPortal } from "react-dom";
 import SubtitleEditor from "./subtitleEditor";
 import PlayerControl from "@/app/components/playerControls/playerControl";
 import SeriesRequestModal from "./seriesRequestModal";
+import { useModals } from "@/app/context/modalContext";
 
 export interface SelectedEpisodeInfo {
     mediaInfo: MediaInfo,
@@ -19,8 +20,9 @@ export interface SelectedEpisodeInfo {
 }
 
 export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
+    const { showModal, closeModal } = useModals();
+
     const [isPlaying, setIsPlaying] = useState(false);
-    const [isManagingMedia, setIsManagingMedia] = useState(false);
 
     const getSelectedEpisodeInfo = async (ep: MediaEpisodeInfo | undefined | null): Promise<SelectedEpisodeInfo | undefined> => {
         if (!ep)
@@ -49,8 +51,8 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
             if (selectedEpisode?.downloadInfo) {
                 setIsPlaying(true);
             }
-            else {
-                setIsManagingMedia(true);
+            else if (selectedEpisode?.mediaInfo) {
+                showModal(<SeriesRequestModal mediaInfo={selectedEpisode.mediaInfo} onUpdate={() => { }} onClose={() => { }} />)
             }
         }
 
@@ -101,7 +103,7 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
 
     const updatedSelectedEpisode = (to: MediaEpisodeInfo | undefined) => {
         setIsPlaying(false);
-        setIsManagingMedia(false);
+        closeModal();
 
         if (to) {
             getSelectedEpisodeInfo(to).then(setSelectedEpisode);
@@ -113,7 +115,7 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
 
 
     const drawEpisodeInfo = (): ReactNode => {
-        if (selectedEpisode == undefined)
+        if (!selectedEpisode?.episodeInfo)
             return (<></>);
 
         return (<div className="ViewPageContainer MediaContainer_EpisodeInfo" style={{ marginBottom: "10px" }}>
@@ -127,7 +129,11 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
                 </div>
             </div>
             <div className="MediaContainer_EpisodeInfo_Right">
-                <SubtitleEditor mediaInfo={mediaInfo} episodeInfo={selectedEpisode.episodeInfo} playbackInfo={selectedEpisode.downloadInfo!} onUpdate={() => updatedSelectedEpisode(selectedEpisode?.episodeInfo)} />
+                {
+                    selectedEpisode.downloadInfo &&
+                    <SubtitleEditor mediaInfo={mediaInfo} episodeInfo={selectedEpisode.episodeInfo} playbackInfo={selectedEpisode.downloadInfo!} onUpdate={() => updatedSelectedEpisode(selectedEpisode?.episodeInfo)} />
+                }
+
             </div>
         </div>)
     }
@@ -142,9 +148,6 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
             </div>
 
             {selectedEpisode && episodeContainer && createPortal(drawEpisodeInfo(), episodeContainer)}
-            {
-                isManagingMedia && selectedEpisode?.mediaInfo && <SeriesRequestModal mediaInfo={selectedEpisode.mediaInfo} onUpdate={() => { }} onClose={() => setIsManagingMedia(false)} />
-            }
         </div>
     )
 }

@@ -54,6 +54,14 @@ public class NotificationController : ControllerBase
         await _notificationService.ReadNotification(usr, id);
     }
 
+    [HttpPost("{id}/Remove")]
+    [Authorize]
+    public async Task RemoveNotification(int id)
+    {
+        HttpContext.GetUserFromSession(out UserSession usr);
+        await _notificationService.RemoveNotification(usr, id);
+    }
+
     [HttpPost("Clear")]
     public async Task ClearReadNotifications()
     {
@@ -62,9 +70,9 @@ public class NotificationController : ControllerBase
     }
 
     [HttpPost("ReadAll")]
-    public async Task ReadAllNotifications()
+    public async Task ReadAllNotifications([FromQuery] string[] sources)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        await _notificationService.MarkAllAsRead(usr);
+        await _notificationService.MarkAllAsRead(usr, sources);
     }
 }
