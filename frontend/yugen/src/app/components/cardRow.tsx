@@ -24,6 +24,14 @@ export default function (props: Props) {
 
         return (<>
             {props.cards?.map(x => <MediaCard Card={x} key={x.aniListId} />)}
+        </>)
+    }
+
+    return (
+        <div className="CardRow_Cards">
+            <div className="CardRow_Cards_Entries">
+                {draw()}
+            </div>
             {
                 props.viewMoreLink && (
                     <a href={props.viewMoreLink} className="CardRow_Cards_ViewMore">
@@ -31,12 +39,6 @@ export default function (props: Props) {
                     </a>
                 )
             }
-        </>)
-    }
-
-    return (
-        <div className="CardRow_Cards">
-            {draw()}
         </div>
     )
 }

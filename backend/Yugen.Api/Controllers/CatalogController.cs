@@ -49,7 +49,8 @@ public class CatalogController : ControllerBase
     {
         try
         {
-            await _catalogService.RedownloadLinks();
+            HttpContext.GetUserFromSession(out UserSession usr);
+            await _catalogService.RedownloadLinks(usr);
             return true;
         }
         catch

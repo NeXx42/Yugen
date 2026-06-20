@@ -29,6 +29,8 @@ public class CatalogService
     private readonly SettingsService _settings;
     private readonly HydrationService _hydrationService;
 
+    private readonly EndpointDeduplicator _endpointDeduplicator;
+
     public static string GetCardCacheId(int id) => $"CardCache_{id}";
     public static string GetInfoCacheId(int id) => $"Info_{id}";
 
@@ -36,6 +38,7 @@ public class CatalogService
     {
         _db = db;
 
+        _endpointDeduplicator = new EndpointDeduplicator();
         _currentProvider = new AniListProvider();
 
         _cache = cache;
@@ -356,6 +359,10 @@ public class CatalogService
                         foreach (JsonElement element in doc.RootElement.EnumerateArray())
                         {
                             element.ExtractInt(nameof(anilist_id), out anilist_id);
+
+                            if (!anilist_id.HasValue)
+                                continue;
+
                             element.ExtractString(nameof(type), out type);
                             element.ExtractInt(nameof(anidb_id), out anidb_id);
                             element.ExtractInt(nameof(animecountdown_id), out animecountdown_id);
@@ -441,6 +448,20 @@ public class CatalogService
         }
     }
 
+    public async Task RedownloadLinks(UserSession usr, bool force = false)
+    {
+        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(RedownloadLinks));
+
+        try
+        {
+            await RedownloadLinks(force);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
     public async Task RedownloadLinks(bool force = false)
     {
         const double importThreshold = .9;
@@ -455,7 +476,6 @@ public class CatalogService
             throw new Exception($"Import would result in {links.Length} imports, this is {Math.Round((links.Length / (float)existingCount) * 100)}% of the existing total. Skipping to preserve integrity");
 
         await _db.BulkInsertOrUpdateAsync(links);
-        await _db.SaveChangesAsync();
     }
 
     public async Task<SearchCriteria> GetSearchCriteria()

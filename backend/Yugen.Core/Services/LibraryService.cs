@@ -93,7 +93,12 @@ public class LibraryService
             }
         }
 
-        downloadedMedia = await _library.GetFactory(link!).GetDownloadedEpisodes(aniListId, link!);
+        ILibraryProvider lib = _library.GetFactory(link!);
+
+        if (!lib.isSetup)
+            return null;
+
+        downloadedMedia = await lib.GetDownloadedEpisodes(aniListId, link!);
 
         if (downloadedMedia == null)
             return null;
