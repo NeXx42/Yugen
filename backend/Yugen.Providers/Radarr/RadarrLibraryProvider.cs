@@ -11,10 +11,14 @@ namespace Yugen.Providers.Radarr;
 
 public class RadarrLibraryProvider : ILibraryProvider
 {
-    private RestfulHelper _http;
+    private readonly RestfulHelper _http;
+    private readonly bool isSetup;
+
+    bool ILibraryProvider.isSetup => isSetup;
 
     public RadarrLibraryProvider(string url, string apiKey)
     {
+        isSetup = !string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(apiKey);
         _http = new RestfulHelper(Path.Combine(url, "api", "v3"), new Dictionary<string, string>()
         {
             { "X-Api-Key", apiKey }

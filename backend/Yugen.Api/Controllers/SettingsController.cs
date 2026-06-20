@@ -8,7 +8,6 @@ using Yugen.Domain.Data.Users;
 namespace Yugen.Api.Controllers;
 
 [ApiController]
-[Authorize]
 [Route("api/Settings")]
 public class SettingsController : ControllerBase
 {
@@ -19,12 +18,58 @@ public class SettingsController : ControllerBase
         _settings = settings;
     }
 
+    [HttpGet("Setup")]
+    public async Task<bool> VerifyJellyfinSetup()
+    {
+        string? url = _settings.getCache.Get(ConfigKeys.Jellyfin_Url);
+        string? key = _settings.getCache.Get(ConfigKeys.Jellyfin_Url);
+
+        return !string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(key);
+    }
+
+    public class SetupRequest
+    {
+        public string? url { get; set; }
+        public string? key { get; set; }
+    }
+
+    [HttpPost("Setup")]
+    public async Task<IResult> SetupJellyfin([FromBody] SetupRequest req)
+    {
+        if (await VerifyJellyfinSetup())
+            return Results.BadRequest("Already setup");
+
+        try
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                HttpRequestMessage msg = new HttpRequestMessage(HttpMethod.Get, Path.Combine(req.url ?? "", "System", "Endpoint"));
+                msg.Headers.Add("X-Emby-Token", req.key);
+
+                var res = await client.SendAsync(msg);
+
+                res.EnsureSuccessStatusCode();
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return Results.BadRequest("Invalid credentials");
+        }
+
+        await _settings.SetConfigValue(ConfigKeys.Jellyfin_Url, req.url);
+        await _settings.SetConfigValue(ConfigKeys.Jellyfin_ApiKey, req.key);
+
+        return Results.Ok();
+    }
+
     public class ConfigRequest
     {
         public string? value { get; set; }
     }
 
     [HttpPost("{Key}")]
+    [Authorize]
     public async Task<IResult> SaveConfigValue([FromBody] ConfigRequest req, string Key)
     {
         if (!Enum.TryParse(Key, out ConfigKeys key))
@@ -41,6 +86,7 @@ public class SettingsController : ControllerBase
     }
 
     [HttpGet()]
+    [Authorize]
     public async Task<ConfigResponse[]> Get()
     {
         return (await _settings.GetAllCache()).Select(c => new ConfigResponse()
@@ -51,6 +97,7 @@ public class SettingsController : ControllerBase
     }
 
     [HttpPost("Update")]
+    [Authorize]
     public async Task<IActionResult> TriggerUpdate()
     {
         try
@@ -67,5 +114,6 @@ public class SettingsController : ControllerBase
     }
 
     [HttpGet("Links")]
+    [Authorize]
     public async Task<Links> GetLinks() => await _settings.GetLinks();
 }

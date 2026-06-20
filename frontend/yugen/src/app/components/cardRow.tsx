@@ -2,15 +2,27 @@ import { MediaCardInfo } from "../shared/types";
 import MediaCard from "./mediaCard";
 
 import "./cardRow.css"
+import MediaCardSkeleton from "./mediaCardSkeleton";
 
 interface Props {
     cards: MediaCardInfo[],
-    viewMoreLink?: string
+    viewMoreLink?: string,
+    loading?: boolean,
 }
 
 export default function (props: Props) {
-    return (
-        <div className="CardRow_Cards">
+    const draw = () => {
+        if (props.loading) {
+            return (<>
+                <MediaCardSkeleton />
+                <MediaCardSkeleton />
+                <MediaCardSkeleton />
+                <MediaCardSkeleton />
+                <MediaCardSkeleton />
+            </>)
+        }
+
+        return (<>
             {props.cards?.map(x => <MediaCard Card={x} key={x.aniListId} />)}
             {
                 props.viewMoreLink && (
@@ -19,6 +31,12 @@ export default function (props: Props) {
                     </a>
                 )
             }
+        </>)
+    }
+
+    return (
+        <div className="CardRow_Cards">
+            {draw()}
         </div>
     )
 }

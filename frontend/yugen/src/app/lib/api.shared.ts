@@ -1,4 +1,5 @@
 import { SERVER_URL } from "@shared/config";
+import { CaughtResponse } from "../shared/types";
 
 const URL = typeof window === "undefined"
     ? SERVER_URL
@@ -103,5 +104,21 @@ async function handleException(res: Response): Promise<Error> {
         return new Error(errorData.message || JSON.stringify(errorData));
     } catch (_) {
         return new Error(`Request failed with status ${res.status}`)
+    }
+}
+
+export async function wrapFetch<T>(req: () => Promise<T | undefined>): Promise<CaughtResponse<T>> {
+    try {
+        const res = (await req())!;
+        return {
+            data: res!,
+            error: null,
+        }
+    }
+    catch (e: any) {
+        return {
+            data: null,
+            error: e.message,
+        }
     }
 }

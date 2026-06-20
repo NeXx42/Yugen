@@ -1,7 +1,20 @@
 .MediCard {
     cursor: pointer;
     position: relative;
+    animation: LoadAnimation .5s;
 }
+
+@keyframes LoadAnimation {
+    0% {
+        opacity: 0%;
+    }
+
+    100% {
+        opacity: 100%;
+    }
+}
+
+
 
 .MediCard:hover .MediaCard_Img {
     transform: translateY(-5px);

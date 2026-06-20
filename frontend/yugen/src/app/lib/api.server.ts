@@ -43,13 +43,6 @@ async function getWithAuth<T>(uri: string, nextCaching: NextFetchRequestConfig |
     }
 }
 
-
-export async function getAllUsers(): Promise<User[]> {
-    return (await api.get("Auth/all", {
-        revalidate: 10
-    }))!;
-}
-
 export async function catalog_GetInfo(aniListId: number): Promise<CaughtResponse<MediaInfo>> {
     return await getWithAuth<MediaInfo>(`catalog/${aniListId}`, {
         revalidate: 60
@@ -59,9 +52,6 @@ export async function library_CurrentWatching(page: number, pageSize: number): P
     return await getWithAuth<PageResponse<MediaCardInfo>>(`library/WatchHistory?page=${page}&pageSize=${pageSize}`);
 }
 
-export async function catalog_Upcoming(): Promise<CaughtResponse<MediaCardInfo[]>> {
-    return await getWithAuth<MediaCardInfo[]>("catalog/Upcoming");
-}
 export async function catalog_SearchCriteria(): Promise<CaughtResponse<SearchCriteria>> {
     return await getWithAuth<SearchCriteria>("catalog/SearchCriteria");
 }

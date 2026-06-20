@@ -4,8 +4,22 @@ import * as api from "@lib/api.local"
 import { useRouter } from "next/navigation";
 
 import "./profileFoldout.css"
+import { useModals } from "../context/modalContext";
+import { useEffect } from "react";
+import LoginModal from "../modals/loginModal";
 
 export default function ({ isAuthenticated }: { isAuthenticated: boolean }) {
+    if (!isAuthenticated) {
+        const { showModal, closeModal } = useModals();
+
+        useEffect(() => {
+            closeModal();
+            showModal(<LoginModal />)
+        }, [])
+
+        return;
+    }
+
     const navigate = useRouter();
 
     const logout = () => {
@@ -19,16 +33,8 @@ export default function ({ isAuthenticated }: { isAuthenticated: boolean }) {
     }
 
     return (<div className="Profile" onClick={e => e.stopPropagation()}>
-        <div className="Profile_Bottom">
-            {
-                isAuthenticated ? (
-                    <button onClick={logout}>Logout</button>
-                ) : (
-                    <>
-                        <button onClick={logout}>Login</button>
-                    </>
-                )
-            }
+        <div style={{ gridColumn: "span 2" }}>
+            <button onClick={logout}>Logout</button>
         </div>
     </div >
     )

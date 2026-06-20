@@ -1,0 +1,12 @@
+.LoginModal_Setup {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    align-items: center;
+}
+
+.LoginModal_Setup_Group {
+    display: grid;
+    grid-template-columns: 150px 500px;
+}

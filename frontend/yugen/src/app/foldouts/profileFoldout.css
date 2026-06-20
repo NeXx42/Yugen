@@ -1,26 +1,23 @@
 .Profile {
-    position: fixed;
-    background-color: var(--global-div-tr);
-    box-shadow: -2px 0 5px #0000004d;
+    z-index: 10;
 
-    width: 250px;
-    height: 100%;
-
-    right: 0px;
-}
-
-.Profile_Bottom {
     position: absolute;
-    bottom: 0px;
-    padding: 15px;
+    background-color: var(--global-div-tr);
+    border: solid 1px var(--global-border-color);
+    border-radius: 8px;
 
-    height: 80px;
-    width: 100%;
+    top: 110%;
+    right: 0%;
 
-    border-top: 1px solid var(--global-border-color);
+    padding: 5px;
+    box-sizing: border-box;
+    overflow: hidden;
+
+    display: grid;
+    grid-template-columns: repeat(2, 70px);
 }
 
-.Profile_Bottom button {
+.Profile button {
     background-color: var(--global-div);
     text-align: center;
 
@@ -31,4 +28,12 @@
     border: 1px solid var(--global-border-color);
 
     cursor: pointer;
+    padding: 5px;
+
+    transition: all .1s;
+}
+
+.Profile button:hover {
+    background-color: var(--primary-accent-bg);
+    color: var(--primary-accent);
 }

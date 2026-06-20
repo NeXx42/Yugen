@@ -144,6 +144,9 @@ public class LibraryService
 
         foreach (ILibraryProvider provider in _library.GetFactories())
         {
+            if (!provider.isSetup)
+                continue;
+
             (string linkId, List<int> ids)? res = await provider.GetDownloadedMedia();
 
             if (res.HasValue)
@@ -169,7 +172,13 @@ public class LibraryService
         await _db.SaveChangesAsync();
 
         int importCount = 0;
-        int?[] links = await _db.links.Where(l => tmdbIds.Contains(l.themoviedb_id ?? -1) || tvdbIds.Contains(l.tvdb_id ?? -1)).Select(l => l.anilist_id).ToArrayAsync();
+        int?[] links = await _db.links
+            .Where(l =>
+                (l.themoviedb_id.HasValue && tmdbIds.Contains(l.themoviedb_id.Value)) ||
+                (l.tvdb_id.HasValue && tvdbIds.Contains(l.tvdb_id.Value))
+            )
+            .Select(l => l.anilist_id)
+            .ToArrayAsync();
 
         foreach (int? link in links)
         {

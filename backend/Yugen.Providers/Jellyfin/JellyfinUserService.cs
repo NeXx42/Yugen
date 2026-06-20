@@ -9,11 +9,11 @@ namespace Yugen.Providers.Jellyfin;
 public class JellyfinUserService : IUserProvider
 {
     private readonly RestfulHelper _http;
+    private readonly bool isSetup;
 
     public JellyfinUserService(string url, string apiKey)
     {
-        Console.WriteLine(url);
-        Console.WriteLine(apiKey);
+        isSetup = !string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(apiKey);
 
         _http = new RestfulHelper(url, new Dictionary<string, string>()
         {
@@ -23,11 +23,17 @@ public class JellyfinUserService : IUserProvider
 
     public async Task<ExternalUser[]> GetAllUsers()
     {
-        return await _http.SendRequest<ExternalUser[]>("Users", HttpMethod.Get);
+        if (!isSetup)
+            throw new Exception("Not setup");
+
+        return (await _http.SendRequest<ExternalUser[]>("Users", HttpMethod.Get)) ?? [];
     }
 
     public async Task<string?> LoginUser(string username, string password)
     {
+        if (!isSetup)
+            throw new Exception("Not setup");
+
         JellyfinResponse_Session? session = await _http.SendRequest<JellyfinResponse_Session>("Users/AuthenticateByName", HttpMethod.Post, new
         {
             Username = username,

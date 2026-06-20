@@ -24,10 +24,10 @@ export default function (props: Props) {
 
     return (<a key={props.card.aniListId} className={`MediaCardHorizontal ${props.selected ? "Selected" : ""}`} href={`${props.card.aniListId}`} style={{ "--hover-color": props.card.colour } as React.CSSProperties}>
         <div className="MediaCardHorizontal_Content">
-            {props.card.cardImg && <img className="MediaCardHorizontal_Icon" src={props.card.cardImg} />}
+            {props.card.cardImg && <img className="MediaCardHorizontal_Icon" src={props.card.cardImg} loading="lazy" decoding="async" />}
             {props.card.banner &&
                 <div className="MediaCardHorizontal_Banner">
-                    <img src={props.card.banner} />
+                    <img src={props.card.banner} loading="lazy" decoding="async" />
                     <div />
                 </div>
             }

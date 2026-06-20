@@ -1,13 +1,27 @@
 "use client"
 
-import { post, get, getPlain, upload, deleteReq } from "./api.shared";
-import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo, SearchRequest, DownloadRequestInfo, MediaRequest, Playback_Info, MediaInfo, MediaSubtitle } from "@shared/types";
+import { post, get, getPlain, upload, deleteReq, wrapFetch } from "./api.shared";
+import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo, SearchRequest, DownloadRequestInfo, MediaRequest, Playback_Info, MediaInfo, MediaSubtitle, CaughtResponse } from "@shared/types";
 
 export async function auth_Login(username: string, password: string) {
     return (await post<User>("auth/login", { username, password }))!;
 }
 export async function auth_Logout() {
     await post("auth/logout");
+}
+export async function getAllUsers(): Promise<User[]> {
+    return (await get("Auth/all"))!;
+}
+
+
+export async function setup_Check() {
+    return (await get("Settings/Setup"))
+}
+export async function setup_Try(url: string, key: string) {
+    return (await post("Settings/Setup", {
+        url,
+        key
+    }))
 }
 
 
@@ -92,6 +106,9 @@ export async function catalog_ClearCache() {
 }
 export async function catalog_Trending(): Promise<MediaInfo[]> {
     return (await get<MediaInfo[]>("catalog/Trending"))!;
+}
+export async function catalog_Upcoming(): Promise<MediaCardInfo[]> {
+    return (await get<MediaCardInfo[]>("catalog/Upcoming"))!;
 }
 
 

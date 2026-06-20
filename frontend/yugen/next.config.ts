@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
       {
         source: "/api/:path*",
         destination: `${NEXT_PUBLIC_API_URL}/api/:path*`
+      },
+      {
+        source: "/",
+        destination: "/home"
       }
     ];
   },

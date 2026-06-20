@@ -57,14 +57,26 @@
     gap: 8px;
 }
 
-.Topbar_Centre input {
+.Topbar_SearchInput {
     background-color: var(--global-div);
     border: 1px solid var(--global-border-color);
-    padding: 8px 12px;
     border-radius: 6px;
+    padding: 0px 10px;
 
     outline: none;
     width: 450px;
+
+    display: grid;
+    grid-template-columns: max-content auto;
+
+    align-items: center;
+    gap: 5px;
+}
+
+.Topbar_SearchInput>input {
+    background: transparent;
+    border: none;
+    outline: none;
 }
 
 .Topbar_Centre button {
@@ -89,6 +101,18 @@
 
     display: flex;
     flex-direction: column;
+
+    animation: QuickSearchOpenAnimation .2s;
+}
+
+@keyframes QuickSearchOpenAnimation {
+    0% {
+        opacity: 0%;
+    }
+
+    100% {
+        opacity: 100%;
+    }
 }
 
 .Topbar_QuickSearch>.Topbar_QuickSearch_Result:nth-child(even) {
