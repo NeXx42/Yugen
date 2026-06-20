@@ -1,8 +1,10 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using EFCore.BulkExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Yugen.Core.Data;
+using Yugen.Core.Helpers;
 using Yugen.Data;
 using Yugen.Domain.Data;
 using Yugen.Domain.Data.Media;
@@ -318,51 +320,121 @@ public class CatalogService
 
     public async Task<Model_Link[]?> DownloadLinksFile()
     {
+        int? anilist_id;
+        string? type;
+        int? anidb_id;
+        int? animecountdown_id;
+        int? animenewsnetwork_id;
+        string? anime_planet_id;
+        int? anisearch_id;
+        string? imdb_id;
+        int? kitsu_id;
+        int? livechart_id;
+        int? mal_id;
+        int? simkl_id;
+        int? tvdb_id;
+
+        int? tvdbSeason;
+        int? tmdbSeason;
+
+        int? tmdbId;
+
         using (HttpClient client = new HttpClient())
         {
             HttpResponseMessage res = await client.GetAsync("https://raw.githubusercontent.com/Fribb/anime-lists/refs/heads/master/anime-list-full.json");
             res.EnsureSuccessStatusCode();
 
-            Link[]? links = [];
+            List<Model_Link> newLinks = new List<Model_Link>();
 
             try
             {
-                links = await res.Content.ReadFromJsonAsync<Link[]>();
+                using (Stream stream = await res.Content.ReadAsStreamAsync())
+                using (JsonDocument doc = await JsonDocument.ParseAsync(stream))
+                {
+                    try
+                    {
+                        foreach (JsonElement element in doc.RootElement.EnumerateArray())
+                        {
+                            element.ExtractInt(nameof(anilist_id), out anilist_id);
+                            element.ExtractString(nameof(type), out type);
+                            element.ExtractInt(nameof(anidb_id), out anidb_id);
+                            element.ExtractInt(nameof(animecountdown_id), out animecountdown_id);
+                            element.ExtractInt(nameof(animenewsnetwork_id), out animenewsnetwork_id);
+                            element.ExtractString(nameof(anime_planet_id), out anime_planet_id);
+                            element.ExtractInt(nameof(anisearch_id), out anisearch_id);
+                            element.ExtractInt(nameof(kitsu_id), out kitsu_id);
+                            element.ExtractInt(nameof(livechart_id), out livechart_id);
+                            element.ExtractInt(nameof(mal_id), out mal_id);
+                            element.ExtractInt(nameof(simkl_id), out simkl_id);
+                            element.ExtractInt(nameof(tvdb_id), out tvdb_id);
+
+                            imdb_id = null;
+
+                            if (element.TryGetProperty("imdb_id", out JsonElement imdbProp))
+                            {
+                                List<string> imdbIds = new List<string>();
+
+                                foreach (JsonElement id in imdbProp.EnumerateArray())
+                                    imdbIds.Add(id.GetString()!);
+
+                                if (imdbIds.Count == 0)
+                                    continue;
+
+                                if (imdbIds.Count > 1)
+                                    Console.WriteLine($"There were {imdbIds.Count} imdb ids present, only using the first");
+
+                                imdb_id = imdbIds[0];
+                            }
+
+                            tvdbSeason = null;
+                            tmdbSeason = null;
+                            tmdbId = null;
+
+
+                            if (element.TryGetProperty("season", out JsonElement seasonProp))
+                            {
+                                seasonProp.ExtractInt("tvdb", out tvdbSeason);
+                                seasonProp.ExtractInt("tmdb", out tmdbSeason);
+                            }
+
+                            if (element.TryGetProperty("themoviedb_id", out JsonElement tmdbProp))
+                            {
+                                tmdbProp.ExtractInt("tv", out int? tvId);
+                                tmdbProp.ExtractInt("tv", out int? movieId);
+
+                                tmdbId = movieId ?? tvdb_id;
+                            }
+
+                            newLinks.Add(new Model_Link()
+                            {
+                                anilist_id = anilist_id,
+                                anidb_id = anidb_id,
+                                animecountdown_id = animecountdown_id,
+                                animenewsnetwork_id = animenewsnetwork_id,
+                                anime_planet_id = anime_planet_id,
+                                anisearch_id = anisearch_id,
+                                imdb_id = imdb_id,
+                                kitsu_id = kitsu_id,
+                                livechart_id = livechart_id,
+                                mal_id = mal_id,
+                                simkl_id = simkl_id,
+                                themoviedb_id = tmdbId,
+                                tmdb_season = tmdbSeason,
+                                tvdb_id = tvdb_id,
+                                tvdb_season = tvdbSeason,
+                                type = type
+                            });
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Failed to process link - {e.Message}");
+                    }
+                }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-            }
-
-            if (links == null)
-                return null;
-
-            List<Model_Link> newLinks = new List<Model_Link>();
-
-            foreach (Link l in links)
-            {
-                if (l.anilist_id == null)
-                    continue;
-
-                newLinks.Add(new Model_Link()
-                {
-                    anilist_id = l.anilist_id,
-                    anidb_id = l.anidb_id,
-                    animecountdown_id = l.animecountdown_id,
-                    animenewsnetwork_id = l.animenewsnetwork_id,
-                    anime_planet_id = l.anime_planet_id,
-                    anisearch_id = l.anisearch_id,
-                    imdb_id = l.imdb_id,
-                    kitsu_id = l.kitsu_id,
-                    livechart_id = l.livechart_id,
-                    mal_id = l.mal_id,
-                    simkl_id = l.simkl_id,
-                    themoviedb_id = l.themoviedb_id?.movie ?? l.themoviedb_id?.tv,
-                    tmdb_season = l.season?.tmdb,
-                    tvdb_id = l.tvdb_id,
-                    tvdb_season = l.season?.tvdb,
-                    type = l.type
-                });
             }
 
             return newLinks.ToArray();
@@ -384,39 +456,6 @@ public class CatalogService
 
         await _db.BulkInsertOrUpdateAsync(links);
         await _db.SaveChangesAsync();
-    }
-
-    public class Link
-    {
-        public int? anilist_id { get; set; }
-
-        public string? type { get; set; }
-        public int? anidb_id { get; set; }
-        public int? animecountdown_id { get; set; }
-        public int? animenewsnetwork_id { get; set; }
-        public string? anime_planet_id { get; set; }
-        public int? anisearch_id { get; set; }
-        public string? imdb_id { get; set; }
-        public int? kitsu_id { get; set; }
-        public int? livechart_id { get; set; }
-        public int? mal_id { get; set; }
-        public int? simkl_id { get; set; }
-        public TheMovieDb? themoviedb_id { get; set; }
-        public int? tvdb_id { get; set; }
-
-        public Season? season { get; set; }
-
-        public class Season
-        {
-            public int? tvdb { get; set; }
-            public int? tmdb { get; set; }
-        }
-
-        public class TheMovieDb
-        {
-            public int? tv { get; set; }
-            public int? movie { get; set; }
-        }
     }
 
     public async Task<SearchCriteria> GetSearchCriteria()
