@@ -167,7 +167,8 @@ public class AniListProvider : IMetaDataProvider
             {
                 Id = media.id,
 
-                Title = media.title?.getBestMatch ?? "",
+                TitleEnglish = media.title?.english,
+                TitleNative = media.title?.native,
                 Description = media.description,
                 Status = media.status,
                 MediaFormat = media.format,

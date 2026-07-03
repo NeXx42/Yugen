@@ -147,7 +147,7 @@ export default function (props: Props) {
     return (
         <div className="EpisodeList ViewPageContainer">
             {
-                props.mediaInfo.status === "NOT_YET_RELEASED" ? (
+                (props.mediaInfo.status === "NOT_YET_RELEASED" && episodes.length === 0) ? (
                     <div className="EpisodeList_Unaired">
                         {
                             upcomingDate != null ?
@@ -155,7 +155,7 @@ export default function (props: Props) {
                                     <>
                                         <span>PREMIERE</span>
                                         <span>{monthsOfTheYear[upcomingDate?.getMonth()]}</span>
-                                        <h1>{upcomingDate?.getDay()}</h1>
+                                        <h1>{upcomingDate?.getDate()}</h1>
                                         <span>{daysOfTheWeek[upcomingDate?.getDay()]} · {upcomingDate?.getFullYear()}</span>
                                     </>
                                 ) : (

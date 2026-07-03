@@ -39,7 +39,7 @@ public class MediaInfo
         return new MediaInfo()
         {
             id = media.Id,
-            title = media.Title,
+            title = media.TitleEnglish ?? media.TitleNative,
             description = media.Description,
             type = media.MediaFormat,
 

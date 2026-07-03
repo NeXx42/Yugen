@@ -131,7 +131,13 @@ public class CatalogService
         // create db entries for those that do not exist
 
         List<int> initialCreates = new List<int>();
-        HashSet<int> existingEntriesInDB = await _db.media.Where(m => remainingIds.Contains(m.Id)).Select(m => m.Id).ToHashSetAsync();
+        HashSet<int> existingEntriesInDB = await _db.media
+            .Where(m => remainingIds.Contains(m.Id) && !(
+                m.Status == "NOT_YET_RELEASED" && // for not yet released the info can change, ignore stale versions
+                    (!m.LastUpdated.HasValue || m.LastUpdated.Value <= currentTime - 43200)
+            ))
+            .Select(m => m.Id)
+            .ToHashSetAsync();
 
         foreach (int desired in remainingIds)
             if (!existingEntriesInDB.Contains(desired))
@@ -277,6 +283,11 @@ public class CatalogService
 
         foreach (Model_Media media in existingDbEntries)
         {
+            if (ShouldUpdateMedia(media))
+            {
+                continue;
+            }
+
             card = MediaCard.Map(media);
             _cache.Set(GetCardCacheId(card.aniListId), card);
 
@@ -292,6 +303,14 @@ public class CatalogService
             _cache.Set(GetCardCacheId(newCard.aniListId), newCard);
 
         return [.. results, .. newCards];
+    }
+
+    private bool ShouldUpdateMedia(Model_Media info)
+    {
+        if (info.Status != "NOT_YET_RELEASED")
+            return false;
+
+        return !info.LastUpdated.HasValue || info.LastUpdated <= (DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 43200);
     }
 
     public async Task<MediaInfo[]> GetTrending(int limit)

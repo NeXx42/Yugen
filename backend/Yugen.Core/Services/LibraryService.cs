@@ -222,13 +222,13 @@ public class LibraryService
         if (media == null)
             return [];
 
-        if (refetch || !(media.Hydrated ?? false))
-        {
-            await _hydrationService.HydrateEpisodes(media, clearOld);
-
-            if (usr != null)
-                await RecheckDownloads(usr, aniListId, true);
-        }
+        //if (refetch || !(media.Hydrated ?? false))
+        //{
+        //    await _hydrationService.HydrateEpisodes(media, clearOld);
+        //
+        //    if (usr != null)
+        //        await RecheckDownloads(usr, aniListId, true);
+        //}
 
         List<Model_MediaEpisode> episodeMetadata = await _db.mediaEpisodes.Where(e => e.MediaId == aniListId).OrderBy(e => e.EpisodeNumber).ToListAsync();
         List<Model_DownloadedEpisode> downloadMetadata = await _db.downloadedEpisodes.Where(e => e.MediaId == aniListId).OrderBy(e => e.EpisodeNumber).ToListAsync();
@@ -415,7 +415,10 @@ public class LibraryService
             return true;
         }
 
+        _db.RemoveRange(existingDownload.downloadedEpisodes);
         _db.Remove(existingDownload);
+        await _db.SaveChangesAsync();
+
         await _db.AddAsync(newDownload);
         await _db.SaveChangesAsync();
 

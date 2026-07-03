@@ -29,7 +29,7 @@ public class MediaCard
         return new MediaCard()
         {
             aniListId = dbData.Id,
-            Title = dbData.Title,
+            Title = dbData.TitleEnglish ?? dbData.TitleNative,
 
             year = dbData.Year,
             season = dbData.Season,

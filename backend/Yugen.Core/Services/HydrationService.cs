@@ -33,33 +33,27 @@ public class HydrationService
         req ??= new MediaSearchQuery();
         req.ids = aniListId;
 
-        Model_Media[] media = await _metaDataProvider.GetMediaInfo(req);
+        List<Model_Media> results = await _db.media.Where(m => aniListId.Contains(m.Id)).ToListAsync();
+        Dictionary<int, Model_Media> newMedia = (await _metaDataProvider.GetMediaInfo(req)).ToDictionary(m => m.Id, m => m);
 
-        await _db.BulkInsertOrUpdateAsync(media);
-        await _db.BulkInsertOrUpdateAsync(media.SelectMany(m => m.Tags));
-        await _db.BulkInsertOrUpdateAsync(media.SelectMany(m => m.Genres));
-        await _db.BulkInsertOrUpdateAsync(media.SelectMany(m => m.Episodes));
-        await _db.BulkInsertOrUpdateAsync(media.SelectMany(m => m.RelatedMedia));
+        foreach (Model_Media existing in results)
+        {
+            if (newMedia.TryGetValue(existing.Id, out Model_Media? fresh))
+            {
+                existing.Update(fresh);
+                newMedia.Remove(existing.Id);
+            }
+        }
 
-        return media;
-    }
+        results.AddRange(newMedia.Values);
 
-    public async Task<Model_Media?> SaveMedia(int aniListId, MediaSearchQuery? req = null)
-    {
-        req ??= new MediaSearchQuery();
-        req.ids = [aniListId];
-
-        Model_Media[] media = await _metaDataProvider.GetMediaInfo(req);
-
-        if (media.Length != 1)
-            return null;
-
-
-        await _db.AddAsync(media[0]);
+        await _db.AddRangeAsync(newMedia.Values);
         await _db.SaveChangesAsync();
 
-        return media[0];
+        return results.ToArray();
     }
+
+    public async Task<Model_Media?> SaveMedia(int aniListId, MediaSearchQuery? req = null) => (await SaveMedia([aniListId], req))[0];
 
     public async Task HydrateEpisodes(Model_Media media, bool clearOld)
     {
@@ -103,7 +97,7 @@ public class HydrationService
         if (toAdd.Count > 0)
             await _db.AddRangeAsync(toAdd);
 
-        media.Hydrated = true;
+        //media.Hydrated = true;
         await _db.SaveChangesAsync();
     }
 
