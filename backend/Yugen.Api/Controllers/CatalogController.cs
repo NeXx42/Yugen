@@ -14,11 +14,13 @@ namespace Yugen.Api.Controllers;
 [Route("api/catalog")]
 public class CatalogController : ControllerBase
 {
+    private readonly LinkService _linkService;
     private readonly CatalogService _catalogService;
 
-    public CatalogController(CatalogService catalogService)
+    public CatalogController(CatalogService catalogService, LinkService linkService)
     {
         _catalogService = catalogService;
+        _linkService = linkService;
     }
 
     [HttpGet("Upcoming")]
@@ -50,7 +52,7 @@ public class CatalogController : ControllerBase
         try
         {
             HttpContext.GetUserFromSession(out UserSession usr);
-            await _catalogService.RedownloadLinks(usr);
+            await _linkService.RedownloadLinks(usr);
             return true;
         }
         catch

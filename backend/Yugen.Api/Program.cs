@@ -82,6 +82,7 @@ builder.Services.Configure<EncryptionConfig>(builder.Configuration.GetSection("E
 
 builder.Services.AddDbContext<YugenContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<LinkService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<MediaService>();
 builder.Services.AddScoped<CatalogService>();

@@ -13,7 +13,7 @@ public class LinkDownloadJob : IScheduledJob
     {
         using var scope = factory.CreateScope();
 
-        CatalogService catalogFactory = scope.ServiceProvider.GetRequiredService<CatalogService>();
-        await catalogFactory.RedownloadLinks();
+        LinkService linkFactory = scope.ServiceProvider.GetRequiredService<LinkService>();
+        await linkFactory.RedownloadLinks();
     }
 }
