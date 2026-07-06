@@ -263,17 +263,16 @@ public class LinkService
                         if (anidb_id.HasValue && anidbCentricLinks.TryGetValue(anidb_id.Value, out Model_Link? link))
                         {
                             link!.tvdb_id = TryParse("tvdbid");
-
                             link!.tvdb_season = TryParse("defaulttvdbseason");
-                            //link!.tvdb_id = TryParse("tmdbtv");
                             link!.tmdb_season = TryParse("tmdbseason");
                             link!.themoviedb_id = TryParse("tmdbid");
                             link!.imdb_id = el.Attribute("imdbid")?.Value;
+                            //link!.tvdb_id = TryParse("tmdbtv");
                         }
 
                         int? TryParse(string attributeName)
                         {
-                            string? str = el.Attribute("tvdbid")?.Value;
+                            string? str = el.Attribute(attributeName)?.Value;
 
                             if (!string.IsNullOrEmpty(str) && int.TryParse(str, out int _temp))
                                 return _temp;
