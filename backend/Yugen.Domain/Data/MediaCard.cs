@@ -51,14 +51,14 @@ public class MediaCard
         return this;
     }
 
-    public MediaCard WithWatchInfo((Model_WatchHistory his, Model_WatchedEpisode? ep) res)
+    public MediaCard WithWatchInfo(Model_WatchHistory his, Model_WatchedEpisode? ep)
     {
-        if (res.ep == null)
+        if (ep == null)
             return this;
 
-        watchPercentage = res.ep.WatchPercentage;
-        watchEpisode = res.ep.EpisodeNumber;
-        watchLastTime = res.his?.UpdatedTime != null ? new DateTimeOffset(res.his.UpdatedTime.Value).ToUnixTimeSeconds() : null;
+        watchPercentage = ep.WatchPercentage;
+        watchEpisode = ep.EpisodeNumber;
+        watchLastTime = his?.UpdatedTime != null ? new DateTimeOffset(his.UpdatedTime.Value).ToUnixTimeSeconds() : null;
 
         return this;
     }

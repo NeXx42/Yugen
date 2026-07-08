@@ -97,6 +97,8 @@ public class MediaService
             });
 
             await _db.SaveChangesAsync();
+            _cache.Remove(CatalogService.GetCardCacheId(AniListId));
+
             return;
         }
 

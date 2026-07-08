@@ -22,10 +22,6 @@ interface Props {
 
 export default function (props: Props) {
     const player = usePlayer(selectTime);
-
-    const [lastCue, setLastCue] = useState<number | undefined>(undefined);
-    const [currentCue, setCurrentCue] = useState<Cue | undefined>(undefined);
-
     const [cues, SetCues] = useState<Cue[] | undefined>(undefined);
 
     function parseTimestamp(ts: string): number {
@@ -106,14 +102,7 @@ export default function (props: Props) {
         SetCues(cues.sort((a, b) => a.start - b.start));
     }
 
-    function WithinCue(time: number, pos: number): boolean {
-        return time >= cues![pos].start && time <= cues![pos].end;
-    }
-
     useEffect(() => {
-        setLastCue(undefined);
-        setCurrentCue(undefined);
-
         if (props.url === undefined) {
             SetCues(undefined);
             return;
@@ -126,37 +115,21 @@ export default function (props: Props) {
 
     }, [props.url])
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (!cues?.length)
-                return;
-
-            const t = (player?.currentTime ?? 0) + props.offset;
-
-            if (lastCue != undefined && WithinCue(t, lastCue)) {
-                return;
-            }
-
-            let i = lastCue ?? 0;
-
-            while (i > 0 && t < cues[i].start) i--;
-            while (i < cues.length && t > cues[i].end) i++;
-
-            if (WithinCue(t, i)) {
-                setLastCue(i);
-                setCurrentCue(cues[i]);
-            }
-            else {
-                setCurrentCue(undefined);
-            }
-
-        }, 10);
-
-        return () => clearInterval(interval);
-    }, [cues, player]);
-
     if (cues === undefined)
         return <></>;
+
+    function findCue(time: number): Cue | undefined {
+        if (cues === undefined)
+            return undefined;
+
+        for (let i = 0; i < cues.length; i++) {
+            if (time < cues[i].start) return undefined; // no cue can match from here on
+            if (time <= cues[i].end) return cues[i];     // start <= time is implied by above
+        }
+        return undefined;
+    }
+
+    const currentCue = findCue((player?.currentTime ?? 0) + props.offset);
 
     if (props.viewLogs) {
         const alignOffset = (cue: Cue) => {
@@ -165,7 +138,7 @@ export default function (props: Props) {
 
         return <div className="VideoPlayer_SubtitlesContainer_Logs" onClick={e => { e.stopPropagation(); props.setViewLogs(false); }}>
             {
-                cues.map((c, i) => <div className={lastCue === i ? "Selected" : ""} key={i} dangerouslySetInnerHTML={{ __html: c.text ?? "" }} onClick={e => { e.stopPropagation(); alignOffset(c); }} />)
+                cues.map((c, i) => <div className={currentCue?.start === c.start ? "Selected" : ""} key={i} dangerouslySetInnerHTML={{ __html: c.text ?? "" }} onClick={e => { e.stopPropagation(); alignOffset(c); }} />)
             }
         </div>
     }

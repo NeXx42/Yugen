@@ -117,6 +117,9 @@ public class LibraryService
 
     public async Task<PageResponse<MediaCard>> GetWatchHistory(UserSession usr, MediaSearchQuery? req)
     {
+        int page = req?.page ?? 1;
+        int pageSize = req?.pageSize ?? 10;
+
         var query = _db.watchHistory
             .Include(w => w.WatchedEpisodes)
             .Where(w => w.UserId == usr.User.Id && w.LastWatchedEpisodeNumber.HasValue)
@@ -128,16 +131,13 @@ public class LibraryService
             })
             .Where(x => x.Episode != null);
 
-        var results = await query.ToArrayAsync();
+        int totalCount = await query.CountAsync();
+        var history = await query.ToArrayAsync();
 
-        Dictionary<int, (Model_WatchHistory, Model_WatchedEpisode?)> historyLookup = results.ToDictionary(x => x.Media.MediaId, x => (x.Media, x.Episode));
-        MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds(results.Select(r => r.Media.MediaId).ToList(), req);
+        Dictionary<int, MediaCard> cardLookup = (await _catalogService.GetOrCreateMediaCardsFromIds(history.Select(m => m.Media.MediaId).ToList(), req)).ToDictionary(c => c.aniListId, c => c);
 
-        int page = req?.page ?? 1;
-        int pageSize = req?.pageSize ?? 10;
-
-        var res = cards.OrderByDescending(c => c.watchLastTime).Skip((page - 1) * pageSize).Take(pageSize).Select(c => c.WithWatchInfo(historyLookup[c.aniListId])).ToArray();
-        return new PageResponse<MediaCard>(res, page, pageSize, cards.Length);
+        var res = history.Select(h => cardLookup[h.Media.MediaId].WithWatchInfo(h.Media, h.Episode)).ToArray();
+        return new PageResponse<MediaCard>(res, page, pageSize, totalCount);
     }
 
     public async Task<int?> ResyncLibrary(UserSession usr)
