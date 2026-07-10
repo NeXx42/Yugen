@@ -3,11 +3,9 @@ using Yugen.Domain.Models.Media;
 
 namespace Yugen.Domain.Models.Linking;
 
-public class Model_Link : IModel_Link
+public interface IModel_Link
 {
-    [Required]
-    [Key]
-    public required int? anilist_id { get; set; }
+    public int? anilist_id { get; set; }
 
     public string? type { get; set; }
     public int? anidb_id { get; set; }

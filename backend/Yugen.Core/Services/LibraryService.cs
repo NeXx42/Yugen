@@ -53,10 +53,7 @@ public class LibraryService
 
         _endpointDeduplicator = endpointDeduplicator;
 
-        _library = new LibraryFactory(
-            new SonarrLibraryProvider(settings.Get(ConfigKeys.Sonarr_Url), settings.Get(ConfigKeys.Sonarr_ApiKey)),
-            new RadarrLibraryProvider(settings.Get(ConfigKeys.Radarr_Url), settings.Get(ConfigKeys.Radarr_ApiKey))
-        );
+        _library = LibraryFactory.Create(settings);
     }
 
     public async Task<DownloadedEpisode[]> GetDownloadedEpisodes(UserSession usr, int aniListId)
@@ -93,7 +90,8 @@ public class LibraryService
             }
         }
 
-        ILibraryProvider lib = _library.GetFactory(link!);
+        Model_Media media = await _db.media.SingleAsync(m => m.Id == aniListId);
+        ILibraryProvider lib = _library.GetFactory(media);
 
         if (!lib.isSetup)
             return null;
@@ -439,8 +437,9 @@ public class LibraryService
 
         Model_DownloadedMedia? existingData = await _db.downloadedMedia.Include(d => d.downloadedEpisodes).FirstOrDefaultAsync(d => d.MediaId == aniListId);
 
+        Model_Media media = await _db.media.SingleAsync(m => m.Id == aniListId);
         Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == aniListId);
-        DownloadRequestInfo requestInfo = await _library.GetFactory(link!).GetRequestInfo(link!);
+        DownloadRequestInfo requestInfo = await _library.GetFactory(media!).GetRequestInfo(link ?? new Model_Link() { anilist_id = aniListId });
 
         if (existingData == null)
             existingData = await RecheckDownloads(usr, aniListId);

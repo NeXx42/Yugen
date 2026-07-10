@@ -90,6 +90,13 @@ export async function library_DeleteMedia(mediaId: number) {
 export async function library_ClearWatchHistory(seriesId: number) {
     return (await post(`library/${seriesId}/ClearHistory`));
 }
+export async function library_UploadManualLink(mediaId: number, providerId: number, linkedId: number, linkedSeason?: number) {
+    return (await post(`library/${mediaId}/SaveLink`, {
+        libraryProvider: providerId,
+        linkedId,
+        linkedSeason
+    }));
+}
 
 
 export async function catalog_ReloadLinks() {

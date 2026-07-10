@@ -4,13 +4,8 @@ import * as api from "@lib/api.local"
 
 import { MediaInfo, DownloadRequestInfo, MediaRequest } from "@shared/types";
 import { ReactNode, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
-
-import { useModals } from "@/app/context/modalContext";
-import LoadingModal from "@/app/modals/loadingModal";
 
 import "./seriesRequestModal.css"
-
 
 export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInfo, onUpdate: () => void, onClose: () => void }) {
     const [loading, setLoading] = useState(false);
@@ -141,6 +136,40 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
         )
     }
 
+    const drawManualLinker = () => {
+        const handleSubmit = async (e: any) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const providerId = Number.parseInt(formData.get("provider")?.toString() ?? "");
+            const mediaId = Number.parseInt(formData.get("mediaId")?.toString() ?? "");
+            const season = Number.parseInt(formData.get("season")?.toString() ?? "");
+
+            api.library_UploadManualLink(mediaInfo.id, providerId, mediaId, season).then(() => document.location.reload());
+        };
+
+        return (<form onSubmit={handleSubmit}>
+            <a>Couldn't find link for anime, define manual link</a>
+            <div>
+                <a>Library Provider</a>
+                <select name="provider">
+                    <option value="0">Sonarr</option>
+                    <option value="1">Radarr</option>
+                </select>
+            </div>
+            <div>
+                <a>Media Id</a>
+                <input name="mediaId" type="number"></input>
+            </div>
+            <div>
+                <a>Media Season</a>
+                <input name="season" type="number"></input>
+            </div>
+
+            <button type="submit">Save</button>
+        </form>)
+    }
+
     const drawMenuContent = (info: DownloadRequestInfo): ReactNode => {
 
         return (<>
@@ -159,13 +188,13 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
                 }
 
                 <div>Root:
-                    <select value={requestInfo!.selectedRoot ?? 0} onChange={e => updateSelectedRoot(e.target.value)}>
+                    <select value={info!.selectedRoot ?? 0} onChange={e => updateSelectedRoot(e.target.value)}>
                         {info.roots.map(r => <option key={r.path} value={r.path}>{r.path}</option>)}
                     </select>
                 </div>
 
                 <div>Quality:
-                    <select value={requestInfo!.selectedQuality ?? 0} onChange={e => updateSelectedQuality(Number.parseInt(e.target.value))}>
+                    <select value={info!.selectedQuality ?? 0} onChange={e => updateSelectedQuality(Number.parseInt(e.target.value))}>
                         {info.qualities.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}
                     </select>
                 </div>
@@ -174,7 +203,7 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
             </div>
 
             {
-                requestInfo?.downloadedEpisodes ? (
+                info?.downloadedEpisodes ? (
                     <>
                         <div className="MediaRequest_Menu_Status">
                             <a>Monitored</a>
@@ -182,8 +211,11 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
                         </div>
 
                         <div className="MediaRequest_Menu_Episodes">
-                            {drawEpisodes()}
-
+                            {
+                                info.sonarrRequestId != undefined
+                                    ? drawEpisodes()
+                                    : drawManualLinker()
+                            }
                         </div>
 
                         <div className="MediaRequest_Menu_Controls">
@@ -197,8 +229,14 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
                     </>
                 ) : (
                     <div className="MediaRequest_Menu_DownloadMetadata">
-                        <p>Unknown series</p>
-                        <button onClick={() => { toggleSeasonMonitor(true); return requestMedia(); }}>Download Provider data</button>
+                        {
+                            info.sonarrRequestId != undefined ? (<>
+                                <p>Unknown series</p>
+                                <button onClick={() => { toggleSeasonMonitor(true); return requestMedia(); }}>Download Provider data</button>
+                            </>)
+                                : drawManualLinker()
+                        }
+
                     </div>
                 )
             }

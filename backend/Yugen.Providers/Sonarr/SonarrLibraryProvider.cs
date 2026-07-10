@@ -222,4 +222,10 @@ public class SonarrLibraryProvider : ILibraryProvider
             episodeFileIds = toDelete
         });
     }
+
+    public void EmbedLink(IModel_Link link, int? linkId, int? seasonId)
+    {
+        link.tvdb_id = linkId;
+        link.tvdb_season = seasonId;
+    }
 }

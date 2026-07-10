@@ -1,13 +1,24 @@
+using Yugen.Core.Services;
 using Yugen.Domain.Enums;
 using Yugen.Domain.Models.Library;
 using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
 using Yugen.Providers;
+using Yugen.Providers.Radarr;
+using Yugen.Providers.Sonarr;
 
 namespace Yugen.Core.Factories;
 
 public class LibraryFactory
 {
+    public static LibraryFactory Create(SettingsCache settings)
+    {
+        return new LibraryFactory(
+            new SonarrLibraryProvider(settings.Get(ConfigKeys.Sonarr_Url), settings.Get(ConfigKeys.Sonarr_ApiKey)),
+            new RadarrLibraryProvider(settings.Get(ConfigKeys.Radarr_Url), settings.Get(ConfigKeys.Radarr_ApiKey))
+        );
+    }
+
     private readonly ILibraryProvider _sonarr;
     private readonly ILibraryProvider _radarr;
 
@@ -19,7 +30,6 @@ public class LibraryFactory
 
     public ILibraryProvider[] GetFactories() => [_sonarr, _radarr];
 
-    public ILibraryProvider GetFactory(Model_Link link) => GetFactory(link.type);
     public ILibraryProvider GetFactory(Model_Media media) => GetFactory(media.MediaFormat);
     public ILibraryProvider GetFactory(Model_DownloadedMedia media)
     {

@@ -10,6 +10,7 @@ using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.History;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Data.Users;
+using Yugen.Domain.Enums;
 using Yugen.Domain.Models;
 
 namespace Yugen.Api.Controllers;
@@ -19,10 +20,12 @@ namespace Yugen.Api.Controllers;
 public class LibraryController : ControllerBase
 {
     private readonly LibraryService _libraryService;
+    private readonly LinkService _linkingServer;
 
-    public LibraryController(LibraryService libraryService)
+    public LibraryController(LibraryService libraryService, LinkService linkingService)
     {
         _libraryService = libraryService;
+        _linkingServer = linkingService;
     }
 
     [HttpGet("{id}/Film")]
@@ -163,6 +166,29 @@ public class LibraryController : ControllerBase
         catch
         {
             return Results.BadRequest();
+        }
+    }
+
+    public struct MediaLinkRequest
+    {
+        public int libraryProvider { get; set; }
+        public int linkedId { get; set; }
+        public int? linkedSeason { get; set; }
+    }
+
+    [HttpPost("{mediaId}/SaveLink")]
+    public async Task<IResult> SaveManualLink(int mediaId, [FromBody] MediaLinkRequest req)
+    {
+        try
+        {
+            HttpContext.GetUserFromSession(out UserSession usr);
+            await _linkingServer.SaveManualLink(usr, (LibraryProviderType)req.libraryProvider, mediaId, req.linkedId, req.linkedSeason);
+
+            return Results.Ok();
+        }
+        catch
+        {
+            return Results.InternalServerError();
         }
     }
 }

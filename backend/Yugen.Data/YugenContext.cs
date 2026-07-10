@@ -29,6 +29,7 @@ public class YugenContext : DbContext
     public DbSet<Model_MediaRelation> mediaRelations { get; set; }
 
     public DbSet<Model_Link> links { get; set; }
+    public DbSet<Model_ManualLink> manualLinks { get; set; }
 
     // from download provider
     public DbSet<Model_DownloadedMedia> downloadedMedia { get; set; }

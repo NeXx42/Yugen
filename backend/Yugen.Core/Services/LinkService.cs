@@ -5,10 +5,14 @@ using System.Xml.Linq;
 using EFCore.BulkExtensions;
 using Humanizer;
 using Microsoft.EntityFrameworkCore;
+using Yugen.Core.Factories;
 using Yugen.Core.Helpers;
 using Yugen.Data;
 using Yugen.Domain.Data.Users;
+using Yugen.Domain.Enums;
 using Yugen.Domain.Models.Linking;
+using Yugen.Providers.Radarr;
+using Yugen.Providers.Sonarr;
 
 namespace Yugen.Core.Services;
 
@@ -17,10 +21,48 @@ public class LinkService
     private readonly YugenContext _db;
     private readonly EndpointDeduplicator _endpointDeduplicator;
 
-    public LinkService(YugenContext db)
+    private readonly LibraryFactory _library;
+
+    public LinkService(YugenContext db, SettingsCache settings)
     {
         _db = db;
         _endpointDeduplicator = new EndpointDeduplicator();
+
+        _library = LibraryFactory.Create(settings);
+    }
+
+    public async Task SaveManualLink(UserSession usr, LibraryProviderType provider, int mediaId, int linkedId, int? linkedSeason)
+    {
+        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(RedownloadLinks));
+        Model_Link? existingLink = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == mediaId);
+
+        if (existingLink == null)
+        {
+            existingLink = new Model_Link() { anilist_id = mediaId };
+            _library.GetFactory(provider).EmbedLink(existingLink, linkedId, linkedSeason);
+
+            await _db.AddAsync(existingLink);
+        }
+        else
+        {
+            _library.GetFactory(provider).EmbedLink(existingLink, linkedId, linkedSeason);
+        }
+
+        Model_ManualLink? existingManualLin = await _db.manualLinks.FirstOrDefaultAsync(l => l.anilist_id == mediaId);
+
+        if (existingManualLin == null)
+        {
+            existingManualLin = new Model_ManualLink() { anilist_id = mediaId };
+            _library.GetFactory(provider).EmbedLink(existingManualLin, linkedId, linkedSeason);
+
+            await _db.AddAsync(existingManualLin);
+        }
+        else
+        {
+            _library.GetFactory(provider).EmbedLink(existingManualLin, linkedId, linkedSeason);
+        }
+
+        await _db.SaveChangesAsync();
     }
 
     public async Task RedownloadLinks(UserSession usr, bool force = false)
@@ -49,6 +91,32 @@ public class LinkService
 
         if (!force && (links.Length <= existingCount * importThreshold))
             throw new Exception($"Import would result in {links.Length} imports, this is {Math.Round((links.Length / (float)existingCount) * 100)}% of the existing total. Skipping to preserve integrity");
+
+        Dictionary<int, Model_ManualLink> manualLinks = await _db.manualLinks.Where(l => l.anilist_id.HasValue).ToDictionaryAsync(l => l.anilist_id!.Value, l => l);
+        Parallel.ForEach(links, (l) =>
+        {
+            if (!l.anilist_id.HasValue)
+                return;
+
+            if (manualLinks.TryGetValue(l.anilist_id.Value, out Model_ManualLink? manualOverride) && manualOverride != null)
+            {
+                l.type ??= manualOverride.type;
+                l.anidb_id ??= manualOverride.anidb_id;
+                l.animecountdown_id ??= manualOverride.animecountdown_id;
+                l.animenewsnetwork_id ??= manualOverride.animenewsnetwork_id;
+                l.anime_planet_id ??= manualOverride.anime_planet_id;
+                l.anisearch_id ??= manualOverride.anisearch_id;
+                l.imdb_id ??= manualOverride.imdb_id;
+                l.kitsu_id ??= manualOverride.kitsu_id;
+                l.livechart_id ??= manualOverride.livechart_id;
+                l.mal_id ??= manualOverride.mal_id;
+                l.simkl_id ??= manualOverride.simkl_id;
+                l.themoviedb_id ??= manualOverride.themoviedb_id;
+                l.tvdb_id ??= manualOverride.tvdb_id;
+                l.tvdb_season ??= manualOverride.tvdb_season;
+                l.tmdb_season ??= manualOverride.tmdb_season;
+            }
+        });
 
         await _db.BulkInsertOrUpdateAsync(links);
     }

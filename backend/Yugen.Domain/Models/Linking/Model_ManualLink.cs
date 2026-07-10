@@ -1,9 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-using Yugen.Domain.Models.Media;
 
 namespace Yugen.Domain.Models.Linking;
 
-public class Model_Link : IModel_Link
+public class Model_ManualLink : IModel_Link
 {
     [Required]
     [Key]
