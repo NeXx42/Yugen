@@ -75,6 +75,35 @@ export default function (props: Props) {
             return true;
         }
 
+        function mergeOverlappingCues(cues: Cue[]): Cue[] {
+            if (cues.length <= 1)
+                return cues;
+
+            const sorted = [...cues].sort((a, b) => a.start - b.start);
+            const result: Cue[] = [];
+
+            for (const cue of sorted) {
+                const last = result[result.length - 1];
+
+                if (!last) {
+                    result.push({ ...cue });
+                    continue;
+                }
+
+                if (cue.start <= last.end) {
+                    last.end = Math.max(last.end, cue.end);
+
+                    if (last.text !== cue.text) {
+                        last.text += "\n" + cue.text;
+                    }
+                } else {
+                    result.push({ ...cue });
+                }
+            }
+
+            return result;
+        }
+
         for (const block of blocks) {
             const lines = block.trim().split("\n");
 
@@ -99,7 +128,7 @@ export default function (props: Props) {
             });
         }
 
-        SetCues(cues.sort((a, b) => a.start - b.start));
+        SetCues(mergeOverlappingCues(cues));
     }
 
     useEffect(() => {

@@ -1,0 +1,30 @@
+.ErrorContainer {
+    position: absolute;
+    margin: auto;
+
+    background: var(--global-div-tr);
+    border: 1px solid var(--global-border-color);
+    border-radius: 15px;
+
+    padding: 15px;
+    justify-self: center;
+    align-self: center;
+
+    color: red;
+
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+.ErrorContainer>button {
+    background: var(--global-div-tr);
+    border: 1px solid var(--global-border-color);
+    border-radius: 15px;
+
+    width: fit-content;
+    padding: 7px 15px;
+
+    cursor: pointer;
+}

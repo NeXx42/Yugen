@@ -29,38 +29,37 @@ public class LibraryController : ControllerBase
     }
 
     [HttpGet("{id}/Film")]
-    public async Task<EpisodeInfo?> GetFilmEpisodeContainer(int id, [FromQuery] bool refetch = false)
+    public async Task<IResult> GetFilmEpisodeContainer(int id, [FromQuery] bool refetch = false)
     {
         HttpContext.TryGetUserFromSession(out UserSession? usr);
-        return await _libraryService.GetFilmEpisodeContainer(usr, id, refetch);
+        return await ExceptionWrapper.WrapException(() => _libraryService.GetFilmEpisodeContainer(usr, id, refetch));
     }
 
     [HttpGet("{id}/Episodes")]
-    public async Task<EpisodeInfo[]> GetMediaEpisodes(int id, [FromQuery] bool refetch = false, [FromQuery] bool clearOld = false)
+    public async Task<IResult> GetMediaEpisodes(int id, [FromQuery] bool refetch = false, [FromQuery] bool clearOld = false)
     {
         HttpContext.TryGetUserFromSession(out UserSession? usr);
-        return await _libraryService.GetMediaEpisodesForUser(usr, id, refetch, clearOld);
+        return await ExceptionWrapper.WrapException(() => _libraryService.GetMediaEpisodesForUser(usr, id, refetch, clearOld));
     }
 
     [HttpGet("WatchHistory")]
     [Authorize]
-    public async Task<PageResponse<MediaCard>> GetWatchHistory([FromQuery] int? page, [FromQuery] int? pageSize)
+    public async Task<IResult> GetWatchHistory([FromQuery] int? page, [FromQuery] int? pageSize)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-
-        return await _libraryService.GetWatchHistory(usr, new MediaSearchQuery
+        return await ExceptionWrapper.WrapException(() => _libraryService.GetWatchHistory(usr, new MediaSearchQuery
         {
             page = page,
             pageSize = pageSize
-        });
+        }));
     }
 
     [HttpPost("Sync/Library")]
     [Authorize]
-    public async Task<int?> SyncExternalLibraries()
+    public async Task<IResult> SyncExternalLibraries()
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        return await _libraryService.ResyncLibrary(usr);
+        return await ExceptionWrapper.WrapException(() => _libraryService.ResyncLibrary(usr));
     }
 
     public class SearchLibraryFilter
@@ -71,10 +70,10 @@ public class LibraryController : ControllerBase
 
     [HttpPost("Search")]
     [Authorize]
-    public async Task<PageResponse<MediaCard>> SearchLibrary([FromBody] SearchLibraryFilter filter)
+    public async Task<IResult> SearchLibrary([FromBody] SearchLibraryFilter filter)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        return await _libraryService.SearchLibrary(usr, filter.req, filter.group ?? "all");
+        return await ExceptionWrapper.WrapException(() => _libraryService.SearchLibrary(usr, filter.req, filter.group ?? "all"));
     }
 
     [HttpPost("Upload")]
@@ -122,34 +121,34 @@ public class LibraryController : ControllerBase
 
     [HttpGet("{mediaId}/Request")]
     [Authorize]
-    public async Task<DownloadRequestInfo> GetSeriesRequestInfo(int mediaId)
+    public async Task<IResult> GetSeriesRequestInfo(int mediaId)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        return await _libraryService.GetSeriesRequestInfo(usr, mediaId);
+        return await ExceptionWrapper.WrapException(() => _libraryService.GetSeriesRequestInfo(usr, mediaId));
     }
 
     [HttpPost("{mediaId}/SyncDownloads")]
     [Authorize]
-    public async Task SyncMediaDownloads(int mediaId, [FromQuery] bool force)
+    public async Task<IResult> SyncMediaDownloads(int mediaId, [FromQuery] bool force)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        await _libraryService.RecheckDownloads(usr, mediaId, force);
+        return await ExceptionWrapper.WrapException(() => _libraryService.RecheckDownloads(usr, mediaId, force));
     }
 
     [HttpPost("{mediaId}/ResearchDownloads")]
     [Authorize]
-    public async Task ResearchDownloads(int mediaId)
+    public async Task<IResult> ResearchDownloads(int mediaId)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        await _libraryService.ResearchDownloads(usr, mediaId);
+        return await ExceptionWrapper.WrapException(() => _libraryService.ResearchDownloads(usr, mediaId));
     }
 
     [HttpDelete("{mediaId}")]
     [Authorize]
-    public async Task Delete(int mediaId)
+    public async Task<IResult> Delete(int mediaId)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        await _libraryService.DeleteMedia(usr, mediaId);
+        return await ExceptionWrapper.WrapException(() => _libraryService.DeleteMedia(usr, mediaId));
     }
 
     [HttpPost("{mediaId}/ClearHistory")]

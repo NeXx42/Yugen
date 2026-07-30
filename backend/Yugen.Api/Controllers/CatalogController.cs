@@ -24,25 +24,28 @@ public class CatalogController : ControllerBase
     }
 
     [HttpGet("Upcoming")]
-    public async Task<MediaCard[]> GetUpcoming([FromQuery] int? take)
+    public async Task<IResult> GetUpcoming([FromQuery] int? take)
     {
-        return await _catalogService.Upcoming(take ?? 10);
+        return await ExceptionWrapper.WrapException(() => _catalogService.Upcoming(take ?? 10));
     }
 
     [HttpGet("Trending")]
-    public async Task<MediaInfo[]> GetTrending([FromQuery] int? take)
+    public async Task<IResult> GetTrending([FromQuery] int? take)
     {
-        return await _catalogService.GetTrending(take ?? 10);
+        return await ExceptionWrapper.WrapException(() => _catalogService.GetTrending(take ?? 10));
     }
 
     [HttpPost("Search")]
-    public async Task<PageResponse<MediaCard>> Search([FromBody] MediaSearchQuery query) => await _catalogService.Search(query);
+    public async Task<IResult> Search([FromBody] MediaSearchQuery query)
+    {
+        return await ExceptionWrapper.WrapException(() => _catalogService.Search(query));
+    }
 
     [HttpGet("{id}")]
-    public async Task<MediaInfo?> GetMediaInfo(int id)
+    public async Task<IResult> GetMediaInfo(int id)
     {
         HttpContext.TryGetUserFromSession(out UserSession? usr);
-        return await _catalogService.GetMediaInfoForUser(usr, id);
+        return await ExceptionWrapper.WrapException(() => _catalogService.GetMediaInfoForUser(usr, id));
     }
 
     [HttpPost("RedownloadLinking")]
@@ -62,13 +65,22 @@ public class CatalogController : ControllerBase
     }
 
     [HttpGet("SearchCriteria")]
-    public async Task<SearchCriteria> GetSearchCriteria() => await _catalogService.GetSearchCriteria();
+    public async Task<IResult> GetSearchCriteria()
+    {
+        return await ExceptionWrapper.WrapException(_catalogService.GetSearchCriteria);
+    }
 
     [HttpPost("Cache/DatabaseClear")]
     [Authorize]
-    public async Task ClearDatabaseCache() => await _catalogService.ClearDatabaseCache();
+    public async Task<IResult> ClearDatabaseCache()
+    {
+        return await ExceptionWrapper.WrapException(_catalogService.ClearDatabaseCache);
+    }
 
     [HttpPost("Cache/Clear")]
     [Authorize]
-    public async Task ClearCache() => await _catalogService.ClearCache();
+    public async Task<IResult> ClearCache()
+    {
+        return await ExceptionWrapper.WrapException(_catalogService.ClearCache);
+    }
 }

@@ -220,13 +220,21 @@ public class LibraryService
         if (media == null)
             return [];
 
-        //if (refetch || !(media.Hydrated ?? false))
-        //{
-        //    await _hydrationService.HydrateEpisodes(media, clearOld);
-        //
-        //    if (usr != null)
-        //        await RecheckDownloads(usr, aniListId, true);
-        //}
+        if (refetch || media.Episodes.Count == 0)
+        {
+            try
+            {
+                await _hydrationService.HydrateEpisodes(media, clearOld);
+            }
+            catch
+            {
+                if (refetch)
+                    throw;
+            }
+
+            if (usr != null)
+                await RecheckDownloads(usr, aniListId, true);
+        }
 
         List<Model_MediaEpisode> episodeMetadata = await _db.mediaEpisodes.Where(e => e.MediaId == aniListId).OrderBy(e => e.EpisodeNumber).ToListAsync();
         List<Model_DownloadedEpisode> downloadMetadata = await _db.downloadedEpisodes.Where(e => e.MediaId == aniListId).OrderBy(e => e.EpisodeNumber).ToListAsync();

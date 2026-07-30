@@ -6,6 +6,7 @@ import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import "./episodeList.css"
 import { EpisodeCompletionThreshold, MediaEpisodeInfo, MediaInfo } from "@/app/shared/types";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import ErrorContainer from "@/app/components/errorContainer";
 
 interface Props {
     mediaInfo: MediaInfo,
@@ -42,6 +43,7 @@ export default function (props: Props) {
 
     const [episodes, setEpisodes] = useState<MediaEpisodeInfo[]>([]);
     const [loadingEpisodes, setLoadingEpisodes] = useState(false);
+    const [errorEpisodes, setEpisodesError] = useState<string | undefined>();
 
     const [timeUntil, setTimeUntil] = useState("")
     const [selectedEpisodeIndex, setSelectedEpisodeIndex] = useState<number | null>(null);
@@ -116,9 +118,11 @@ export default function (props: Props) {
     const fetchEpisodes = (recache: boolean, clearOld: boolean) => {
         setRefreshMenuOpen(false);
         setLoadingEpisodes(true);
+        setEpisodesError(undefined);
 
         api.library_GetEpisodes(props.mediaInfo.id, recache, clearOld)
             .then(r => setEpisodes(r.sort((a, b) => a.number - b.number)))
+            .catch(e => setEpisodesError(e.Message))
             .finally(() => setLoadingEpisodes(false));
     }
 
@@ -189,29 +193,29 @@ export default function (props: Props) {
                             </div>
                         </div>
                         <div className="EpisodeList_EntriesContainer">
-                            <div className="EpisodeList_Entries">
-                                {
-                                    loadingEpisodes ? (
-                                        <>
-                                            <div className="Episode_Skeleton" />
-                                            <div className="Episode_Skeleton" />
-                                            <div className="Episode_Skeleton" />
-                                            <div className="Episode_Skeleton" />
-                                            <div className="Episode_Skeleton" />
-                                            <div className="Episode_Skeleton" />
-                                            <div className="Episode_Skeleton" />
-                                            <div className="Episode_Skeleton" />
-                                            <div className="Episode_Skeleton" />
-                                            <div className="Episode_Skeleton" />
-                                            <div className="Episode_Skeleton" />
-                                            <div className="Episode_Skeleton" />
-                                            <div className="Episode_Skeleton" />
-                                        </>
-                                    ) : (
-                                        episodes?.map(drawEpisode)
-                                    )
-                                }
-                            </div>
+                            <ErrorContainer
+                                loading={loadingEpisodes}
+                                error={errorEpisodes}
+                                retryFunc={() => fetchEpisodes(false, false)}
+                                dataDisplay={(<div className="EpisodeList_Entries">
+                                    {episodes?.map(drawEpisode)}
+                                </div>)}
+                                loadingDisplay={(<div className="EpisodeList_Entries">
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                    <div className="Episode_Skeleton" />
+                                </div>)}
+                            />
                         </div>
                         {
                             props.mediaInfo.upcomingEpisode != null && (

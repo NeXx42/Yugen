@@ -32,47 +32,47 @@ public class NotificationController : ControllerBase
 
     [HttpGet("Count")]
     [Authorize]
-    public async Task<int> GetNotificationCount()
+    public async Task<IResult> GetNotificationCount()
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        return await _notificationService.GetNotificationCount(usr);
+        return await ExceptionWrapper.WrapException(() => _notificationService.GetNotificationCount(usr));
     }
 
     [HttpGet]
     [Authorize]
-    public async Task<Notification[]> GetNotifications()
+    public async Task<IResult> GetNotifications()
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        return await _notificationService.GetNotifications(usr);
+        return await ExceptionWrapper.WrapException(() => _notificationService.GetNotifications(usr));
     }
 
     [HttpPost("{id}/Read")]
     [Authorize]
-    public async Task ReadNotification(int id)
+    public async Task<IResult> ReadNotification(int id)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        await _notificationService.ReadNotification(usr, id);
+        return await ExceptionWrapper.WrapException(() => _notificationService.ReadNotification(usr, id));
     }
 
     [HttpPost("{id}/Remove")]
     [Authorize]
-    public async Task RemoveNotification(int id)
+    public async Task<IResult> RemoveNotification(int id)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        await _notificationService.RemoveNotification(usr, id);
+        return await ExceptionWrapper.WrapException(() => _notificationService.RemoveNotification(usr, id));
     }
 
     [HttpPost("Clear")]
-    public async Task ClearReadNotifications()
+    public async Task<IResult> ClearReadNotifications()
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        await _notificationService.ClearReadNotifications(usr);
+        return await ExceptionWrapper.WrapException(() => _notificationService.ClearReadNotifications(usr));
     }
 
     [HttpPost("ReadAll")]
-    public async Task ReadAllNotifications([FromQuery] string[] sources)
+    public async Task<IResult> ReadAllNotifications([FromQuery] string[] sources)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        await _notificationService.MarkAllAsRead(usr, sources);
+        return await ExceptionWrapper.WrapException(() => _notificationService.MarkAllAsRead(usr, sources));
     }
 }
