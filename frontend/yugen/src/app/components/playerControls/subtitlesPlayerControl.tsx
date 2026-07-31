@@ -79,26 +79,21 @@ export default function (props: Props) {
             if (cues.length <= 1)
                 return cues;
 
-            const sorted = [...cues].sort((a, b) => a.start - b.start);
+            const boundaries = [
+                ...new Set(cues.flatMap(cue => [cue.start, cue.end]))
+            ].sort((a, b) => a - b);
+
             const result: Cue[] = [];
 
-            for (const cue of sorted) {
-                const last = result[result.length - 1];
+            for (let i = 0; i < boundaries.length - 1; i++) {
+                const start = boundaries[i];
+                const end = boundaries[i + 1];
+                const activeCues = cues.filter(cue => cue.start <= start && cue.end >= end);
 
-                if (!last) {
-                    result.push({ ...cue });
+                if (activeCues.length === 0)
                     continue;
-                }
 
-                if (cue.start <= last.end) {
-                    last.end = Math.max(last.end, cue.end);
-
-                    if (last.text !== cue.text) {
-                        last.text += "\n" + cue.text;
-                    }
-                } else {
-                    result.push({ ...cue });
-                }
+                result.push({ ...activeCues[0], start, end, text: activeCues.map(cue => cue.text).join("\n"), });
             }
 
             return result;
