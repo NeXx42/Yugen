@@ -151,7 +151,7 @@ public class AniListProvider : IMetaDataProvider
             }
             catch (Exception e)
             {
-                _ = _logger.LogError(e);
+                _logger.LogError(e);
             }
         }
 
@@ -514,7 +514,7 @@ public class AniListProvider : IMetaDataProvider
         }
         catch (Exception e)
         {
-            _ = _logger.LogError(e);
+            _logger.LogError(e);
             return default;
         }
     }

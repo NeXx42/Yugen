@@ -90,7 +90,11 @@ public class LibraryService
             }
         }
 
-        Model_Media media = await _db.media.SingleAsync(m => m.Id == aniListId);
+        Model_Media? media = await _db.media.FirstOrDefaultAsync(m => m.Id == aniListId);
+
+        if (media == null)
+            return null;
+
         ILibraryProvider lib = _library.GetFactory(media);
 
         if (!lib.isSetup)
@@ -228,7 +232,7 @@ public class LibraryService
             }
             catch (Exception e)
             {
-                _ = _loggingService.LogError(e);
+                _loggingService.LogError(e);
 
                 if (refetch)
                     throw;

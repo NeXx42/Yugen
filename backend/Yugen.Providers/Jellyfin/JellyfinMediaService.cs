@@ -19,7 +19,7 @@ public class JellyfinMediaService : IMediaProvider
     {
         if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(apiKey))
         {
-            _ = logger.LogError(new Exception("Failed to start jellyfin service"));
+            logger.LogError(new Exception("Failed to start jellyfin service"));
             _http = null!;
 
             _url = string.Empty;

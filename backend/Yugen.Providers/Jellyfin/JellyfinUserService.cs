@@ -16,7 +16,7 @@ public class JellyfinUserService : IUserProvider
     {
         if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(apiKey))
         {
-            _ = logger.LogError(new Exception("Failed to start jellyfin provider"));
+            logger.LogError(new Exception("Failed to start jellyfin provider"));
             _http = null!;
 
             return;

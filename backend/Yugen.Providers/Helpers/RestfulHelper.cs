@@ -80,7 +80,7 @@ public class RestfulHelper
         }
         catch (Exception e)
         {
-            await _logger.LogError(e);
+            _logger.LogError(e);
             return default;
         }
     }

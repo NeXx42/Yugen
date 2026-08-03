@@ -101,8 +101,6 @@ export default function () {
             case "Providers":
                 return (<>
                     {renderSetting_Button("Download links", "Download", "", api.catalog_ReloadLinks)}
-                    {renderSetting_ApiGroup("Jikan API", "Jikan_Url", "Jikan_ApiKey")}
-                    {renderSetting_ApiGroup("Id Moe API", "IdMoe_Url", "IdMoe_ApiKey")}
                 </>)
         }
 

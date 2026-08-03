@@ -12,14 +12,14 @@ public class LoggingService : ILogging
         _database = context;
     }
 
-    public async Task LogError(Exception e)
+    public void LogError(Exception e)
     {
-        await _database.exceptions.AddAsync(new Domain.Models.Model_Exception()
+        _database.exceptions.Add(new Domain.Models.Model_Exception()
         {
             Message = e.Message,
             Trace = e.StackTrace,
             Time = DateTime.UtcNow
         });
-        await _database.SaveChangesAsync();
+        _database.SaveChanges();
     }
 }

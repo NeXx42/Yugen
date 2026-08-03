@@ -21,7 +21,7 @@ public class RadarrLibraryProvider : ILibraryProvider
     {
         if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(apiKey))
         {
-            _ = logger.LogError(new Exception("Failed to start radarr, no url or api provided"));
+            logger.LogError(new Exception("Failed to start radarr, no url or api provided"));
 
             _http = null!;
             isSetup = false;
