@@ -28,7 +28,7 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidAudience = "Yugen",
 
-        ValidateLifetime = true,
+        ValidateLifetime = false,
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(builder.Configuration["Encryption:JWTToken"]!)),
     };
