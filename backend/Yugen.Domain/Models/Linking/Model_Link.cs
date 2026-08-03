@@ -25,4 +25,12 @@ public class Model_Link : IModel_Link
 
     public int? tvdb_season { get; set; }
     public int? tmdb_season { get; set; }
+
+    public static Model_Link Fake(int aniListId)
+    {
+        return new Model_Link()
+        {
+            anilist_id = aniListId
+        };
+    }
 }

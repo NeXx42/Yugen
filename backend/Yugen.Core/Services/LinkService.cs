@@ -1,18 +1,15 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
-using System.Xml;
 using System.Xml.Linq;
 using EFCore.BulkExtensions;
-using Humanizer;
 using Microsoft.EntityFrameworkCore;
 using Yugen.Core.Factories;
 using Yugen.Core.Helpers;
 using Yugen.Data;
 using Yugen.Domain.Data.Users;
 using Yugen.Domain.Enums;
+using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models.Linking;
-using Yugen.Providers.Radarr;
-using Yugen.Providers.Sonarr;
 
 namespace Yugen.Core.Services;
 
@@ -23,12 +20,12 @@ public class LinkService
 
     private readonly LibraryFactory _library;
 
-    public LinkService(YugenContext db, SettingsCache settings)
+    public LinkService(YugenContext db, SettingsCache settings, ILogging logger)
     {
         _db = db;
         _endpointDeduplicator = new EndpointDeduplicator();
 
-        _library = LibraryFactory.Create(settings);
+        _library = LibraryFactory.Create(settings, logger);
     }
 
     public async Task SaveManualLink(UserSession usr, LibraryProviderType provider, int mediaId, int linkedId, int? linkedSeason)

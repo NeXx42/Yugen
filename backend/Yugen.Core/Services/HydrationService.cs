@@ -1,19 +1,11 @@
-using System.Formats.Asn1;
-using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Yugen.Core.Configs;
-using Yugen.Core.Data;
 using Yugen.Data;
 using Yugen.Domain.Data;
-using Yugen.Domain.Data.Media;
-using Yugen.Domain.Enums;
-using Yugen.Domain.Models;
+using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
 using Yugen.Providers;
 using Yugen.Providers.AniList;
-using Yugen.Providers.IdsMoe;
 
 namespace Yugen.Core.Services;
 
@@ -22,10 +14,10 @@ public class HydrationService
     private readonly YugenContext _db;
     private readonly IMetaDataProvider _metaDataProvider;
 
-    public HydrationService(YugenContext db, SettingsCache settings)
+    public HydrationService(YugenContext db, SettingsCache settings, ILogging logger)
     {
         _db = db;
-        _metaDataProvider = new AniListProvider();
+        _metaDataProvider = new AniListProvider(logger);
     }
 
     public async Task<Model_Media[]> SaveMedia(ICollection<int> aniListId, MediaSearchQuery? req = null)
@@ -58,9 +50,7 @@ public class HydrationService
     public async Task HydrateEpisodes(Model_Media media, bool clearOld)
     {
         Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == media.Id);
-
-        if (link?.mal_id == null)
-            return;
+        link ??= Model_Link.Fake(media.Id);
 
         Model_MediaEpisode[] existingEpisodes = [];
 
@@ -74,7 +64,7 @@ public class HydrationService
             existingEpisodes = await _db.mediaEpisodes.Where(e => e.MediaId == media.Id).ToArrayAsync();
         }
 
-        Model_MediaEpisode[] providedEpisodes = await _metaDataProvider.GetEpisodeData(link!.mal_id.Value);
+        Model_MediaEpisode[] providedEpisodes = await _metaDataProvider.GetEpisodeData(link);
         List<Model_MediaEpisode> toAdd = [.. providedEpisodes];
 
         foreach (Model_MediaEpisode existingEpisode in existingEpisodes)

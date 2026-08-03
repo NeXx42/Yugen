@@ -12,21 +12,25 @@ import { Metadata } from "next";
 
 import { cache } from "react";
 
-export const getMedia = cache(async (id: number) => {
-    return (await api.catalog_GetInfo(id)).data!;
+export const getMedia = cache(async (id: number): Promise<MediaInfo | null> => {
+    return (await api.catalog_GetInfo(id)).data;
 });
 
 export async function generateMetadata({ params }: { params: { id: number } }): Promise<Metadata> {
     const { id } = await params;
 
     return {
-        title: (await getMedia(id)).title ?? "Anime",
+        title: (await getMedia(id))?.title ?? "Anime",
     };
 }
 
 export default async function ({ params }: { params: { id: number } }) {
     const { id } = await params;
-    const media: MediaInfo = await getMedia(id);
+    const media: MediaInfo | null = await getMedia(id);
+
+    if (media === null) {
+        return <>Not found</>
+    }
 
     const seasons = media.connectedMedia?.sort((a, b) => ((a?.card.year ?? a.season) ?? 0) - ((b?.card.year ?? b.season) ?? 0)).filter(c => c.card != null);
 

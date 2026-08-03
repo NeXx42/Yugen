@@ -1,6 +1,8 @@
 using Yugen.Core.Data;
 using Yugen.Domain.Data;
+using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models;
+using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
 using Yugen.Providers.Helpers;
 
@@ -10,14 +12,15 @@ public class JikanMetadataProvider : IMetaDataProvider
 {
     private readonly RestfulHelper _http;
 
-    public JikanMetadataProvider()
+    public JikanMetadataProvider(ILogging logger)
     {
-        _http = new RestfulHelper("https://api.jikan.moe/v4/");
+        _http = new RestfulHelper("https://api.jikan.moe/v4/", logger);
     }
 
-    public async Task<Model_MediaEpisode[]> GetEpisodeData(int malId)
+    public async Task<Model_MediaEpisode[]> GetEpisodeData(Model_Link malId)
     {
-        JikanReponse_Episodes? episodes = await _http.SendRequest<JikanReponse_Episodes>(Path.Combine("anime", malId.ToString(), "episodes"), HttpMethod.Get);
+        // api doesnt work ...
+        JikanReponse_Episodes? episodes = await _http.SendRequest<JikanReponse_Episodes>(Path.Combine("anime", malId.mal_id!.Value.ToString(), "episodes"), HttpMethod.Get);
 
         if (episodes?.data == null)
             return [];

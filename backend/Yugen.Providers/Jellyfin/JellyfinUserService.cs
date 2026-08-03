@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Yugen.Domain.Data.Users;
+using Yugen.Domain.Interfaces;
 using Yugen.Providers.Helpers;
 
 namespace Yugen.Providers.Jellyfin;
@@ -11,11 +12,19 @@ public class JellyfinUserService : IUserProvider
     private readonly RestfulHelper _http;
     private readonly bool isSetup;
 
-    public JellyfinUserService(string url, string apiKey)
+    public JellyfinUserService(string? url, string? apiKey, ILogging logger)
     {
+        if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(apiKey))
+        {
+            _ = logger.LogError(new Exception("Failed to start jellyfin provider"));
+            _http = null!;
+
+            return;
+        }
+
         isSetup = !string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(apiKey);
 
-        _http = new RestfulHelper(url, new Dictionary<string, string>()
+        _http = new RestfulHelper(url, logger, new Dictionary<string, string>()
         {
             { "X-Emby-Token", apiKey}
         });

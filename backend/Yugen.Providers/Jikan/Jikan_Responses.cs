@@ -9,7 +9,7 @@ public class JikanResponses_Page
 
 public class JikanReponse_Episodes
 {
-    public Episode[] data { get; set; }
+    public Episode[]? data { get; set; }
     public JikanResponses_Page? page { get; set; }
 
     public class Episode

@@ -1,6 +1,7 @@
 using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Enums;
+using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models.Library;
 using Yugen.Domain.Models.Linking;
 using Yugen.Providers.Helpers;
@@ -14,11 +15,20 @@ public class SonarrLibraryProvider : ILibraryProvider
 
     bool ILibraryProvider.isSetup => isSetup;
 
-    public SonarrLibraryProvider(string url, string apiKey)
+    public SonarrLibraryProvider(string? url, string? apiKey, ILogging logger)
     {
+        if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(apiKey))
+        {
+            _ = logger.LogError(new Exception("Failed to start sonarr, no url or api provided"));
+
+            _http = null!;
+            isSetup = false;
+            return;
+        }
+
         isSetup = !string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(apiKey);
 
-        _http = new RestfulHelper(Path.Combine(url, "api", "v3"), new Dictionary<string, string>()
+        _http = new RestfulHelper(Path.Combine(url, "api", "v3"), logger, new Dictionary<string, string>()
         {
             { "X-Api-Key", apiKey }
         });
@@ -185,13 +195,13 @@ public class SonarrLibraryProvider : ILibraryProvider
         series = await _http.SendRequest<SonarrRequest_FetchLibrary>(Path.Combine("series", series!.id.ToString()), HttpMethod.Put, series);
 
         SonarrLibrary_Response_Episode[]? eps = await _http.SendRequest<SonarrLibrary_Response_Episode[]>($"episode?seriesId={existing.ProviderId}&seasonNumber={mediaRequest.seasonId}", HttpMethod.Get);
-        existing.downloadedEpisodes = eps.Select(e => new Model_DownloadedEpisode()
+        existing.downloadedEpisodes = eps?.Select(e => new Model_DownloadedEpisode()
         {
             Id = e.id,
             MediaId = mediaId,
             EpisodeNumber = e.episodeNumber,
             monitored = e.monitored,
-        }).ToArray();
+        }).ToArray() ?? [];
 
         return existing;
     }

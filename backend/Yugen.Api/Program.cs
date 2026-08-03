@@ -7,6 +7,7 @@ using Yugen.Core.Helpers;
 using Yugen.Core.Services;
 using Yugen.Data;
 using Yugen.Domain.Data.Users;
+using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models;
 using Yugen.YugenBackgroundService;
 using Yugen.YugenBackgroundService.Jobs;
@@ -64,7 +65,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddCors(options =>
 {
@@ -90,6 +90,7 @@ builder.Services.AddScoped<LibraryService>();
 builder.Services.AddScoped<SettingsService>();
 builder.Services.AddScoped<HydrationService>();
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<ILogging, LoggingService>();
 
 builder.Services.AddSingleton<CacheService>();
 builder.Services.AddSingleton<SettingsCache>();
@@ -117,7 +118,6 @@ using (var scope = app.Services.CreateScope())
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
     app.UseCors("localhost");
 }
 

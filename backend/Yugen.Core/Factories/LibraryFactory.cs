@@ -1,5 +1,6 @@
 using Yugen.Core.Services;
 using Yugen.Domain.Enums;
+using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models.Library;
 using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
@@ -11,11 +12,11 @@ namespace Yugen.Core.Factories;
 
 public class LibraryFactory
 {
-    public static LibraryFactory Create(SettingsCache settings)
+    public static LibraryFactory Create(SettingsCache settings, ILogging logging)
     {
         return new LibraryFactory(
-            new SonarrLibraryProvider(settings.Get(ConfigKeys.Sonarr_Url), settings.Get(ConfigKeys.Sonarr_ApiKey)),
-            new RadarrLibraryProvider(settings.Get(ConfigKeys.Radarr_Url), settings.Get(ConfigKeys.Radarr_ApiKey))
+            new SonarrLibraryProvider(settings.Get(ConfigKeys.Sonarr_Url), settings.Get(ConfigKeys.Sonarr_ApiKey), logging),
+            new RadarrLibraryProvider(settings.Get(ConfigKeys.Radarr_Url), settings.Get(ConfigKeys.Radarr_ApiKey), logging)
         );
     }
 

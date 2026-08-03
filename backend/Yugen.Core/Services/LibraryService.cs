@@ -1,7 +1,5 @@
-using System.DirectoryServices.Protocols;
 using EFCore.BulkExtensions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Yugen.Core.Data;
 using Yugen.Core.Factories;
@@ -12,14 +10,13 @@ using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Data.Users;
 using Yugen.Domain.Enums;
+using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models.Bookmarks;
 using Yugen.Domain.Models.History;
 using Yugen.Domain.Models.Library;
 using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
 using Yugen.Providers;
-using Yugen.Providers.Radarr;
-using Yugen.Providers.Sonarr;
 
 namespace Yugen.Core.Services;
 
@@ -31,6 +28,7 @@ public class LibraryService
     private readonly MediaService _mediaService;
     private readonly CatalogService _catalogService;
     private readonly HydrationService _hydrationService;
+    private readonly ILogging _loggingService;
 
     private readonly EndpointDeduplicator _endpointDeduplicator;
 
@@ -42,18 +40,20 @@ public class LibraryService
                         MediaService mediaService,
                         CacheService cache,
                         HydrationService hydrationService,
-                        EndpointDeduplicator endpointDeduplicator)
+                        EndpointDeduplicator endpointDeduplicator,
+                        ILogging loggingService)
     {
         _db = db;
 
         _cache = cache;
         _mediaService = mediaService;
         _catalogService = catalogService;
+        _loggingService = loggingService;
         _hydrationService = hydrationService;
 
         _endpointDeduplicator = endpointDeduplicator;
 
-        _library = LibraryFactory.Create(settings);
+        _library = LibraryFactory.Create(settings, loggingService);
     }
 
     public async Task<DownloadedEpisode[]> GetDownloadedEpisodes(UserSession usr, int aniListId)
@@ -226,8 +226,10 @@ public class LibraryService
             {
                 await _hydrationService.HydrateEpisodes(media, clearOld);
             }
-            catch
+            catch (Exception e)
             {
+                _ = _loggingService.LogError(e);
+
                 if (refetch)
                     throw;
             }

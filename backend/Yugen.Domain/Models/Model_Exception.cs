@@ -12,4 +12,5 @@ public class Model_Exception
 
     public string? Message { get; set; }
     public string? Trace { get; set; }
+    public DateTime? Time { get; set; }
 }

@@ -10,6 +10,7 @@ using Yugen.Domain.Data;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Data.Users;
 using Yugen.Domain.Enums;
+using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.Bookmarks;
 using Yugen.Domain.Models.Linking;
@@ -34,12 +35,12 @@ public class CatalogService
     public static string GetCardCacheId(int id) => $"CardCache_{id}";
     public static string GetInfoCacheId(int id) => $"Info_{id}";
 
-    public CatalogService(YugenContext db, HydrationService hydrationService, CacheService cache, SettingsService settings)
+    public CatalogService(YugenContext db, HydrationService hydrationService, CacheService cache, SettingsService settings, ILogging logger)
     {
         _db = db;
 
         _endpointDeduplicator = new EndpointDeduplicator();
-        _currentProvider = new AniListProvider();
+        _currentProvider = new AniListProvider(logger);
 
         _cache = cache;
         _settings = settings;
@@ -75,11 +76,11 @@ public class CatalogService
         return pageResponse;
     }
 
-    public async Task<MediaInfo> GetMediaInfoForUser(UserSession? usr, int aniListId)
+    public async Task<MediaInfo?> GetMediaInfoForUser(UserSession? usr, int aniListId)
     {
-        MediaInfo info = await GetMediaInfo(aniListId);
+        MediaInfo? info = await GetMediaInfo(aniListId);
 
-        if (usr != null)
+        if (info != null && usr != null)
         {
             Model_UserBookmark? bookmark = await _db.userBookmarks.FirstOrDefaultAsync(b => b.UserId == usr.User.Id && b.MediaId == aniListId);
             info.RegisterBookmark(bookmark);
@@ -88,15 +89,15 @@ public class CatalogService
         return info;
     }
 
-    public async Task<MediaInfo> GetMediaInfo(int aniListId)
-        => (await GetMediaInfo([aniListId]))[0];
+    public async Task<MediaInfo?> GetMediaInfo(int aniListId)
+        => (await GetMediaInfo([aniListId])).FirstOrDefault();
 
     public async Task<MediaInfo[]> GetMediaInfo(ICollection<int> ids)
     {
-        if (ids?.Count == 0)
+        if ((ids?.Count ?? 0) == 0)
             return [];
 
-        List<int> remainingIds = new List<int>(ids);
+        List<int> remainingIds = [.. ids!];
         List<MediaInfo> results = new List<MediaInfo>();
 
         // find cached version

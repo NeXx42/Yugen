@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.Media;
+using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models.History;
 using Yugen.Domain.Models.Library;
 using Yugen.Providers.Helpers;
@@ -14,12 +15,23 @@ public class JellyfinMediaService : IMediaProvider
     private readonly string _url;
     private readonly string _apiKey;
 
-    public JellyfinMediaService(string url, string apiKey)
+    public JellyfinMediaService(string? url, string? apiKey, ILogging logger)
     {
+        if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(apiKey))
+        {
+            _ = logger.LogError(new Exception("Failed to start jellyfin service"));
+            _http = null!;
+
+            _url = string.Empty;
+            _apiKey = string.Empty;
+
+            return;
+        }
+
         _url = url;
         _apiKey = apiKey;
 
-        _http = new RestfulHelper(url, new Dictionary<string, string>()
+        _http = new RestfulHelper(url, logger, new Dictionary<string, string>()
         {
             { "X-Emby-Token", apiKey}
         });

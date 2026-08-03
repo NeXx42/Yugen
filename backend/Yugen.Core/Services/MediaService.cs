@@ -7,6 +7,7 @@ using Yugen.Data;
 using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Data.Users;
+using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.History;
 using Yugen.Domain.Models.Library;
@@ -23,12 +24,12 @@ public class MediaService
 
     private readonly IMediaProvider _mediaProvider;
 
-    public MediaService(YugenContext db, SettingsCache settings, CacheService cache)
+    public MediaService(YugenContext db, SettingsCache settings, CacheService cache, ILogging logger)
     {
         _db = db;
         _cache = cache;
 
-        _mediaProvider = new JellyfinMediaService(settings.Get(ConfigKeys.Jellyfin_Url), settings.Get(ConfigKeys.Jellyfin_ApiKey));
+        _mediaProvider = new JellyfinMediaService(settings.Get(ConfigKeys.Jellyfin_Url), settings.Get(ConfigKeys.Jellyfin_ApiKey), logger);
     }
 
     public async Task<PlaybackInfo> GetPlaybackInfo(UserSession usr, int? anilistId, int? episodeNumber, string jellyfinId)

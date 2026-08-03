@@ -32,7 +32,7 @@ public class NotificationService
                 return new SonarrNotificationProvider();
         }
 
-        return null;
+        return null!;
     }
 
     public async Task ConsumeWebhook(string json, LibraryProviderType provider)

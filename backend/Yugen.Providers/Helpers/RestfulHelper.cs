@@ -1,18 +1,21 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using Yugen.Domain.Interfaces;
 
 namespace Yugen.Providers.Helpers;
 
 public class RestfulHelper
 {
     private readonly HttpClient _http;
+    private readonly ILogging _logger;
 
     private readonly string _url;
     private readonly Dictionary<string, string>? _defaultHeaders;
 
-    public RestfulHelper(string url, Dictionary<string, string>? defaultHeaders = null)
+    public RestfulHelper(string url, ILogging logger, Dictionary<string, string>? defaultHeaders = null)
     {
         _http = new HttpClient();
+        _logger = logger;
 
         _url = url;
         _defaultHeaders = defaultHeaders;
@@ -77,8 +80,7 @@ public class RestfulHelper
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
-            Console.WriteLine(response);
+            await _logger.LogError(e);
             return default;
         }
     }

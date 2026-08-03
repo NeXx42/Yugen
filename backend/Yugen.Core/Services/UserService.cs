@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Yugen.Core.Configs;
 using Yugen.Data;
 using Yugen.Domain.Data.Users;
+using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models;
 using Yugen.Providers;
 using Yugen.Providers.Jellyfin;
@@ -22,13 +23,13 @@ public class UserService
 
     private readonly byte[] _jwtToken;
 
-    public UserService(YugenContext db, IOptions<EncryptionConfig> encryptionSettings, SettingsCache settings, CacheService cache)
+    public UserService(YugenContext db, IOptions<EncryptionConfig> encryptionSettings, SettingsCache settings, CacheService cache, ILogging logger)
     {
         _db = db;
 
         _cache = cache;
 
-        _userProvider = new JellyfinUserService(settings.Get(ConfigKeys.Jellyfin_Url), settings.Get(ConfigKeys.Jellyfin_ApiKey));
+        _userProvider = new JellyfinUserService(settings.Get(ConfigKeys.Jellyfin_Url), settings.Get(ConfigKeys.Jellyfin_ApiKey), logger);
         _jwtToken = Convert.FromBase64String(encryptionSettings.Value.jwtToken);
     }
 

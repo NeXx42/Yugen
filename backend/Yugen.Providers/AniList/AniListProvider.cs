@@ -1,14 +1,12 @@
 using System.Net.Http.Json;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Yugen.Core.Data;
 using Yugen.Domain.Data;
-using Yugen.Domain.Enums;
+using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models;
+using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
-using Yugen.Providers.Jikan;
 
 namespace Yugen.Providers.AniList;
 
@@ -16,15 +14,14 @@ public class AniListProvider : IMetaDataProvider
 {
     private readonly string _url;
     private readonly HttpClient _http;
+    private readonly ILogging _logger;
 
-    private readonly IMetaDataProvider _episodeProvider;
-
-    public AniListProvider()
+    public AniListProvider(ILogging logger)
     {
+        _logger = logger;
+
         _url = "https://graphql.anilist.co";
         _http = new HttpClient();
-
-        _episodeProvider = new JikanMetadataProvider();
     }
 
     public async Task<Model_Media[]> GetMediaInfo(MediaSearchQuery filter)
@@ -154,7 +151,7 @@ public class AniListProvider : IMetaDataProvider
             }
             catch (Exception e)
             {
-
+                _ = _logger.LogError(e);
             }
         }
 
@@ -210,16 +207,26 @@ public class AniListProvider : IMetaDataProvider
                 });
             }
 
-            for (int i = 0; i < (media.streamingEpisodes?.Length ?? 0); i++)
+            if ((media.streamingEpisodes?.Length ?? 0) > 0)
             {
-                result.Episodes.Add(new Model_MediaEpisode()
+                for (int i = 0; i < (media.streamingEpisodes?.Length ?? 0); i++)
                 {
-                    MediaId = media.id,
-                    EpisodeNumber = i + 1,
+                    result.Episodes.Add(new Model_MediaEpisode()
+                    {
+                        MediaId = media.id,
+                        EpisodeNumber = i + 1,
 
-                    EpisodeTitle = Regex.Replace(media.streamingEpisodes![i].title ?? "", @"^Episode \d+ - ", ""),
-                    EpisodeIcon = media.streamingEpisodes![i].thumbnail,
-                });
+                        EpisodeTitle = Regex.Replace(media.streamingEpisodes![i].title ?? "", @"^Episode \d+ - ", ""),
+                        EpisodeIcon = media.streamingEpisodes![i].thumbnail,
+                    });
+                }
+            }
+            else
+            {
+                Model_MediaEpisode[] eps = FakeEpisodeList(media.id, result.EpisodeCount);
+
+                foreach (Model_MediaEpisode ep in eps)
+                    result.Episodes.Add(ep);
             }
 
             for (int i = 0; i < (media.recommendations?.nodes?.Length ?? 0); i++)
@@ -455,9 +462,35 @@ public class AniListProvider : IMetaDataProvider
         );
     }
 
-    // not possible with AniList
-    public Task<Model_MediaEpisode[]> GetEpisodeData(int malId) => _episodeProvider.GetEpisodeData(malId);
 
+    public async Task<Model_MediaEpisode[]> GetEpisodeData(Model_Link media)
+    {
+        string query = @"query Query($mediaId: Int) {
+            Media(id: $mediaId) {
+                episodes
+            }
+        }";
+
+        AniListResponse_Info? res = await SendRequest<AniListResponse_Info>(query, new { mediaId = media.anilist_id });
+
+        if ((res?.data?.media?.episodes ?? 0) == 0)
+            return [];
+
+        return FakeEpisodeList(media.anilist_id!.Value, res?.data?.media?.episodes);
+    }
+
+    private Model_MediaEpisode[] FakeEpisodeList(int mediaId, int? count)
+    {
+        if ((count ?? 0) == 0)
+            return [];
+
+        return Enumerable.Range(0, count!.Value).Select(e => new Model_MediaEpisode()
+        {
+            MediaId = mediaId,
+            EpisodeNumber = e + 1,
+            EpisodeTitle = $"Episode {e + 1}"
+        }).ToArray();
+    }
 
 
 
@@ -472,12 +505,16 @@ public class AniListProvider : IMetaDataProvider
         try
         {
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<T>();
+            string responseJson = await response.Content.ReadAsStringAsync();
+
+            return JsonSerializer.Deserialize<T>(responseJson, new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true
+            });
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
-            Console.WriteLine(await response.Content.ReadAsStringAsync());
+            _ = _logger.LogError(e);
             return default;
         }
     }

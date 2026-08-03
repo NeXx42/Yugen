@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Enums;
+using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models.Library;
 using Yugen.Domain.Models.Linking;
 using Yugen.Providers.Helpers;
@@ -16,10 +17,20 @@ public class RadarrLibraryProvider : ILibraryProvider
 
     bool ILibraryProvider.isSetup => isSetup;
 
-    public RadarrLibraryProvider(string url, string apiKey)
+    public RadarrLibraryProvider(string? url, string? apiKey, ILogging logger)
     {
+        if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(apiKey))
+        {
+            _ = logger.LogError(new Exception("Failed to start radarr, no url or api provided"));
+
+            _http = null!;
+            isSetup = false;
+            return;
+        }
+
+
         isSetup = !string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(apiKey);
-        _http = new RestfulHelper(Path.Combine(url, "api", "v3"), new Dictionary<string, string>()
+        _http = new RestfulHelper(Path.Combine(url, "api", "v3"), logger, new Dictionary<string, string>()
         {
             { "X-Api-Key", apiKey }
         });
