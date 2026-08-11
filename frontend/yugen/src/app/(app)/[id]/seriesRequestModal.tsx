@@ -11,7 +11,7 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | undefined>(undefined);
 
-    const [requestInfo, setRequestInfo] = useState<any | null>(null)
+    const [requestInfo, setRequestInfo] = useState<DownloadRequestInfo | null>(null)
     const [mediaRequest, setMediaRequest] = useState<MediaRequest | null>(null);
 
     useEffect(() => {
