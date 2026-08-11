@@ -102,8 +102,8 @@ async function handleException(res: Response): Promise<Error> {
     try {
         const errorData = await res.json();
         return new Error(errorData.message || JSON.stringify(errorData));
-    } catch (_) {
-        return new Error(`Request failed with status ${res.status}`)
+    } catch (error: any) {
+        return new Error(`Request failed with status ${res.status} - ${error.message}`)
     }
 }
 

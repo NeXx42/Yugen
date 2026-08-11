@@ -129,10 +129,10 @@ public class LibraryController : ControllerBase
 
     [HttpPost("{mediaId}/SyncDownloads")]
     [Authorize]
-    public async Task<IResult> SyncMediaDownloads(int mediaId, [FromQuery] bool force)
+    public async Task SyncMediaDownloads(int mediaId, [FromQuery] bool force)
     {
         HttpContext.GetUserFromSession(out UserSession usr);
-        return await ExceptionWrapper.WrapException(() => _libraryService.RecheckDownloads(usr, mediaId, force));
+        await ExceptionWrapper.WrapException(() => _libraryService.RecheckDownloads(usr, mediaId, force));
     }
 
     [HttpPost("{mediaId}/ResearchDownloads")]

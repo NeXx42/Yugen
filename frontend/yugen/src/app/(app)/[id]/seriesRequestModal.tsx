@@ -9,11 +9,15 @@ import "./seriesRequestModal.css"
 
 export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInfo, onUpdate: () => void, onClose: () => void }) {
     const [loading, setLoading] = useState(false);
-    const [requestInfo, setRequestInfo] = useState<DownloadRequestInfo | null>(null)
+    const [error, setError] = useState<string | undefined>(undefined);
+
+    const [requestInfo, setRequestInfo] = useState<any | null>(null)
     const [mediaRequest, setMediaRequest] = useState<MediaRequest | null>(null);
 
     useEffect(() => {
         setLoading(true);
+        setError(undefined);
+
         api.library_GetSeriesRequest(mediaInfo.id).then(r => {
             setRequestInfo(r);
             setMediaRequest({
@@ -26,7 +30,10 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
 
                 monitorSeason: r.monitored
             });
-        }).finally(() => setLoading(false));
+        })
+            .catch(e => setError(e.message))
+            .finally(() => setLoading(false));
+
     }, [mediaInfo])
 
     const requestMedia = async (): Promise<any> => {
@@ -245,14 +252,19 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
         </>)
     }
 
+    const drawWrapper = () => {
+        if (error || requestInfo == null)
+            return (<>{error ?? "Failed to load"}</>)
+
+        if (loading)
+            return (<>loading...</>)
+
+        return drawMenuContent(requestInfo);
+    }
+
     return (
         <div className="MediaRequest_Menu" >
             <h1>{mediaInfo.title}</h1>
-            {
-                loading ? <>Loading</>
-                    : (
-                        requestInfo == null ? (<>Failed to load</>) : (drawMenuContent(requestInfo))
-                    )
-            }
+            {drawWrapper()}
         </div>)
 }

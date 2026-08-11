@@ -6,7 +6,11 @@ public static class ExceptionWrapper
     {
         try
         {
-            T res = await demand();
+            T? res = await demand();
+
+            if (res == null)
+                return Results.Ok();
+
             return Results.Json(res);
         }
         catch (Exception e)
