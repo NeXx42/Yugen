@@ -1,0 +1,91 @@
+.Schedule {
+    margin: 50px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    gap: 50px;
+}
+
+.Schedule_Dates {
+    margin: auto;
+
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+
+    color: var(--global-text-muted);
+
+    font-size: 2.5em;
+    font-weight: 700px;
+
+    gap: 15px;
+
+    align-items: center;
+}
+
+.Schedule_Dates_Day {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    justify-content: center;
+
+    transition: all 1s;
+}
+
+.Schedule_Dates_Day>.Selected {
+    color: white;
+}
+
+.Schedule_Dates_Day>p {
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.Schedule_Content {
+    display: flex;
+    flex-direction: column;
+
+    gap: 20px;
+}
+
+.Schedule_Content_Container {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.Schedule_Content_Header {
+    display: flex;
+    gap: 5px;
+
+    align-items: center;
+    color: var(--primary-accent);
+}
+
+.Schedule_Content_Header>a {
+    font-weight: 800;
+    font-size: larger;
+}
+
+.Schedule_Content_Entries {
+    position: relative;
+    padding-left: 15px;
+    margin-left: 6px;
+    display: grid;
+    gap: 5px;
+}
+
+.Schedule_Content_Entries::before {
+    position: absolute;
+    content: "";
+    background-color: var(--primary-accent);
+    left: 0px;
+    height: 100%;
+    width: 2px;
+}

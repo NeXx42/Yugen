@@ -224,7 +224,7 @@ export default function (props: Props) {
                                     <span>·</span>
                                     <span>{daysOfTheWeek[upcomingDate!.getDay()].slice(0, 3)},</span>
                                     <span>{monthsOfTheYear[upcomingDate!.getMonth()].slice(0, 3)}</span>
-                                    <span>{upcomingDate!.getDay()},</span>
+                                    <span>{upcomingDate!.getDate()},</span>
                                     <span>{upcomingDate!.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</span>
                                 </div>
                             )

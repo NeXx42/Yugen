@@ -261,6 +261,23 @@ public class CatalogService
         return media.Select(x => x.WithReleaseDate(upcoming[x.aniListId])).OrderBy(x => x.nextReleaseDate).Take(take).ToArray();
     }
 
+    public async Task<MediaCard[]> UpcomingForDay(int? absoluteDayOfMonth)
+    {
+        absoluteDayOfMonth ??= DateTime.UtcNow.Day;
+        string CACHE_KEY = $"CATALOG_UPCOMINGDAY_{absoluteDayOfMonth}";
+
+        if (!_cache.TryGetValue(CACHE_KEY, out Dictionary<int, long>? upcoming) || upcoming == null)
+        {
+            upcoming = await _currentProvider.UpcomingMediaForDay(absoluteDayOfMonth.Value);
+
+            _cache.Remove(CACHE_KEY);
+            _cache.SetIfNotExists(CACHE_KEY, upcoming, new TimeSpan(0, 30, 0));
+        }
+
+        MediaCard[] media = await GetOrCreateMediaCardsFromIds(upcoming.Keys.ToList());
+        return media.Select(x => x.WithReleaseDate(upcoming[x.aniListId])).OrderBy(x => x.nextReleaseDate).ToArray();
+    }
+
     public async Task<MediaCard[]> GetOrCreateMediaCardsFromIds(List<int> ids, MediaSearchQuery? req = null)
     {
         MediaCard? card;

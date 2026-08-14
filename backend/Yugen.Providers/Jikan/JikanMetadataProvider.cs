@@ -71,4 +71,9 @@ public class JikanMetadataProvider : IMetaDataProvider
     {
         throw new NotImplementedException();
     }
+
+    public Task<Dictionary<int, long>> UpcomingMediaForDay(int day)
+    {
+        throw new NotImplementedException();
+    }
 }

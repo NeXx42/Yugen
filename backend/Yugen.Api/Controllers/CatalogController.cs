@@ -29,6 +29,12 @@ public class CatalogController : ControllerBase
         return await ExceptionWrapper.WrapException(() => _catalogService.Upcoming(take ?? 10));
     }
 
+    [HttpGet("UpcomingDay")]
+    public async Task<IResult> GetUpcomingForDay([FromQuery] int? absoluteDayOfMonth)
+    {
+        return await ExceptionWrapper.WrapException(() => _catalogService.UpcomingForDay(absoluteDayOfMonth));
+    }
+
     [HttpGet("Trending")]
     public async Task<IResult> GetTrending([FromQuery] int? take)
     {

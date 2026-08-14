@@ -14,6 +14,7 @@ public interface IMetaDataProvider
 
     public Task<List<int>> GetTrending(int limit);
     public Task<Dictionary<int, long>> UpcomingMedia();
+    public Task<Dictionary<int, long>> UpcomingMediaForDay(int day);
 
     public Task<Model_Media[]> GetMediaInfo(MediaSearchQuery filter);
     public Task<Model_MediaEpisode[]> GetEpisodeData(Model_Link media);

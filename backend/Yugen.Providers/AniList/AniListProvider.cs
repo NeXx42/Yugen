@@ -330,6 +330,27 @@ public class AniListProvider : IMetaDataProvider
 
     public async Task<Dictionary<int, long>> UpcomingMedia()
     {
+        return await SearchForMediaBetweenTime(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(7));
+    }
+
+    public async Task<Dictionary<int, long>> UpcomingMediaForDay(int day)
+    {
+        DateTime now = DateTime.UtcNow;
+        DateTime startDate = new DateTime(now.Year, now.Month, day, 0, 0, 0, DateTimeKind.Utc);
+
+        if (day < now.Day)
+        {
+            startDate = startDate.AddMonths(1);
+        }
+
+        DateTimeOffset start = new DateTimeOffset(startDate);
+        DateTimeOffset end = start.AddHours(12);
+
+        return await SearchForMediaBetweenTime(start, end);
+    }
+
+    private async Task<Dictionary<int, long>> SearchForMediaBetweenTime(DateTimeOffset start, DateTimeOffset end)
+    {
         string query = @"
         query Page($airingAtGreater: Int, $airingAtLesser: Int, $sort: [AiringSort]) {
             Page {
@@ -343,8 +364,8 @@ public class AniListProvider : IMetaDataProvider
 
         AniListResponse_Airing? res = await SendRequest<AniListResponse_Airing>(query, new
         {
-            airingAtGreater = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-            airingAtLesser = DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds(),
+            airingAtGreater = start.ToUnixTimeSeconds(),
+            airingAtLesser = end.ToUnixTimeSeconds(),
             sort = "TIME"
         });
 

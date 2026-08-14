@@ -117,6 +117,9 @@ export async function catalog_Trending(): Promise<MediaInfo[]> {
 export async function catalog_Upcoming(): Promise<MediaCardInfo[]> {
     return (await get<MediaCardInfo[]>("catalog/Upcoming"))!;
 }
+export async function catalog_UpcomingForDay(absoluteDayOfMonth: number): Promise<MediaCardInfo[]> {
+    return (await get<MediaCardInfo[]>(`catalog/UpcomingDay?absoluteDayOfMonth=${absoluteDayOfMonth}`))!;
+}
 
 
 export async function media_PlaybackInfo(anilistId: number, epNumber: number, itemId: string): Promise<Playback_Info> {
