@@ -193,7 +193,11 @@ public class LibraryService
                 continue;
 
             importCount++;
-            await RecheckDownloads(usr, link.Value, true);
+            try
+            {
+                await RecheckDownloads(usr, link.Value, true);
+            }
+            catch { }
         }
 
         return importCount;
