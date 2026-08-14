@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Yugen.Core.Services;
 using Yugen.Data;
+using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.Media;
 
@@ -50,14 +51,8 @@ public class YugenBackgroundService : BackgroundService
             {
                 using var scope = _scopeFactory.CreateScope();
 
-                YugenContext db = scope.ServiceProvider.GetRequiredService<YugenContext>();
-                await db.AddAsync(new Model_Exception()
-                {
-                    Message = ex.Message,
-                    Trace = ex.StackTrace
-                });
-
-                await db.SaveChangesAsync();
+                ILogging logger = scope.ServiceProvider.GetRequiredService<ILogging>();
+                logger.LogError(ex);
             }
             catch (Exception e) { Console.WriteLine($"Failed to save exception to db\n{e.Message}"); }
         }
