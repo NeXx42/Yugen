@@ -6,10 +6,13 @@ import { MediaEpisodeInfo, MediaInfo, MediaSubtitle } from "@shared/types";
 import { ReactNode, useEffect, useState } from "react";
 
 import "./massSubtitleEditor.css"
+import { useToast } from "@/app/context/toast";
 
 export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
     const [loading, setLoading] = useState(false);
     const [episodes, setEpisodes] = useState<MediaEpisodeInfo[] | undefined>();
+
+    const { showToast } = useToast();
 
     useEffect(() => {
         void loadInfo();
@@ -43,7 +46,10 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
             formData.append("jellyfinIds", episodes![i].jellyfinId!)
         }
 
-        api.media_UploadSubtitles(selectedLanguage, formData).finally(() => setLoading(false));
+        api.media_UploadSubtitles(selectedLanguage, formData)
+            .then(() => showToast("Uploaded subtitles", "Success"))
+            .catch(() => showToast("Failed to upload subtitles", "Error"))
+            .finally(() => setLoading(false));
     }
 
     const drawUpload = () => {
@@ -117,6 +123,12 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
                         </tbody>
                     </table>
                 </div>
+
+                {
+                    loading && (<div className="MassSubtitlesEditor_Loading">
+                        Loading...
+                    </div>)
+                }
             </>
         )
     }

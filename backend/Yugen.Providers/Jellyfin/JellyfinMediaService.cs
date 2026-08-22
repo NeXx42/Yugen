@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using Yugen.Domain.Data.Downloads;
 using Yugen.Domain.Data.Media;
+using Yugen.Domain.Data.Users;
 using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models.History;
 using Yugen.Domain.Models.Library;
@@ -198,61 +199,102 @@ public class JellyfinMediaService : IMediaProvider
 
     public async Task<string> GetSubtitleUrl(string jellyfinId, string mediaId, int subtitleId) => $"{_url}/Videos/{jellyfinId}/{mediaId}/Subtitles/{subtitleId}/Stream.vtt?api_key={_apiKey}";
 
-    public async Task<string?[]?> MapPathToJellyfinId(ICollection<Model_DownloadedEpisode> episodes)
+    public async Task<string?[]?> MapPathToJellyfinId(UserSession usr, ICollection<Model_DownloadedEpisode> episodes)
     {
-        JellyfinResponse_Page<Jellyfin_Response_Item>? items = await _http.SendRequest<JellyfinResponse_Page<Jellyfin_Response_Item>>("Items?Recursive=true&IncludeItemTypes=Movie,Episode&Fields=Id,Path", HttpMethod.Get);
+        Dictionary<string, List<Jellyfin_Response_Item>> byFilename = new(StringComparer.OrdinalIgnoreCase);
+        int offset = 0;
 
-        if (items == null)
-            return null;
+        while (true)
+        {
+            const int take = 500;
 
-        string?[] results = new string[episodes.Count];
+            string url = $"Items?Recursive=true&UserId={usr.JellyfinId}&IncludeItemTypes=Movie,Episode&Fields=Id,Path&StartIndex={offset}&Limit={take}";
+            JellyfinResponse_Page<Jellyfin_Response_Item>? items = await _http.SendRequest<JellyfinResponse_Page<Jellyfin_Response_Item>>(url, HttpMethod.Get);
+
+            if (items == null || items.Items.Length == 0)
+                break;
+
+            foreach (Jellyfin_Response_Item item in items.Items)
+            {
+                if (string.IsNullOrEmpty(item.path))
+                    continue;
+
+                string normalized = NormalizePath(item.path);
+                string filename = normalized.Substring(normalized.LastIndexOf('/') + 1);
+
+                if (!byFilename.TryGetValue(filename, out var list))
+                    byFilename[filename] = list = new();
+
+                list.Add(item);
+            }
+
+            offset += items.Items.Length; // advance by what was actually returned, not the requested page size
+            if (offset >= items.TotalRecordCount)
+                break;
+        }
+
+        string?[] results = new string?[episodes.Count];
 
         for (int i = 0; i < results.Length; i++)
         {
-            if (string.IsNullOrEmpty(episodes.ElementAt(i).filePath))
+            string? filePath = episodes.ElementAt(i).filePath;
+            if (string.IsNullOrEmpty(filePath))
             {
                 results[i] = null;
                 continue;
             }
 
-            ReadOnlySpan<char> normalizedPath = RemoveFirstSegment(episodes.ElementAt(i).filePath!);
-            int pathLength = normalizedPath.Length;
+            string normalizedEpisodePath = NormalizePath(filePath);
 
-            foreach (Jellyfin_Response_Item jellyfinItem in items.Items)
+            string[] episodeSegments = normalizedEpisodePath.Split('/');
+            string filename = episodeSegments[^1];
+
+            if (!byFilename.TryGetValue(filename, out List<Jellyfin_Response_Item>? candidates) || candidates.Count == 0)
+                continue;
+
+            if (candidates.Count == 1)
             {
-                if (string.IsNullOrEmpty(jellyfinItem.path) || jellyfinItem.path.Length <= pathLength)
-                    continue;
-
-                if (jellyfinItem.path.AsSpan(jellyfinItem.path.Length - pathLength, pathLength).SequenceEqual(normalizedPath))
-                {
-                    results[i] = jellyfinItem.id;
-                    break;
-                }
+                results[i] = candidates[0].id;
+                continue;
             }
+
+            results[i] = FindClosestMatchingPath(candidates, episodeSegments).id;
         }
 
         return results;
 
-        // jellyfin used a different start then sonarr
-        ReadOnlySpan<char> RemoveFirstSegment(string path)
+        string NormalizePath(string path) => path.Replace('\\', '/').TrimEnd('/');
+
+        Jellyfin_Response_Item FindClosestMatchingPath(List<Jellyfin_Response_Item> candidates, string[] episodeSegments)
         {
-            if (string.IsNullOrEmpty(path))
-                return path;
+            List<(int pos, string[] parts)> candidatePartsLookup = Enumerable.Range(0, candidates.Count)
+                .Select(c => (c, candidates[c].path!.Split("/").ToArray()))
+                .ToList();
 
-            ReadOnlySpan<char> span = path.AsSpan();
+            int? bestLastOption = 0;
 
-            int i = 0;
+            for (int segmentPos = 2; segmentPos <= episodeSegments.Length; segmentPos++)
+            {
+                if (candidatePartsLookup.Count <= 1)
+                    break;
 
-            if (span.Length > 0 && span[0] == '/')
-                i++;
+                string comparisonSegment = episodeSegments[episodeSegments.Length - segmentPos];
 
-            while (i < span.Length && span[i] != '/')
-                i++;
+                for (int i = candidatePartsLookup.Count - 1; i >= 0; i--)
+                {
+                    int candidateSegmentPos = candidatePartsLookup[i].parts.Length - segmentPos;
 
-            if (i >= span.Length)
-                return "/";
+                    if (candidateSegmentPos < 0 || !candidatePartsLookup[i].parts[candidateSegmentPos].Equals(comparisonSegment, StringComparison.OrdinalIgnoreCase))
+                    {
+                        candidatePartsLookup.RemoveAt(i);
+                        continue;
+                    }
 
-            return span.Slice(i);
+                    bestLastOption = candidatePartsLookup[i].pos;
+                }
+            }
+
+            return candidates[bestLastOption.Value];
         }
     }
 

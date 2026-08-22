@@ -521,12 +521,13 @@ public class AniListProvider : IMetaDataProvider
     public async Task<T?> SendRequest<T>(string query, object variables)
     {
         var json = JsonSerializer.Serialize(new { query, variables });
+
         var response = await _http.PostAsync(_url, new StringContent(json, Encoding.UTF8, "application/json"));
+        string responseJson = await response.Content.ReadAsStringAsync();
 
         try
         {
             response.EnsureSuccessStatusCode();
-            string responseJson = await response.Content.ReadAsStringAsync();
 
             return JsonSerializer.Deserialize<T>(responseJson, new JsonSerializerOptions()
             {
@@ -535,7 +536,7 @@ public class AniListProvider : IMetaDataProvider
         }
         catch (Exception e)
         {
-            _logger.LogError(e);
+            _logger.LogError(new Exception($"{e.Message}\n\n{responseJson}"));
             return default;
         }
     }

@@ -72,7 +72,7 @@ public class MediaService
 
 
 
-    public async Task<string?[]?> GetJellyfinIdsForEpisodes(ICollection<Model_DownloadedEpisode> episodes) => await _mediaProvider.MapPathToJellyfinId(episodes);
+    public async Task<string?[]?> GetJellyfinIdsForEpisodes(UserSession usr, ICollection<Model_DownloadedEpisode> episodes) => await _mediaProvider.MapPathToJellyfinId(usr, episodes);
 
     public async Task UpdateEpisodeWatchTime(UserSession usr, int AniListId, int epNumber, float percentage, long ticks)
     {

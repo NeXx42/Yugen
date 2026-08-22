@@ -137,3 +137,17 @@
 .MassSubtitlesEditor_Controls>div>button {
     background: var(--global-div);
 }
+
+
+.MassSubtitlesEditor_Loading {
+    position: absolute;
+
+    backdrop-filter: blur(3px);
+    inset: 0px;
+
+    padding: 0px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

@@ -105,7 +105,7 @@ public class LibraryService
         if (downloadedMedia == null)
             return null;
 
-        string?[]? jellyfinIds = await _mediaService.GetJellyfinIdsForEpisodes(downloadedMedia.downloadedEpisodes);
+        string?[]? jellyfinIds = await _mediaService.GetJellyfinIdsForEpisodes(usr, downloadedMedia.downloadedEpisodes);
 
         if (jellyfinIds != null)
             for (int i = 0; i < jellyfinIds.Length; i++)
@@ -242,7 +242,7 @@ public class LibraryService
                     throw;
             }
 
-            if (usr != null)
+            if (usr != null) // jellyfin's api doesnt return all results without the userid??
                 await RecheckDownloads(usr, aniListId, true);
         }
 

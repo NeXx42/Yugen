@@ -153,6 +153,9 @@ public class MediaController : ControllerBase
             IFormFile file = files[i];
             string id = jellyfinIds[i];
 
+            if (string.IsNullOrEmpty(id))
+                continue;
+
             await _mediaService.UploadSubtitle(id, language, file);
         }
 
