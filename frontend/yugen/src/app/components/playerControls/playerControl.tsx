@@ -2,7 +2,7 @@
 
 import * as api from "@lib/api.local"
 
-import { BufferingIndicator, Container, createPlayer, Gesture, selectPlaybackRate, usePlayer, videoFeatures } from '@videojs/react';
+import { BufferingIndicator, Container, createPlayer, Gesture, videoFeatures } from '@videojs/react';
 import {
     Controls,
     PlayButton,
@@ -19,11 +19,11 @@ import WatchtimeSyncerPlayerControl from "@/app/components/playerControls/watcht
 import SegmentSkipperPlayerControl from "@/app/components/playerControls/segmentSkipperPlayerControl";
 import TimePlayerControl from "@/app/components/playerControls/timePlayerControl";
 
-import { MediaEpisodeInfo, MediaInfo, Playback_Info } from '@/app/shared/types';
 import { useEffect, useRef, useState } from 'react';
 
 import "./playerControl.css"
 import PlaybackSpeedListPlayerControl from "./playbackSpeedListPlayerControl";
+import { SelectedEpisodeInfo } from "@/app/(app)/[id]/mediaContainer";
 
 const Player = createPlayer({
     features: [
@@ -36,8 +36,8 @@ export type MenuType = "None" | "Settings" | "Subtitles" | "Audio";
 export type SettingsMenu = "None" | "Quality" | "PlaybackSpeed";
 
 
-export default function ({ mediaInfo, episodeInfo, playbackInfo }: { mediaInfo: MediaInfo, episodeInfo: MediaEpisodeInfo, playbackInfo: Playback_Info }) {
-    const source = playbackInfo.sources[0];
+export default function ({ episode }: { episode: SelectedEpisodeInfo }) {
+    const source = episode.downloadInfo!.sources[0];
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
     const [selectedAudio, setSelectedAudio] = useState<number | null>(() => {
@@ -146,14 +146,14 @@ export default function ({ mediaInfo, episodeInfo, playbackInfo }: { mediaInfo: 
     }
 
     const onMetadataLoad = (video: HTMLVideoElement) => {
-        if (playbackInfo?.historicalTicks == null)
+        if (episode.downloadInfo?.historicalTicks == null)
             return;
 
-        video.currentTime = playbackInfo!.historicalTicks / 10_000_000;
+        video.currentTime = episode.downloadInfo!.historicalTicks / 10_000_000;
     };
 
     const syncPlaybackTime = (runtime: number, percentage: number) => {
-        void api.media_UpdateEpisodeTime(mediaInfo.id, episodeInfo!.number, runtime, percentage);
+        void api.media_UpdateEpisodeTime(episode.mediaInfo.id, episode.episodeInfo!.number, runtime, percentage);
     }
 
     const detectPlaybackCapabilities = () => {
@@ -194,7 +194,7 @@ export default function ({ mediaInfo, episodeInfo, playbackInfo }: { mediaInfo: 
             vidParams.push(`audioCodecs=${audioCodecs}`);
         }
 
-        return `api/media/${playbackInfo.jellyfinId}/${0}/stream.${format}?${vidParams.join("&")}`;
+        return `api/media/${episode.downloadInfo!.jellyfinId}/${0}/stream.${format}?${vidParams.join("&")}`;
     }
 
     const playbackUrl = getPlaybackUrl();
@@ -215,15 +215,19 @@ export default function ({ mediaInfo, episodeInfo, playbackInfo }: { mediaInfo: 
                 <WatchtimeSyncerPlayerControl syncFunc={syncPlaybackTime} />
                 <SubtitlesPlayerControl url={source.subs[selectedSub]?.uri} offset={subtitleOffset} viewLogs={viewSubLogs} setViewLogs={setViewSubLogs} setOffset={setSubtitleOffset} />
 
-                <SegmentSkipperPlayerControl video={videoRef} info={playbackInfo} />
+                <SegmentSkipperPlayerControl video={videoRef} info={episode.downloadInfo!} />
 
                 <Controls.Root className="VideoPlayer_Controls" onClick={handleVideoClick}>
+                    <Controls.Group className="VideoPlayer_Controls_Top">
+                        <h2>{episode.episodeInfo.title}</h2>
+                    </Controls.Group>
+
                     <Controls.Group className="VideoPlayer_Controls_Bottom" onClick={e => e.stopPropagation()}>
                         <TimeSlider.Root className="VideoPlayer_Controls_TimeSlider">
                             <TimeSlider.Track className="VideoPlayer_Controls_TimeSlider_track">
                                 <TimeSlider.Buffer className="VideoPlayer_Controls_TimeSlider_buffer" />
-                                {playbackInfo.segments.map((s, i) => <div className="VideoPlayer_Controls_TimeSlider_Segment" style={{ left: `${s.start}%`, width: `${s.duration}%` }} key={i} />)}
-                                {playbackInfo.chapters.map((s, i) => <div className="VideoPlayer_Controls_TimeSlider_Chapter" style={{ left: `${s}%` }} key={i} />)}
+                                {episode.downloadInfo!.segments.map((s, i) => <div className="VideoPlayer_Controls_TimeSlider_Segment" style={{ left: `${s.start}%`, width: `${s.duration}%` }} key={i} />)}
+                                {episode.downloadInfo!.chapters.map((s, i) => <div className="VideoPlayer_Controls_TimeSlider_Chapter" style={{ left: `${s}%` }} key={i} />)}
                                 <TimeSlider.Fill className="VideoPlayer_Controls_TimeSlider_fill" />
                                 <TimeSlider.Thumb className="VideoPlayer_Controls_TimeSlider_thumb" />
                             </TimeSlider.Track>

@@ -165,7 +165,7 @@ public class RadarrLibraryProvider : ILibraryProvider
         throw new NotImplementedException();
     }
 
-    public void EmbedLink(IModel_Link link, int? linkId, int? seasonId)
+    public void EmbedLink(Model_Link link, int? linkId, int? seasonId)
     {
         link.themoviedb_id = linkId;
     }

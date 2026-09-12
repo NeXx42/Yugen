@@ -32,14 +32,14 @@ public class MediaService
         _mediaProvider = new JellyfinMediaService(settings.Get(ConfigKeys.Jellyfin_Url), settings.Get(ConfigKeys.Jellyfin_ApiKey), logger);
     }
 
-    public async Task<PlaybackInfo> GetPlaybackInfo(UserSession usr, int? anilistId, int? episodeNumber, string jellyfinId)
+    public async Task<PlaybackInfo> GetPlaybackInfo(UserSession usr, int? mediaId, int? episodeNumber, string jellyfinId)
     {
         PlaybackInfo info = await _mediaProvider.GetPlaybackInfo(jellyfinId);
 
-        if (episodeNumber.HasValue && anilistId.HasValue)
+        if (episodeNumber.HasValue && mediaId.HasValue)
         {
             Model_WatchedEpisode? episodeWatchData = await _db.watchHistory
-                .Where(w => w.UserId == usr.User.Id && w.MediaId == anilistId)
+                .Where(w => w.UserId == usr.User.Id && w.MediaId == mediaId)
                 .Include(w => w.WatchedEpisodes)
                 .SelectMany(w => w.WatchedEpisodes)
                 .FirstOrDefaultAsync(e => e.EpisodeNumber == episodeNumber);
@@ -74,15 +74,15 @@ public class MediaService
 
     public async Task<string?[]?> GetJellyfinIdsForEpisodes(UserSession usr, ICollection<Model_DownloadedEpisode> episodes) => await _mediaProvider.MapPathToJellyfinId(usr, episodes);
 
-    public async Task UpdateEpisodeWatchTime(UserSession usr, int AniListId, int epNumber, float percentage, long ticks)
+    public async Task UpdateEpisodeWatchTime(UserSession usr, int mediaId, int epNumber, float percentage, long ticks)
     {
-        Model_WatchHistory? history = await _db.watchHistory.Include(e => e.WatchedEpisodes).FirstOrDefaultAsync(e => e.MediaId == AniListId);
+        Model_WatchHistory? history = await _db.watchHistory.Include(e => e.WatchedEpisodes).FirstOrDefaultAsync(e => e.MediaId == mediaId);
 
         if (history == null)
         {
             await _db.AddAsync(new Model_WatchHistory()
             {
-                MediaId = AniListId,
+                MediaId = mediaId,
                 UpdatedTime = DateTime.UtcNow,
                 LastWatchedEpisodeNumber = epNumber,
                 UserId = usr.User.Id,
@@ -98,7 +98,7 @@ public class MediaService
             });
 
             await _db.SaveChangesAsync();
-            _cache.Remove(CatalogService.GetCardCacheId(AniListId));
+            _cache.Remove(CatalogService.GetCardCacheId(mediaId));
 
             return;
         }
@@ -126,7 +126,7 @@ public class MediaService
         }
 
         await _db.SaveChangesAsync();
-        _cache.Remove(CatalogService.GetCardCacheId(AniListId));
+        _cache.Remove(CatalogService.GetCardCacheId(mediaId));
     }
 
     public async Task UploadSubtitle(string jellyfinId, string language, IFormFile subtitle)

@@ -233,7 +233,7 @@ public class SonarrLibraryProvider : ILibraryProvider
         });
     }
 
-    public void EmbedLink(IModel_Link link, int? linkId, int? seasonId)
+    public void EmbedLink(Model_Link link, int? linkId, int? seasonId)
     {
         link.tvdb_id = linkId;
         link.tvdb_season = seasonId;

@@ -31,6 +31,8 @@ public enum ConfigKeys
 
     BuildNumber,
     CommitSha,
+
+    MetadataProviderId
 }
 
 public class SettingsService
@@ -166,5 +168,7 @@ public class SettingsCache
     }
 
     public bool Get(ConfigKeys key, bool fallback) => Get(key, fallback ? "1" : "0") == "1";
+    public int Get(ConfigKeys key, int fallback) => int.Parse(Get(key, fallback.ToString()) ?? fallback.ToString());
+
     public void Clear() => cache.Clear();
 }

@@ -11,6 +11,7 @@ import "./page.css";
 import { Metadata } from "next";
 
 import { cache } from "react";
+import MediaRecacher from "./mediaRecacher";
 
 export const getMedia = cache(async (id: number): Promise<MediaInfo | null> => {
     return (await api.catalog_GetInfo(id)).data;
@@ -32,7 +33,7 @@ export default async function ({ params }: { params: { id: number } }) {
         return <>Not found</>
     }
 
-    const seasons = media.connectedMedia?.sort((a, b) => ((a?.card.year ?? a.season) ?? 0) - ((b?.card.year ?? b.season) ?? 0)).filter(c => c.card != null);
+    const seasons = media.connectedMedia?.filter(c => c.card != null).sort((a, b) => ((a?.card.year ?? a.season) ?? 0) - ((b?.card.year ?? b.season) ?? 0));
 
     const getDate = (unixSeconds: number | null): string => {
         if (unixSeconds == null)
@@ -72,7 +73,10 @@ export default async function ({ params }: { params: { id: number } }) {
                             </div>
                         </div>
                         <div className="ViewPage_Info_Info">
-                            <h2>{media.title}</h2>
+                            <div className="ViewPage_Info_Info_Title">
+                                <h2>{media.title}</h2>
+                                <MediaRecacher media={media} />
+                            </div>
                             <div className="ViewPage_Info_Info_Tags">
                                 {media.genres?.map(t => <a key={t} style={{ backgroundColor: media.colour ?? "" }} href={`search?genres=${t}`}>{t}</a>)}
                             </div>

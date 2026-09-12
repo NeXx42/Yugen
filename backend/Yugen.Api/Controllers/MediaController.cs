@@ -24,10 +24,10 @@ public class MediaController : ControllerBase
     }
 
     [HttpGet("{jellyfinId}/PlaybackInfo")]
-    public async Task<PlaybackInfo> PlaybackInfo(string jellyfinId, [FromQuery] int? anilistId, [FromQuery] int? episodeNumber)
+    public async Task<PlaybackInfo> PlaybackInfo(string jellyfinId, [FromQuery] int? mediaId, [FromQuery] int? episodeNumber)
     {
         HttpContext.GetUserFromSession(out var usr);
-        return await _mediaService.GetPlaybackInfo(usr, anilistId, episodeNumber, jellyfinId);
+        return await _mediaService.GetPlaybackInfo(usr, mediaId, episodeNumber, jellyfinId);
     }
 
     [HttpGet("{jellyfinId}/{source}/stream.mkv")]

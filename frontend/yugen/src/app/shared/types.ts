@@ -85,7 +85,7 @@ export interface MediaEpisodeInfo {
     score: number,
 
     jellyfinId: string | null
-    wasLastWatched: boolean;
+    watchDate: number;
     watchPercentage: number | null,
 }
 

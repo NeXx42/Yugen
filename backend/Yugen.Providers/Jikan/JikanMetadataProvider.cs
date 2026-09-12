@@ -8,6 +8,7 @@ using Yugen.Providers.Helpers;
 
 namespace Yugen.Providers.Jikan;
 
+/*
 public class JikanMetadataProvider : IMetaDataProvider
 {
     private readonly RestfulHelper _http;
@@ -77,3 +78,4 @@ public class JikanMetadataProvider : IMetaDataProvider
         throw new NotImplementedException();
     }
 }
+*/

@@ -7,10 +7,10 @@ namespace Yugen.Domain.Models.Media;
 
 public class Model_Media
 {
-    // is the anilist id
     [Key]
     [Required]
     public required int Id { get; set; }
+    public Model_Link link { get; set; } = null!;
 
     public string? TitleNative { get; set; }
     public string? TitleEnglish { get; set; }
@@ -38,6 +38,8 @@ public class Model_Media
 
     public long? LastUpdated { get; set; }
     public long? NextEpisodeReleaseDate { get; set; }
+
+    public long? lastViewed { get; set; }
 
     public Collection<Model_MediaTag> Tags { get; set; } = new Collection<Model_MediaTag>();
     public Collection<Model_MediaGenre> Genres { get; set; } = new Collection<Model_MediaGenre>();

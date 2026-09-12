@@ -4,6 +4,8 @@ import "./timePlayerControl.css"
 export default function () {
     const time = usePlayer(selectTime);
 
+    const endTime = new Date(Date.now() + (((time?.duration ?? 0) - (time?.currentTime ?? 0)) * 1000));
+
     const currentTimeTxt = formatTime(time?.currentTime ?? 0);
     const durationTxt = formatTime(time?.duration ?? 0);
 
@@ -24,6 +26,6 @@ export default function () {
     }
 
     return (
-        <a className="TimePlayerControl">{currentTimeTxt} / {durationTxt}</a>
+        <a className="TimePlayerControl">{`${currentTimeTxt} / ${durationTxt} (${endTime.toLocaleTimeString().slice(0, 5)})`}</a>
     )
 }

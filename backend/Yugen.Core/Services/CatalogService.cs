@@ -1,7 +1,4 @@
-using System.Net.Http.Json;
-using System.Text.Json;
 using EFCore.BulkExtensions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Yugen.Core.Data;
 using Yugen.Core.Helpers;
@@ -15,8 +12,6 @@ using Yugen.Domain.Models;
 using Yugen.Domain.Models.Bookmarks;
 using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
-using Yugen.Providers;
-using Yugen.Providers.AniList;
 
 namespace Yugen.Core.Services;
 
@@ -24,10 +19,10 @@ public class CatalogService
 {
     private readonly YugenContext _db;
 
-    private readonly IMetaDataProvider _currentProvider;
 
     private readonly CacheService _cache;
     private readonly SettingsService _settings;
+    private readonly MetadataService _currentProvider;
     private readonly HydrationService _hydrationService;
 
     private readonly EndpointDeduplicator _endpointDeduplicator;
@@ -35,12 +30,12 @@ public class CatalogService
     public static string GetCardCacheId(int id) => $"CardCache_{id}";
     public static string GetInfoCacheId(int id) => $"Info_{id}";
 
-    public CatalogService(YugenContext db, HydrationService hydrationService, CacheService cache, SettingsService settings, ILogging logger)
+    public CatalogService(YugenContext db, MetadataService metadataService, HydrationService hydrationService, CacheService cache, SettingsService settings, ILogging logger)
     {
         _db = db;
 
         _endpointDeduplicator = new EndpointDeduplicator();
-        _currentProvider = new AniListProvider(logger);
+        _currentProvider = metadataService;
 
         _cache = cache;
         _settings = settings;
@@ -76,21 +71,72 @@ public class CatalogService
         return pageResponse;
     }
 
-    public async Task<MediaInfo?> GetMediaInfoForUser(UserSession? usr, int aniListId)
+    public async Task<PageResponse<MediaCard>> SearchSeasonal(string season, int take, int page)
     {
-        MediaInfo? info = await GetMediaInfo(aniListId);
+        string SEARCH_CACHE = $"{nameof(SearchSeasonal)}_{season}_{page}_{take}";
+        PageResponse<MediaCard>? pageResponse;
 
-        if (info != null && usr != null)
+        if (!_cache.TryGetValue(SEARCH_CACHE, out pageResponse))
         {
-            Model_UserBookmark? bookmark = await _db.userBookmarks.FirstOrDefaultAsync(b => b.UserId == usr.User.Id && b.MediaId == aniListId);
-            info.RegisterBookmark(bookmark);
+            MediaSearchQuery query = new MediaSearchQuery
+            {
+                page = page,
+                pageSize = take,
+                season = season,
+                year = DateTime.UtcNow.Year,
+                sort = MediaSort.START_DATE,
+                allowAdultContent = _settings.getCache.Get(ConfigKeys.AdultContent, false)
+            };
+
+            (int total, int[] media) = await _currentProvider.SearchSeasonal(query);
+            pageResponse = new PageResponse<MediaCard>(await GetOrCreateMediaCardsFromIds(media.ToList()), query.page ?? 1, query.pageSize ?? 10, total);
+
+            _cache.Set(SEARCH_CACHE, pageResponse);
+        }
+
+        return pageResponse ?? new PageResponse<MediaCard>([], page, take, 0);
+    }
+
+    public async Task<MediaInfo?> GetMediaInfoForUser(UserSession? usr, int mediaId)
+    {
+        MediaInfo? info = await GetMediaInfo(mediaId);
+
+        if (info != null)
+        {
+            if (info.lastViewed == null && (info.recommended?.Length ?? 0) == 0)
+            {
+                await RecacheRecommended(usr, mediaId);
+                info = await GetMediaInfo(mediaId);
+            }
+        }
+
+        if (info != null)
+        {
+            if (usr != null)
+            {
+                Model_UserBookmark? bookmark = await _db.userBookmarks.FirstOrDefaultAsync(b => b.UserId == usr.User.Id && b.MediaId == mediaId);
+                info.RegisterBookmark(bookmark);
+            }
+
+            try
+            {
+                info.lastViewed = DateTimeOffset.UtcNow.ToUnixTimeSeconds(); // updates cached version too
+                Model_Media? mediaModel = await _db.media.FirstOrDefaultAsync(m => m.Id == mediaId);
+
+                if (mediaModel != null)
+                {
+                    mediaModel.lastViewed = info.lastViewed;
+                    await _db.SaveChangesAsync();
+                }
+            }
+            catch { }
         }
 
         return info;
     }
 
-    public async Task<MediaInfo?> GetMediaInfo(int aniListId)
-        => (await GetMediaInfo([aniListId])).FirstOrDefault();
+    public async Task<MediaInfo?> GetMediaInfo(int mediaId)
+        => (await GetMediaInfo([mediaId])).FirstOrDefault();
 
     public async Task<MediaInfo[]> GetMediaInfo(ICollection<int> ids)
     {
@@ -180,9 +226,8 @@ public class CatalogService
         var links = await (
             from l in _db.links
 
-            where l.anilist_id.HasValue
-                && l.tvdb_id.HasValue
-                && linkLookup.Keys.Contains(l.anilist_id.Value)
+            where l.tvdb_id.HasValue
+                && linkLookup.Keys.Contains(l.MediaId)
 
             join cl in _db.links
                 on l.tvdb_id equals cl.tvdb_id
@@ -190,7 +235,7 @@ public class CatalogService
 
             select new
             {
-                id = l.anilist_id!.Value,
+                id = l.MediaId,
                 relatedIds = grouped.Distinct()
             }
         ).ToArrayAsync();
@@ -200,7 +245,7 @@ public class CatalogService
             linkLookup[link.id] = link.relatedIds.ToArray();
 
             foreach (Model_Link linkMediaId in link.relatedIds)
-                mediaLookup[linkMediaId.anilist_id!.Value] = null;
+                mediaLookup[linkMediaId.MediaId] = null;
         }
 
         Model_Tag[] tags = await _db.tags.Where(t => tagLookup.Keys.Contains(t.Id)).ToArrayAsync();
@@ -231,7 +276,7 @@ public class CatalogService
 
             if (linkLookup.TryGetValue(media.Id, out Model_Link[]? linkedMedia) && linkedMedia != null)
             {
-                (Model_Link, MediaCard)[] hydratedLinks = linkedMedia.Where(l => mediaLookup.ContainsKey(l.anilist_id!.Value)).Select(l => (l, mediaLookup[l.anilist_id!.Value]!)).ToArray();
+                (Model_Link, MediaCard)[] hydratedLinks = linkedMedia.Where(l => mediaLookup.ContainsKey(l.MediaId)).Select(l => (l, mediaLookup[l.MediaId]!)).ToArray();
                 info.RegisterConnectedMedia(hydratedLinks);
             }
 
@@ -245,13 +290,32 @@ public class CatalogService
         return results.ToArray();
     }
 
+    public async Task RecacheRecommended(UserSession? usr, int mediaId)
+    {
+        Model_Media? media = await _db.media
+            .Include(m => m.link)
+            .FirstOrDefaultAsync(m => m.Id == mediaId);
+
+        if (media == null)
+            return;
+
+        int[] recommendedIds = await _currentProvider.FetchRecommendedMedia(media.link);
+
+        _db.mediaRelations.RemoveRange(_db.mediaRelations.Where(r => r.MediaId == mediaId));
+
+        await _db.SaveChangesAsync();
+        await _db.BulkInsertAsync(recommendedIds.Select(r => new Model_MediaRelation { MediaId = mediaId, ConnectedMediaId = r }));
+
+        _cache.Remove(GetInfoCacheId(mediaId));
+    }
+
     public async Task<MediaCard[]> Upcoming(int take)
     {
         const string CACHE_KEY = "CATALOG_UPCOMING";
 
         if (!_cache.TryGetValue(CACHE_KEY, out Dictionary<int, long>? upcoming) || upcoming == null)
         {
-            upcoming = await _currentProvider.UpcomingMedia();
+            upcoming = await _currentProvider.UpcomingMedia(null);
 
             _cache.Remove(CACHE_KEY);
             _cache.SetIfNotExists(CACHE_KEY, upcoming, new TimeSpan(0, 30, 0));
@@ -268,7 +332,7 @@ public class CatalogService
 
         if (!_cache.TryGetValue(CACHE_KEY, out Dictionary<int, long>? upcoming) || upcoming == null)
         {
-            upcoming = await _currentProvider.UpcomingMediaForDay(absoluteDayOfMonth.Value);
+            upcoming = await _currentProvider.UpcomingMedia(absoluteDayOfMonth.Value);
 
             _cache.Remove(CACHE_KEY);
             _cache.SetIfNotExists(CACHE_KEY, upcoming, new TimeSpan(0, 30, 0));
@@ -278,7 +342,7 @@ public class CatalogService
         return media.Select(x => x.WithReleaseDate(upcoming[x.aniListId])).OrderBy(x => x.nextReleaseDate).ToArray();
     }
 
-    public async Task<MediaCard[]> GetOrCreateMediaCardsFromIds(List<int> ids, MediaSearchQuery? req = null)
+    public async Task<MediaCard[]> GetOrCreateMediaCardsFromIds(List<int> ids)
     {
         MediaCard? card;
         List<MediaCard> results = new List<MediaCard>();
@@ -288,9 +352,7 @@ public class CatalogService
             if (_cache.TryGetValue(GetCardCacheId(ids[i]), out card) && card != null)
             {
                 ids.RemoveAt(i);
-
-                if (card.IsInFilter(req))
-                    results.Add(card);
+                results.Add(card);
             }
         }
 
@@ -310,12 +372,10 @@ public class CatalogService
             _cache.Set(GetCardCacheId(card.aniListId), card);
 
             ids.Remove(media.Id);
-
-            if (card.IsInFilter(req))
-                results.Add(card);
+            results.Add(card);
         }
 
-        IEnumerable<MediaCard> newCards = (await _hydrationService.SaveMedia(ids, req)).Select(MediaCard.Map);
+        IEnumerable<MediaCard> newCards = (await _hydrationService.SaveMedia(ids)).Select(MediaCard.Map);
 
         foreach (MediaCard newCard in newCards)
             _cache.Set(GetCardCacheId(newCard.aniListId), newCard);
@@ -381,11 +441,9 @@ public class CatalogService
         (List<Model_Tag> tags, List<Model_Genre> genres) = await _currentProvider.GetSearchCriteria();
 
         _db.RemoveRange(_db.tags);
-        _db.RemoveRange(_db.genres);
         await _db.SaveChangesAsync();
 
         await _db.BulkInsertAsync(tags);
-        await _db.BulkInsertAsync(genres);
     }
 
     public async Task CheckForOutOfDateEpisodes()

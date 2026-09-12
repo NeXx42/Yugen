@@ -56,26 +56,12 @@ public class LibraryService
         _library = LibraryFactory.Create(settings, loggingService);
     }
 
-    public async Task<DownloadedEpisode[]> GetDownloadedEpisodes(UserSession usr, int aniListId)
+    public async Task<Model_DownloadedMedia?> RecheckDownloads(UserSession usr, int mediaId, bool force = false)
     {
-        Model_DownloadedMedia? media = await RecheckDownloads(usr, aniListId);
+        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(RecheckDownloads), mediaId.ToString());
 
-        if (media == null)
-            return [];
-
-        return media.downloadedEpisodes.Select(DownloadedEpisode.Map).ToArray();
-    }
-
-    public async Task<Model_DownloadedMedia?> RecheckDownloads(UserSession usr, int aniListId, bool force = false)
-    {
-        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(RecheckDownloads), aniListId.ToString());
-
-        Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == aniListId);
-
-        if (link == null)
-            return null;
-
-        Model_DownloadedMedia? downloadedMedia = await _db.downloadedMedia.FirstOrDefaultAsync(d => d.MediaId == aniListId);
+        Model_Link link = await _db.links.SingleAsync(l => l.MediaId == mediaId);
+        Model_DownloadedMedia? downloadedMedia = await _db.downloadedMedia.FirstOrDefaultAsync(d => d.MediaId == mediaId);
 
         if (downloadedMedia != null)
         {
@@ -90,7 +76,7 @@ public class LibraryService
             }
         }
 
-        Model_Media? media = await _db.media.FirstOrDefaultAsync(m => m.Id == aniListId);
+        Model_Media? media = await _db.media.FirstOrDefaultAsync(m => m.Id == mediaId);
 
         if (media == null)
             return null;
@@ -100,7 +86,7 @@ public class LibraryService
         if (!lib.isSetup)
             return null;
 
-        downloadedMedia = await lib.GetDownloadedEpisodes(aniListId, link!);
+        downloadedMedia = await lib.GetDownloadedEpisodes(mediaId, link!);
 
         if (downloadedMedia == null)
             return null;
@@ -115,31 +101,6 @@ public class LibraryService
         await _db.SaveChangesAsync();
 
         return downloadedMedia;
-    }
-
-    public async Task<PageResponse<MediaCard>> GetWatchHistory(UserSession usr, MediaSearchQuery? req)
-    {
-        int page = req?.page ?? 1;
-        int pageSize = req?.pageSize ?? 10;
-
-        var query = _db.watchHistory
-            .Include(w => w.WatchedEpisodes)
-            .Where(w => w.UserId == usr.User.Id && w.LastWatchedEpisodeNumber.HasValue)
-            .OrderByDescending(w => w.UpdatedTime)
-            .Select(w => new
-            {
-                Media = w,
-                Episode = w.WatchedEpisodes.FirstOrDefault(e => e.EpisodeNumber == w.LastWatchedEpisodeNumber)
-            })
-            .Where(x => x.Episode != null);
-
-        int totalCount = await query.CountAsync();
-        var history = await query.ToArrayAsync();
-
-        Dictionary<int, MediaCard> cardLookup = (await _catalogService.GetOrCreateMediaCardsFromIds(history.Select(m => m.Media.MediaId).ToList(), req)).ToDictionary(c => c.aniListId, c => c);
-
-        var res = history.Select(h => cardLookup[h.Media.MediaId].WithWatchInfo(h.Media, h.Episode)).ToArray();
-        return new PageResponse<MediaCard>(res, page, pageSize, totalCount);
     }
 
     public async Task<int?> ResyncLibrary(UserSession usr)
@@ -179,23 +140,20 @@ public class LibraryService
         await _db.SaveChangesAsync();
 
         int importCount = 0;
-        int?[] links = await _db.links
+        int[] links = await _db.links
             .Where(l =>
                 (l.themoviedb_id.HasValue && tmdbIds.Contains(l.themoviedb_id.Value)) ||
                 (l.tvdb_id.HasValue && tvdbIds.Contains(l.tvdb_id.Value))
             )
-            .Select(l => l.anilist_id)
+            .Select(l => l.MediaId)
             .ToArrayAsync();
 
-        foreach (int? link in links)
+        foreach (int link in links)
         {
-            if (link == null)
-                continue;
-
-            importCount++;
             try
             {
-                await RecheckDownloads(usr, link.Value, true);
+                await RecheckDownloads(usr, link, true);
+                importCount++;
             }
             catch { }
         }
@@ -203,9 +161,9 @@ public class LibraryService
         return importCount;
     }
 
-    public async Task<EpisodeInfo?> GetFilmEpisodeContainer(UserSession? usr, int aniListId, bool refetch)
+    public async Task<EpisodeInfo?> GetFilmEpisodeContainer(UserSession? usr, int mediaId, bool refetch)
     {
-        Model_DownloadedMedia? media = await _db.downloadedMedia.Include(m => m.downloadedEpisodes).FirstOrDefaultAsync(m => m.MediaId == aniListId);
+        Model_DownloadedMedia? media = await _db.downloadedMedia.Include(m => m.downloadedEpisodes).FirstOrDefaultAsync(m => m.MediaId == mediaId);
 
         if (media?.downloadedEpisodes.Count != 1)
             return null;
@@ -216,14 +174,14 @@ public class LibraryService
         Model_WatchHistory? history = null;
 
         if (usr != null)
-            history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.User.Id && w.MediaId == aniListId);
+            history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.User.Id && w.MediaId == mediaId);
 
         return EpisodeInfo.Map((null, media.downloadedEpisodes.ElementAt(0), history?.WatchedEpisodes.FirstOrDefault()));
     }
 
-    public async Task<EpisodeInfo[]> GetMediaEpisodesForUser(UserSession? usr, int aniListId, bool refetch, bool clearOld)
+    public async Task<EpisodeInfo[]> GetMediaEpisodesForUser(UserSession? usr, int mediaId, bool refetch, bool clearOld)
     {
-        Model_Media? media = await _db.media.FirstOrDefaultAsync(m => m.Id == aniListId);
+        Model_Media? media = await _db.media.FirstOrDefaultAsync(m => m.Id == mediaId);
 
         if (media == null)
             return [];
@@ -243,11 +201,11 @@ public class LibraryService
             }
 
             if (usr != null) // jellyfin's api doesnt return all results without the userid??
-                await RecheckDownloads(usr, aniListId, true);
+                await RecheckDownloads(usr, mediaId, true);
         }
 
-        List<Model_MediaEpisode> episodeMetadata = await _db.mediaEpisodes.Where(e => e.MediaId == aniListId).OrderBy(e => e.EpisodeNumber).ToListAsync();
-        List<Model_DownloadedEpisode> downloadMetadata = await _db.downloadedEpisodes.Where(e => e.MediaId == aniListId).OrderBy(e => e.EpisodeNumber).ToListAsync();
+        List<Model_MediaEpisode> episodeMetadata = await _db.mediaEpisodes.Where(e => e.MediaId == mediaId).OrderBy(e => e.EpisodeNumber).ToListAsync();
+        List<Model_DownloadedEpisode> downloadMetadata = await _db.downloadedEpisodes.Where(e => e.MediaId == mediaId).OrderBy(e => e.EpisodeNumber).ToListAsync();
 
         Dictionary<int, (Model_MediaEpisode? metaData, Model_DownloadedEpisode? downloadData, Model_WatchedEpisode? watchData)>
             episodes = episodeMetadata.ToDictionary(e => e.EpisodeNumber, e => (metaData: e, downloadData: (Model_DownloadedEpisode?)null, watchData: (Model_WatchedEpisode?)null))!;
@@ -268,7 +226,7 @@ public class LibraryService
 
         if (usr != null)
         {
-            history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.User.Id && w.MediaId == aniListId); ;
+            history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.User.Id && w.MediaId == mediaId); ;
 
             foreach (Model_WatchedEpisode watch in history?.WatchedEpisodes ?? [])
             {
@@ -306,15 +264,44 @@ public class LibraryService
         if (query == null)
             return PageResponse<MediaCard>.Empty();
 
-        List<int> ids = await query.ToListAsync();
+        int totalResults = await query.CountAsync();
 
         int page = Math.Max(req?.page ?? 1, 1);
         int pageSize = req?.pageSize ?? 10;
 
-        MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds(ids, req);
+        List<int> ids = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds(ids);
 
         var results = cards.Skip((page - 1) * pageSize).Take(pageSize).OrderBy(c => c.Title).ToArray();
-        return new PageResponse<MediaCard>(results, page, pageSize, cards.Length);
+        return new PageResponse<MediaCard>(results, page, pageSize, totalResults);
+    }
+
+    public async Task<PageResponse<MediaCard>> GetWatchHistory(UserSession usr, MediaSearchQuery? req)
+    {
+        int page = Math.Max(req?.page ?? 1, 1);
+        int pageSize = req?.pageSize ?? 10;
+
+        var query = _db.watchHistory
+            .Include(w => w.WatchedEpisodes)
+            .Where(w => w.UserId == usr.User.Id && w.LastWatchedEpisodeNumber.HasValue)
+            .OrderByDescending(w => w.UpdatedTime)
+            .Select(w => new
+            {
+                Media = w,
+                Episode = w.WatchedEpisodes.FirstOrDefault(e => e.EpisodeNumber == w.LastWatchedEpisodeNumber)
+            })
+            .Where(x => x.Episode != null);
+
+        int totalCount = await query.CountAsync();
+        var history = await query.Skip((page - 1) * pageSize).Take(pageSize).ToArrayAsync();
+
+        List<int> mediaIds = history.Select(m => m.Media.MediaId).ToList();
+        MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds(mediaIds);
+
+        foreach (var fullHistory in history)
+            cards.FirstOrDefault(c => c.aniListId == fullHistory.Media.MediaId)?.WithWatchInfo(fullHistory.Media, fullHistory.Episode);
+
+        return new PageResponse<MediaCard>(cards, page, pageSize, totalCount);
     }
 
     public async Task UpdateBookmark(UserSession usr, int mediaId, int bookmarkId)
@@ -441,26 +428,26 @@ public class LibraryService
         return false;
     }
 
-    public async Task ResearchDownloads(UserSession usr, int aniListId)
+    public async Task ResearchDownloads(UserSession usr, int mediaId)
     {
-        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(GetSeriesRequestInfo), aniListId.ToString());
+        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(GetSeriesRequestInfo), mediaId.ToString());
 
-        Model_DownloadedMedia? media = await _db.downloadedMedia.FirstOrDefaultAsync(d => d.MediaId == aniListId);
+        Model_DownloadedMedia? media = await _db.downloadedMedia.FirstOrDefaultAsync(d => d.MediaId == mediaId);
         if (media != null) await _library.GetFactory(media).ResearchMedia(media);
     }
 
-    public async Task<DownloadRequestInfo> GetSeriesRequestInfo(UserSession usr, int aniListId)
+    public async Task<DownloadRequestInfo> GetSeriesRequestInfo(UserSession usr, int mediaId)
     {
-        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(GetSeriesRequestInfo), aniListId.ToString());
+        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(GetSeriesRequestInfo), mediaId.ToString());
 
-        Model_DownloadedMedia? existingData = await _db.downloadedMedia.Include(d => d.downloadedEpisodes).FirstOrDefaultAsync(d => d.MediaId == aniListId);
+        Model_DownloadedMedia? existingData = await _db.downloadedMedia.Include(d => d.downloadedEpisodes).FirstOrDefaultAsync(d => d.MediaId == mediaId);
 
-        Model_Media media = await _db.media.SingleAsync(m => m.Id == aniListId);
-        Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == aniListId);
-        DownloadRequestInfo requestInfo = await _library.GetFactory(media!).GetRequestInfo(link ?? new Model_Link() { anilist_id = aniListId });
+        Model_Media media = await _db.media.SingleAsync(m => m.Id == mediaId);
+        Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.MediaId == mediaId);
+        DownloadRequestInfo requestInfo = await _library.GetFactory(media!).GetRequestInfo(link ?? new Model_Link() { anilist_id = mediaId });
 
         if (existingData == null)
-            existingData = await RecheckDownloads(usr, aniListId);
+            existingData = await RecheckDownloads(usr, mediaId);
 
         if (existingData == null)
             return requestInfo;
@@ -492,11 +479,11 @@ public class LibraryService
         return requestInfo;
     }
 
-    public async Task DeleteMedia(UserSession usr, int aniListId)
+    public async Task DeleteMedia(UserSession usr, int mediaId)
     {
-        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(DeleteMedia), aniListId.ToString());
+        using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(DeleteMedia), mediaId.ToString());
 
-        Model_DownloadedMedia? media = await RecheckDownloads(usr, aniListId, true);
+        Model_DownloadedMedia? media = await RecheckDownloads(usr, mediaId, true);
 
         if (media != null)
         {
@@ -504,17 +491,17 @@ public class LibraryService
                 throw new Exception("Cannot delete with monitored episodes");
 
             await _library.GetFactory(media).DeleteMedia(media);
-            await RecheckDownloads(usr, aniListId, true);
+            await RecheckDownloads(usr, mediaId, true);
         }
     }
 
-    public async Task ClearMediaHistory(UserSession usr, int aniListId)
+    public async Task ClearMediaHistory(UserSession usr, int mediaId)
     {
-        _db.RemoveRange(_db.watchHistory.Include(h => h.WatchedEpisodes).Where(e => e.UserId == usr.User.Id && e.MediaId == aniListId));
+        _db.RemoveRange(_db.watchHistory.Include(h => h.WatchedEpisodes).Where(e => e.UserId == usr.User.Id && e.MediaId == mediaId));
 
         await _db.SaveChangesAsync();
 
-        _cache.Remove(CatalogService.GetCardCacheId(aniListId));
-        _cache.Remove(CatalogService.GetInfoCacheId(aniListId));
+        _cache.Remove(CatalogService.GetCardCacheId(mediaId));
+        _cache.Remove(CatalogService.GetInfoCacheId(mediaId));
     }
 }

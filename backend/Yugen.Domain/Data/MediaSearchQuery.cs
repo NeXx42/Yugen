@@ -1,4 +1,5 @@
 using Yugen.Domain.Enums;
+using Yugen.Domain.Models.Linking;
 
 namespace Yugen.Domain.Data;
 
@@ -7,7 +8,7 @@ public class MediaSearchQuery
     public int? page { get; set; }
     public int? pageSize { get; set; }
 
-    public ICollection<int>? ids { get; set; }
+    public ICollection<Model_Link>? ids { get; set; }
     public string? text { get; set; }
     public MediaSort? sort { get; set; }
 

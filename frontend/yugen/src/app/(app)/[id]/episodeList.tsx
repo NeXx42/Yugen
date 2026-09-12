@@ -1,7 +1,7 @@
 "use client"
 
 import * as api from "@lib/api.local"
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
 import "./episodeList.css"
 import { EpisodeCompletionThreshold, MediaEpisodeInfo, MediaInfo } from "@/app/shared/types";
@@ -48,6 +48,7 @@ export default function (props: Props) {
     const [timeUntil, setTimeUntil] = useState("")
     const [selectedEpisodeIndex, setSelectedEpisodeIndex] = useState<number | null>(null);
 
+    const refreshMenuRef = useRef<HTMLDivElement>(null);
     const [refreshMenuOpen, setRefreshMenuOpen] = useState(false);
 
 
@@ -79,6 +80,8 @@ export default function (props: Props) {
     }, [props.mediaInfo])
 
     useEffect(() => {
+        if (episodes?.length == 0)
+            return;
 
         const urlBased: string | null = searchParams.get("episode");
 
@@ -91,7 +94,7 @@ export default function (props: Props) {
         var bestIndex = null;
 
         episodes.forEach((ep, i) => {
-            if (ep.wasLastWatched) {
+            if (ep.watchDate) {
                 bestIndex = i;
                 return;
             }
@@ -107,6 +110,23 @@ export default function (props: Props) {
 
         onSelectEpisode(bestIndex);
     }, [episodes])
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (refreshMenuRef.current && !refreshMenuRef.current.contains(event.target as Node)) {
+                setRefreshMenuOpen(false);
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener(
+                "mousedown",
+                handleClickOutside
+            );
+        };
+    })
 
     const onSelectEpisode = (pos: number | null) => {
         window.history.replaceState(null, "", pos != null ? `?episode=${pos}` : "");
@@ -185,7 +205,7 @@ export default function (props: Props) {
                                 </button>
 
                                 {
-                                    refreshMenuOpen && (<div className="EpisodeList_Titlebar_RefreshMenu">
+                                    refreshMenuOpen && (<div className="EpisodeList_Titlebar_RefreshMenu" ref={refreshMenuRef}>
                                         <button onClick={() => fetchEpisodes(true, false)}>Recache</button>
                                         <button onClick={() => fetchEpisodes(true, true)}>Clear And Refetch</button>
                                     </div>)

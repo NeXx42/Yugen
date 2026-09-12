@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Yugen.Domain.Interfaces;
@@ -66,7 +67,18 @@ public class RestfulHelper
         if (!httpRes.IsSuccessStatusCode)
         {
             Console.Write(response);
-            throw new Exception("Invalid request - " + httpRes.ReasonPhrase);
+
+            switch (httpRes.StatusCode)
+            {
+                case HttpStatusCode.BadRequest:
+                    throw new ArgumentException(response);
+
+                case HttpStatusCode.TooManyRequests:
+                    throw new OverflowException(response);
+
+                default:
+                    throw new HttpRequestException(httpRes.ReasonPhrase);
+            }
         }
 
         try

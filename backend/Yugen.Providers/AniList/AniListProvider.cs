@@ -1,8 +1,10 @@
+using System.Linq.Expressions;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Yugen.Domain.Data;
+using Yugen.Domain.Data.Media;
 using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.Linking;
@@ -16,6 +18,7 @@ public class AniListProvider : IMetaDataProvider
     private readonly HttpClient _http;
     private readonly ILogging _logger;
 
+
     public AniListProvider(ILogging logger)
     {
         _logger = logger;
@@ -24,8 +27,15 @@ public class AniListProvider : IMetaDataProvider
         _http = new HttpClient();
     }
 
-    public async Task<Model_Media[]> GetMediaInfo(MediaSearchQuery filter)
+    public string getLinkPropertyName => nameof(Model_Link.anilist_id);
+
+    public async Task<MediaCreationModel[]> GetMediaInfo(IEnumerable<Model_Link> items)
     {
+        MediaSearchQuery filter = new MediaSearchQuery()
+        {
+            ids = items.ToArray()
+        };
+
         if ((filter.ids?.Count ?? 0) == 0)
             return [];
 
@@ -156,13 +166,14 @@ public class AniListProvider : IMetaDataProvider
         }
 
 
-        List<Model_Media> results = new List<Model_Media>();
+        List<MediaCreationModel> results = new List<MediaCreationModel>();
 
         foreach (AniListResponse_Media media in responses)
         {
-            Model_Media result = new Model_Media()
+            MediaCreationModel result = new MediaCreationModel()
             {
-                Id = media.id,
+                Id = -1,
+                providerId = media.id.ToString(),
 
                 TitleEnglish = media.title?.english,
                 TitleNative = media.title?.native,
@@ -211,9 +222,11 @@ public class AniListProvider : IMetaDataProvider
             {
                 for (int i = 0; i < (media.streamingEpisodes?.Length ?? 0); i++)
                 {
-                    result.Episodes.Add(new Model_MediaEpisode()
+                    result.Episodes.Add(new MediaEpisodeCreationModel()
                     {
-                        MediaId = media.id,
+                        MediaId = -1,
+                        providerId = media.id.ToString(),
+
                         EpisodeNumber = i + 1,
 
                         EpisodeTitle = Regex.Replace(media.streamingEpisodes![i].title ?? "", @"^Episode \d+ - ", ""),
@@ -223,9 +236,9 @@ public class AniListProvider : IMetaDataProvider
             }
             else
             {
-                Model_MediaEpisode[] eps = FakeEpisodeList(media.id, result.EpisodeCount);
+                MediaEpisodeCreationModel[] eps = FakeEpisodeList(media.id.ToString(), result.EpisodeCount);
 
-                foreach (Model_MediaEpisode ep in eps)
+                foreach (MediaEpisodeCreationModel ep in eps)
                     result.Episodes.Add(ep);
             }
 
@@ -247,7 +260,10 @@ public class AniListProvider : IMetaDataProvider
         return results.ToArray();
     }
 
-    public async Task<(int, int[])> SearchMedia(MediaSearchQuery searchQuery)
+    public async Task<(int, string[])> SearchSeasonal(MediaSearchQuery searchQuery)
+        => await SearchMedia(searchQuery);
+
+    public async Task<(int, string[])> SearchMedia(MediaSearchQuery searchQuery)
     {
         AniListResponse_Search? res = await GenerateGraphqlQuery(@"
             id
@@ -256,7 +272,7 @@ public class AniListProvider : IMetaDataProvider
         if (res == null)
             return (0, []);
 
-        return (res.data.page?.pageInfo?.total ?? 0, res.data.page?.media?.Select(m => m.id).ToArray() ?? []);
+        return (res.data.page?.pageInfo?.total ?? 0, res.data.page?.media?.Select(m => m.id.ToString()).ToArray() ?? []);
     }
 
     private async Task<AniListResponse_Search?> GenerateGraphqlQuery(string fields, MediaSearchQuery? searchQuery)
@@ -295,7 +311,7 @@ public class AniListProvider : IMetaDataProvider
             sort = searchQuery?.sort?.ToString() ?? "",
 
             search = searchQuery?.text,
-            idIn = searchQuery?.ids,
+            idIn = searchQuery?.ids?.Where(i => i.anilist_id.HasValue).Select(i => i.anilist_id!.Value),
 
             startDate_lesser = searchQuery?.lesserStartDate,
             seasonYear = searchQuery?.year,
@@ -328,28 +344,28 @@ public class AniListProvider : IMetaDataProvider
         }
     }
 
-    public async Task<Dictionary<int, long>> UpcomingMedia()
+    public async Task<Dictionary<string, long>> UpcomingMedia(int? day)
     {
+        if (day.HasValue)
+        {
+            DateTime now = DateTime.UtcNow;
+            DateTime startDate = new DateTime(now.Year, now.Month, day.Value, 0, 0, 0, DateTimeKind.Utc);
+
+            if (day < now.Day)
+            {
+                startDate = startDate.AddMonths(1);
+            }
+
+            DateTimeOffset start = new DateTimeOffset(startDate);
+            DateTimeOffset end = start.AddHours(12);
+
+            return await SearchForMediaBetweenTime(start, end);
+        }
+
         return await SearchForMediaBetweenTime(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(7));
     }
 
-    public async Task<Dictionary<int, long>> UpcomingMediaForDay(int day)
-    {
-        DateTime now = DateTime.UtcNow;
-        DateTime startDate = new DateTime(now.Year, now.Month, day, 0, 0, 0, DateTimeKind.Utc);
-
-        if (day < now.Day)
-        {
-            startDate = startDate.AddMonths(1);
-        }
-
-        DateTimeOffset start = new DateTimeOffset(startDate);
-        DateTimeOffset end = start.AddHours(12);
-
-        return await SearchForMediaBetweenTime(start, end);
-    }
-
-    private async Task<Dictionary<int, long>> SearchForMediaBetweenTime(DateTimeOffset start, DateTimeOffset end)
+    private async Task<Dictionary<string, long>> SearchForMediaBetweenTime(DateTimeOffset start, DateTimeOffset end)
     {
         string query = @"
         query Page($airingAtGreater: Int, $airingAtLesser: Int, $sort: [AiringSort]) {
@@ -372,23 +388,23 @@ public class AniListProvider : IMetaDataProvider
         if (res == null)
             throw new Exception("Failed");
 
-        Dictionary<int, long> results = new Dictionary<int, long>();
+        Dictionary<string, long> results = new Dictionary<string, long>();
 
         foreach (var entry in res.data.page.airingSchedules!)
         {
-            if (results.TryGetValue(entry.mediaId, out long nextEpisode) && nextEpisode < entry.airingAt)
+            if (results.TryGetValue(entry.mediaId.ToString(), out long nextEpisode) && nextEpisode < entry.airingAt)
                 continue;
 
-            results[entry.mediaId] = entry.airingAt;
+            results[entry.mediaId.ToString()] = entry.airingAt;
         }
 
         return results;
     }
 
-    public async Task<Dictionary<int, long?>> GetTimeOfNextEpisodes(ICollection<int> aniListIds)
+    public async Task<Dictionary<string, long?>> GetTimeOfNextEpisodes(ICollection<Model_Link> aniListIds)
     {
         if (aniListIds.Count == 0)
-            return new Dictionary<int, long?>();
+            return new Dictionary<string, long?>();
 
         string query = @"query Page($perPage: Int, $idIn: [Int]) {
             Page(perPage: $perPage) {
@@ -401,12 +417,17 @@ public class AniListProvider : IMetaDataProvider
             }
         }";
 
-        Dictionary<int, long?> response = new Dictionary<int, long?>();
+        Dictionary<string, long?> response = new Dictionary<string, long?>();
 
-        foreach (int id in aniListIds)
-            response[id] = null;
+        foreach (Model_Link id in aniListIds)
+            if (id.anilist_id.HasValue)
+                response[id.anilist_id.Value.ToString()] = null;
 
-        AniListResponse_AiringEpisode? res = await SendRequest<AniListResponse_AiringEpisode>(query, new { idIn = response.Keys, perPage = response.Count });
+        AniListResponse_AiringEpisode? res = await SendRequest<AniListResponse_AiringEpisode>(query, new
+        {
+            idIn = aniListIds.Where(a => a.anilist_id.HasValue).Select(a => a.anilist_id!.Value),
+            perPage = response.Count
+        });
 
         if ((res?.data?.page?.media?.Length ?? 0) > 0)
         {
@@ -415,14 +436,14 @@ public class AniListProvider : IMetaDataProvider
                 if (entry == null)
                     continue;
 
-                response[entry.id] = entry?.nextAiringEpisode?.airingAt;
+                response[entry.id.ToString()] = entry?.nextAiringEpisode?.airingAt;
             }
         }
 
         return response;
     }
 
-    public async Task<List<int>> GetTrending(int limit)
+    public async Task<List<string>> GetTrending(int limit)
     {
         string query = @$"query {{
             trending: Page(page: 1, perPage: {limit}) {{
@@ -437,7 +458,7 @@ public class AniListProvider : IMetaDataProvider
         if (res == null)
             return [];
 
-        return res.data.trending.media.Select(m => m.id).ToList();
+        return res.data.trending.media.Select(m => m.id.ToString()).ToList();
     }
 
 
@@ -484,30 +505,35 @@ public class AniListProvider : IMetaDataProvider
     }
 
 
-    public async Task<Model_MediaEpisode[]> GetEpisodeData(Model_Link media)
+    public async Task<MediaEpisodeCreationModel[]> GetEpisodeData(Model_Link media)
     {
+        if (!media.anilist_id.HasValue)
+            return [];
+
         string query = @"query Query($mediaId: Int) {
             Media(id: $mediaId) {
                 episodes
             }
         }";
 
-        AniListResponse_Info? res = await SendRequest<AniListResponse_Info>(query, new { mediaId = media.anilist_id });
+        AniListResponse_Info? res = await SendRequest<AniListResponse_Info>(query, new { mediaId = media.anilist_id.Value });
 
         if ((res?.data?.media?.episodes ?? 0) == 0)
             return [];
 
-        return FakeEpisodeList(media.anilist_id!.Value, res?.data?.media?.episodes);
+        return FakeEpisodeList(media.anilist_id.Value.ToString(), res?.data?.media?.episodes);
     }
 
-    private Model_MediaEpisode[] FakeEpisodeList(int mediaId, int? count)
+    private MediaEpisodeCreationModel[] FakeEpisodeList(string mediaId, int? count)
     {
         if ((count ?? 0) == 0)
             return [];
 
-        return Enumerable.Range(0, count!.Value).Select(e => new Model_MediaEpisode()
+        return Enumerable.Range(0, count!.Value).Select(e => new MediaEpisodeCreationModel()
         {
-            MediaId = mediaId,
+            MediaId = -1,
+            providerId = mediaId,
+
             EpisodeNumber = e + 1,
             EpisodeTitle = $"Episode {e + 1}"
         }).ToArray();
@@ -539,5 +565,30 @@ public class AniListProvider : IMetaDataProvider
             _logger.LogError(new Exception($"{e.Message}\n\n{responseJson}"));
             return default;
         }
+    }
+
+    public async Task<string[]> FetchRecommendedMedia(Model_Link media)
+    {
+        if (!media.anilist_id.HasValue)
+            return [];
+
+        string query = @"query Query($mediaId: Int) {
+            Media(id: $mediaId) {
+                recommendations {{
+                    nodes {{
+                        mediaRecommendation{{
+                            id
+                        }}
+                    }}
+                }}
+            }
+        }";
+
+        AniListResponse_Info? res = await SendRequest<AniListResponse_Info>(query, new { mediaId = media.anilist_id.Value });
+
+        if ((res?.data?.media?.recommendations?.nodes?.Length ?? 0) == 0)
+            return [];
+
+        return res!.data.media.recommendations!.nodes!.Select(n => n.mediaRecommendation.id.ToString()).ToArray();
     }
 }

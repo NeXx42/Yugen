@@ -29,6 +29,8 @@ public class MediaInfo
 
     public int? bookmark { get; set; }
 
+    public long? lastViewed { get; set; }
+
     public string[]? genres { get; set; }
     public MediaTag[]? tags { get; set; }
     public MediaCard[]? recommended { get; set; }
@@ -56,6 +58,7 @@ public class MediaInfo
             cardImage = media.CardImageLarge,
             colour = media.Colour,
 
+            lastViewed = media.lastViewed,
             genres = media.Genres.Select(g => g.Genre).ToArray()
         };
     }

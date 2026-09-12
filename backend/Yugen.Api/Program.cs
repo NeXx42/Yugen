@@ -87,6 +87,7 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<MediaService>();
 builder.Services.AddScoped<CatalogService>();
 builder.Services.AddScoped<LibraryService>();
+builder.Services.AddScoped<MetadataService>();
 builder.Services.AddScoped<SettingsService>();
 builder.Services.AddScoped<HydrationService>();
 builder.Services.AddScoped<NotificationService>();

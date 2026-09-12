@@ -10,7 +10,8 @@ import { useModals } from "../context/modalContext";
 import LoadingModal from "./loadingModal";
 
 
-type SettingsGroup = "App" | "Jellyfin" | "Indexers" | "Providers";
+type SettingsGroup = "App" | "External" | "Library";
+const groups: SettingsGroup[] = ["App", "External", "Library"];
 
 
 export default function () {
@@ -19,7 +20,6 @@ export default function () {
 
     const filePicker = useRef<HTMLInputElement>(null);
 
-    const groups: SettingsGroup[] = ["App", "Jellyfin", "Indexers", "Providers"];
 
     const [selectedSettingsGroup, setSelectedSettingsGroup] = useState<SettingsGroup>(groups[0]);
     const [savedConfigValues, setSavedConfigValues] = useState<Record<string, string>>()
@@ -67,22 +67,21 @@ export default function () {
     const renderSettingsGroup = (): ReactNode => {
         switch (selectedSettingsGroup) {
             case "App":
-                return (<>
-                    {renderSetting_Button("Import Library", "Import", "", tryToImportLibrary)}
-                    {renderSetting_Toggle("Allow adult content", "AdultContent")}
+                return (
+                    <>
+                        <h2>Settings</h2>
+                        <div className="Settings_Menu_Content_Entries_Settings">
+                            {renderSetting_Toggle("Allow adult content", "AdultContent")}
+                        </div>
 
-                    {renderSetting_Button("Clear cache", "Clear", "Negative", api.catalog_ClearCache)}
-                    {renderSetting_Button("Clear database cache", "Clear", "Negative", api.catalog_ClearDatabase)}
-                    {renderSetting_Button("Update", "Update", "", api.settings_Update)}
-                </>)
+                        <h2>Caching</h2>
+                        <div className="Settings_Menu_Content_Entries_Settings">
+                            {renderSetting_Button("Clear cache", "Clear", "Negative", api.catalog_ClearCache)}
+                            {renderSetting_Button("Clear database cache", "Clear", "Negative", api.catalog_ClearDatabase)}
+                        </div>
+                    </>)
 
-            case "Jellyfin":
-                return (<>
-                    {renderSetting_Button("Sync watch history", "Sync", "", api.library_SyncWatchHistory)}
-                    {renderSetting_ApiGroup("Jellyfin API", "Jellyfin_Url", "Jellyfin_ApiKey")}
-                </>)
-
-            case "Indexers":
+            case "External":
                 const librarySyncCallback = async () => {
                     try {
                         const importCount = await api.library_sync();
@@ -91,16 +90,33 @@ export default function () {
                         showToast("Failed import", "Error");
                     }
                 }
-
                 return (<>
-                    {renderSetting_Button("Sync Library", "Sync", "", librarySyncCallback)}
-                    {renderSetting_ApiGroup("Sonarr API", "Sonarr_Url", "Sonarr_ApiKey")}
-                    {renderSetting_ApiGroup("Radarr API", "Radarr_Url", "Radarr_ApiKey")}
+                    <h2>Metadata</h2>
+                    <div className="Settings_Menu_Content_Entries_Settings">
+                        {renderSettings_Dropdown("Metadata provider", "MetadataProviderId", ["Anilist", "Tenrai"])}
+                        {renderSetting_Button("Update links", "Download", "", api.catalog_ReloadLinks)}
+                    </div >
+
+                    <h2>Jellyfin</h2>
+                    <div className="Settings_Menu_Content_Entries_Settings">
+                        {renderSetting_ApiGroup("Jellyfin API", "Jellyfin_Url", "Jellyfin_ApiKey")}
+                    </div >
+
+                    <h2>Indexers</h2>
+                    <div className="Settings_Menu_Content_Entries_Settings">
+                        {renderSetting_Button("Sync Downloads", "Sync", "", librarySyncCallback)}
+                        {renderSetting_ApiGroup("Sonarr API", "Sonarr_Url", "Sonarr_ApiKey")}
+                        {renderSetting_ApiGroup("Radarr API", "Radarr_Url", "Radarr_ApiKey")}
+                    </div >
+
                 </>)
 
-            case "Providers":
+            case "Library":
                 return (<>
-                    {renderSetting_Button("Download links", "Download", "", api.catalog_ReloadLinks)}
+                    <h2>Import / Export</h2>
+                    <div className="Settings_Menu_Content_Entries_Settings">
+                        {renderSetting_Button("Import Library", "Import", "", tryToImportLibrary)}
+                    </div >
                 </>)
         }
 
@@ -183,10 +199,10 @@ export default function () {
                     api.settings_Save(apiKeyKey, savedConfigValues[apiKeyKey]),
                 ])
 
-                showToast("Saved", "success");
+                showToast("Saved", "Success");
             }
             catch {
-                showToast("Error", "error");
+                showToast("Error", "Error");
             }
         }
 
@@ -206,6 +222,38 @@ export default function () {
         )
     }
 
+    const renderSettings_Dropdown = (label: string, optionKey: string, options: string[]): ReactNode => {
+        if (savedConfigValues === undefined)
+            return (<>LOADING...</>)
+
+        const updateKey = async (to: string) => {
+            await setSavedConfigValues((prev) => {
+                if (prev === undefined) return prev;
+                return {
+                    ...prev,
+                    [optionKey]: to
+                }
+            })
+
+            try {
+                await api.settings_Save(optionKey, to);
+                showToast("Saved", "success");
+            }
+            catch {
+                showToast("Error", "Error");
+            }
+        }
+
+        return (
+            <div className="Settings_Setting_Dropdown">
+                <p>{label}</p>
+                <select value={savedConfigValues[optionKey]} onChange={e => updateKey(e.target.value)}>
+                    {options.map((o, i) => <option key={i} value={i}>{o}</option>)}
+                </select>
+            </div>
+        )
+    }
+
 
     return (
         <div className="Settings_Menu" onClick={e => e.stopPropagation()}>
@@ -219,9 +267,7 @@ export default function () {
                     {groups.map(g => <button className={g === selectedSettingsGroup ? "Selected" : ""} key={g} onClick={() => setSelectedSettingsGroup(g)}>{g}</button>)}
                 </aside>
                 <div className="Settings_Menu_Content_Entries">
-                    <h2>{selectedSettingsGroup}</h2>
-
-                    <div className="Settings_Menu_Content_Entries_Settings">
+                    <div>
                         {renderSettingsGroup()}
                     </div>
                 </div>

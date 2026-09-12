@@ -18,5 +18,5 @@ public interface ILibraryProvider
     public Task<bool> ResearchMedia(Model_DownloadedMedia existingDownload);
     public Task<Model_DownloadedMedia?> RequestSeries(int mediaId, Model_DownloadedMedia? existingDownload, DownloadRequest request);
 
-    public void EmbedLink(IModel_Link link, int? linkId, int? seasonId);
+    public void EmbedLink(Model_Link link, int? linkId, int? seasonId);
 }

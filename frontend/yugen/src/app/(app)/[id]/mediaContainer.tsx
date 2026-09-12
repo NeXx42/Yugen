@@ -59,7 +59,7 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
         return (
             <div className="MediaPlayer_Container">
                 {selectedEpisode?.downloadInfo != undefined && isPlaying ? (
-                    <PlayerControl mediaInfo={selectedEpisode.mediaInfo} episodeInfo={selectedEpisode.episodeInfo} playbackInfo={selectedEpisode.downloadInfo} />
+                    <PlayerControl episode={selectedEpisode} />
                 ) :
                     (
                         <div className="MediaPlayer_Container_Request" onClick={attemptToPlay}>

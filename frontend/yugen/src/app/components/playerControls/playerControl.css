@@ -107,6 +107,14 @@
     opacity: 1;
 }
 
+.VideoPlayer_Controls_Top {
+    position: absolute;
+    width: 100%;
+
+    padding: 10px;
+
+    background-image: linear-gradient(to bottom, #000000ab, #0000004d, #0000);
+}
 
 .VideoPlayer_Controls_Bottom {
     position: absolute;

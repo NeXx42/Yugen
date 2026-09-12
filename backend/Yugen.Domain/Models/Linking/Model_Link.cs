@@ -1,14 +1,18 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Yugen.Domain.Models.Media;
 
 namespace Yugen.Domain.Models.Linking;
 
-public class Model_Link : IModel_Link
+public class Model_Link
 {
-    [Required]
     [Key]
-    public required int? anilist_id { get; set; }
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int MediaId { get; set; }
 
+    public Model_Media? Media { get; set; }
+
+    public int? anilist_id { get; set; }
     public string? type { get; set; }
     public int? anidb_id { get; set; }
     public int? animecountdown_id { get; set; }
@@ -25,12 +29,4 @@ public class Model_Link : IModel_Link
 
     public int? tvdb_season { get; set; }
     public int? tmdb_season { get; set; }
-
-    public static Model_Link Fake(int aniListId)
-    {
-        return new Model_Link()
-        {
-            anilist_id = aniListId
-        };
-    }
 }

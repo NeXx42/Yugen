@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Yugen.Data;
@@ -11,9 +12,11 @@ using Yugen.Data;
 namespace Yugen.Data.Migrations
 {
     [DbContext(typeof(YugenContext))]
-    partial class YugenContextModelSnapshot : ModelSnapshot
+    [Migration("20260912115934_RemoveOldManualLinking")]
+    partial class RemoveOldManualLinking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -319,9 +322,6 @@ namespace Yugen.Data.Migrations
                     b.Property<int?>("Year")
                         .HasColumnType("integer");
 
-                    b.Property<long?>("lastViewed")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("thumbnailIcon")
                         .HasColumnType("text");
 
@@ -451,84 +451,6 @@ namespace Yugen.Data.Migrations
                     b.HasKey("Genre");
 
                     b.ToTable("genres");
-
-                    b.HasData(
-                        new
-                        {
-                            Genre = "Action"
-                        },
-                        new
-                        {
-                            Genre = "Adventure"
-                        },
-                        new
-                        {
-                            Genre = "Comedy"
-                        },
-                        new
-                        {
-                            Genre = "Drama"
-                        },
-                        new
-                        {
-                            Genre = "Ecchi"
-                        },
-                        new
-                        {
-                            Genre = "Fantasy"
-                        },
-                        new
-                        {
-                            Genre = "Hentai"
-                        },
-                        new
-                        {
-                            Genre = "Horror"
-                        },
-                        new
-                        {
-                            Genre = "Mahou Shoujo"
-                        },
-                        new
-                        {
-                            Genre = "Mecha"
-                        },
-                        new
-                        {
-                            Genre = "Music"
-                        },
-                        new
-                        {
-                            Genre = "Mystery"
-                        },
-                        new
-                        {
-                            Genre = "Psychological"
-                        },
-                        new
-                        {
-                            Genre = "Romance"
-                        },
-                        new
-                        {
-                            Genre = "Sci-Fi"
-                        },
-                        new
-                        {
-                            Genre = "Slice of Life"
-                        },
-                        new
-                        {
-                            Genre = "Sports"
-                        },
-                        new
-                        {
-                            Genre = "Supernatural"
-                        },
-                        new
-                        {
-                            Genre = "Thriller"
-                        });
                 });
 
             modelBuilder.Entity("Yugen.Domain.Models.Model_Notification", b =>

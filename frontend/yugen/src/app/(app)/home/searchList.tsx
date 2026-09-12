@@ -24,15 +24,7 @@ export default function () {
     const search = (): Promise<PageResponse<MediaCardInfo>> => {
         switch (sort) {
             case "New":
-                return api.catalog_Search({
-                    page: page,
-                    pageSize: pageSize,
-
-                    sort: 17,
-
-                    year: new Date().getFullYear(),
-                    season: season
-                });
+                return api.catalog_SearchSeasonal(season, pageSize, page);
 
             default: return api.catalog_Search({
                 page: page,

@@ -63,6 +63,11 @@
     gap: 15px;
 }
 
+.ViewPage_Info_Info_Title {
+    display: flex;
+    justify-content: space-between;
+}
+
 .ViewPage_Info_Info_Tags {
     display: flex;
     flex-wrap: wrap;

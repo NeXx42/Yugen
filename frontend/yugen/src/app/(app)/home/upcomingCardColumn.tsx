@@ -8,8 +8,8 @@ import { useEffect } from "react";
 
 
 export default function () {
-    const { data, execute } = useRequest<MediaCardInfo[]>(api.catalog_Upcoming);
+    const { data, execute, loading, error } = useRequest<MediaCardInfo[]>(api.catalog_Upcoming);
     useEffect(() => { execute(); }, [])
 
-    return <CardColumn header="Upcoming" content={data ?? []} />
+    return <CardColumn header="Upcoming" content={data ?? []} loading={loading} error={error} />
 }

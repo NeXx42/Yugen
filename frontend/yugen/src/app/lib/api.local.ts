@@ -1,7 +1,7 @@
 "use client"
 
-import { post, get, getPlain, upload, deleteReq, wrapFetch } from "./api.shared";
-import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo, SearchRequest, DownloadRequestInfo, MediaRequest, Playback_Info, MediaInfo, MediaSubtitle, CaughtResponse } from "@shared/types";
+import { post, get, upload, deleteReq } from "./api.shared";
+import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo, SearchRequest, DownloadRequestInfo, MediaRequest, Playback_Info, MediaInfo, MediaSubtitle, CaughtResponse, MediaConnection } from "@shared/types";
 
 export async function auth_Login(username: string, password: string) {
     return (await post<User>("auth/login", { username, password }))!;
@@ -105,6 +105,9 @@ export async function catalog_ReloadLinks() {
 export async function catalog_Search(req: SearchRequest): Promise<PageResponse<MediaCardInfo>> {
     return (await post<PageResponse<MediaCardInfo>>("catalog/Search", req))!;
 }
+export async function catalog_SearchSeasonal(season: string, take: number, page: number): Promise<PageResponse<MediaCardInfo>> {
+    return (await get<PageResponse<MediaCardInfo>>(`catalog/SearchSeasonal?season=${season}&take=${take}&page=${page}`))!;
+}
 export async function catalog_ClearDatabase() {
     await post("catalog/Cache/DatabaseClear");
 }
@@ -120,10 +123,12 @@ export async function catalog_Upcoming(): Promise<MediaCardInfo[]> {
 export async function catalog_UpcomingForDay(absoluteDayOfMonth: number): Promise<MediaCardInfo[]> {
     return (await get<MediaCardInfo[]>(`catalog/UpcomingDay?absoluteDayOfMonth=${absoluteDayOfMonth}`))!;
 }
+export async function catalog_RecacheRecommended(mediaId: number) {
+    return (await post(`catalog/${mediaId}/Recommended`))!;
+}
 
-
-export async function media_PlaybackInfo(anilistId: number, epNumber: number, itemId: string): Promise<Playback_Info> {
-    return (await get<Playback_Info>(`media/${itemId}/PlaybackInfo?anilistId=${anilistId}&episodeNumber=${epNumber}`))!
+export async function media_PlaybackInfo(mediaId: number, epNumber: number, itemId: string): Promise<Playback_Info> {
+    return (await get<Playback_Info>(`media/${itemId}/PlaybackInfo?mediaId=${mediaId}&episodeNumber=${epNumber}`))!
 }
 export async function media_UpdateEpisodeTime(mediaId: number, episode: number, runtimeSeconds: number, percentage: number) {
     return (await post(`media/${mediaId}/${episode}/UpdateTime`, {

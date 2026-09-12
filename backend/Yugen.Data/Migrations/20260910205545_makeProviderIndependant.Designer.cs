@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Yugen.Data;
@@ -11,9 +12,11 @@ using Yugen.Data;
 namespace Yugen.Data.Migrations
 {
     [DbContext(typeof(YugenContext))]
-    partial class YugenContextModelSnapshot : ModelSnapshot
+    [Migration("20260910205545_makeProviderIndependant")]
+    partial class makeProviderIndependant
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -254,6 +257,64 @@ namespace Yugen.Data.Migrations
                     b.ToTable("links");
                 });
 
+            modelBuilder.Entity("Yugen.Domain.Models.Linking.Model_ManualLink", b =>
+                {
+                    b.Property<int>("anilist_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("anilist_id"));
+
+                    b.Property<int?>("anidb_id")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("anime_planet_id")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("animecountdown_id")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("animenewsnetwork_id")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("anisearch_id")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("imdb_id")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("kitsu_id")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("livechart_id")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("mal_id")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("simkl_id")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("themoviedb_id")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("tmdb_season")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("tvdb_id")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("tvdb_season")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("type")
+                        .HasColumnType("text");
+
+                    b.HasKey("anilist_id");
+
+                    b.ToTable("manualLinks");
+                });
+
             modelBuilder.Entity("Yugen.Domain.Models.Media.Model_Media", b =>
                 {
                     b.Property<int>("Id")
@@ -318,9 +379,6 @@ namespace Yugen.Data.Migrations
 
                     b.Property<int?>("Year")
                         .HasColumnType("integer");
-
-                    b.Property<long?>("lastViewed")
-                        .HasColumnType("bigint");
 
                     b.Property<string>("thumbnailIcon")
                         .HasColumnType("text");
@@ -451,84 +509,6 @@ namespace Yugen.Data.Migrations
                     b.HasKey("Genre");
 
                     b.ToTable("genres");
-
-                    b.HasData(
-                        new
-                        {
-                            Genre = "Action"
-                        },
-                        new
-                        {
-                            Genre = "Adventure"
-                        },
-                        new
-                        {
-                            Genre = "Comedy"
-                        },
-                        new
-                        {
-                            Genre = "Drama"
-                        },
-                        new
-                        {
-                            Genre = "Ecchi"
-                        },
-                        new
-                        {
-                            Genre = "Fantasy"
-                        },
-                        new
-                        {
-                            Genre = "Hentai"
-                        },
-                        new
-                        {
-                            Genre = "Horror"
-                        },
-                        new
-                        {
-                            Genre = "Mahou Shoujo"
-                        },
-                        new
-                        {
-                            Genre = "Mecha"
-                        },
-                        new
-                        {
-                            Genre = "Music"
-                        },
-                        new
-                        {
-                            Genre = "Mystery"
-                        },
-                        new
-                        {
-                            Genre = "Psychological"
-                        },
-                        new
-                        {
-                            Genre = "Romance"
-                        },
-                        new
-                        {
-                            Genre = "Sci-Fi"
-                        },
-                        new
-                        {
-                            Genre = "Slice of Life"
-                        },
-                        new
-                        {
-                            Genre = "Sports"
-                        },
-                        new
-                        {
-                            Genre = "Supernatural"
-                        },
-                        new
-                        {
-                            Genre = "Thriller"
-                        });
                 });
 
             modelBuilder.Entity("Yugen.Domain.Models.Model_Notification", b =>

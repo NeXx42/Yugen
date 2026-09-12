@@ -15,6 +15,8 @@ namespace Yugen.Core.Services;
 
 public class LinkService
 {
+    private static bool handlingImport = false;
+
     private readonly YugenContext _db;
     private readonly EndpointDeduplicator _endpointDeduplicator;
 
@@ -31,11 +33,11 @@ public class LinkService
     public async Task SaveManualLink(UserSession usr, LibraryProviderType provider, int mediaId, int linkedId, int? linkedSeason)
     {
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(RedownloadLinks));
-        Model_Link? existingLink = await _db.links.FirstOrDefaultAsync(l => l.anilist_id == mediaId);
+        Model_Link? existingLink = await _db.links.FirstOrDefaultAsync(l => l.MediaId == mediaId);
 
         if (existingLink == null)
         {
-            existingLink = new Model_Link() { anilist_id = mediaId };
+            existingLink = new Model_Link() { MediaId = mediaId };
             _library.GetFactory(provider).EmbedLink(existingLink, linkedId, linkedSeason);
 
             await _db.AddAsync(existingLink);
@@ -43,23 +45,8 @@ public class LinkService
         else
         {
             _library.GetFactory(provider).EmbedLink(existingLink, linkedId, linkedSeason);
+            await _db.SaveChangesAsync();
         }
-
-        Model_ManualLink? existingManualLin = await _db.manualLinks.FirstOrDefaultAsync(l => l.anilist_id == mediaId);
-
-        if (existingManualLin == null)
-        {
-            existingManualLin = new Model_ManualLink() { anilist_id = mediaId };
-            _library.GetFactory(provider).EmbedLink(existingManualLin, linkedId, linkedSeason);
-
-            await _db.AddAsync(existingManualLin);
-        }
-        else
-        {
-            _library.GetFactory(provider).EmbedLink(existingManualLin, linkedId, linkedSeason);
-        }
-
-        await _db.SaveChangesAsync();
     }
 
     public async Task RedownloadLinks(UserSession usr, bool force = false)
@@ -78,44 +65,75 @@ public class LinkService
 
     public async Task RedownloadLinks(bool force = false)
     {
-        const double importThreshold = .9;
-        Model_Link[]? links = await new LinkDownloader_OfflineList().Download();
+        if (handlingImport)
+            return;
 
-        if (links == null)
-            throw new Exception("No links found!");
+        handlingImport = true;
 
-        int existingCount = await _db.links.CountAsync();
-
-        if (!force && (links.Length <= existingCount * importThreshold))
-            throw new Exception($"Import would result in {links.Length} imports, this is {Math.Round((links.Length / (float)existingCount) * 100)}% of the existing total. Skipping to preserve integrity");
-
-        Dictionary<int, Model_ManualLink> manualLinks = await _db.manualLinks.Where(l => l.anilist_id.HasValue).ToDictionaryAsync(l => l.anilist_id!.Value, l => l);
-        Parallel.ForEach(links, (l) =>
+        try
         {
-            if (!l.anilist_id.HasValue)
-                return;
+            Model_Link[]? links = await new LinkDownloader_OfflineList().Download();
 
-            if (manualLinks.TryGetValue(l.anilist_id.Value, out Model_ManualLink? manualOverride) && manualOverride != null)
+            if (links == null)
+                throw new Exception("No links found!");
+
+            Dictionary<int, Model_Link> existingLinks = await _db.links.ToDictionaryAsync(l => l.MediaId, l => l);
+            Dictionary<int, int> anilistLinkLookup = existingLinks.Values.Where(e => e.anilist_id.HasValue).ToDictionary(l => l.anilist_id!.Value, l => l.MediaId);
+            Dictionary<int, int> malLinkLookup = existingLinks.Values.Where(e => e.mal_id.HasValue).ToDictionary(l => l.mal_id!.Value, l => l.MediaId);
+
+            ConcurrentBag<Model_Link> linkUpdates = new();
+            ConcurrentBag<Model_Link> linkAdditions = new();
+
+            Parallel.ForEach(links, (l) =>
             {
-                l.type ??= manualOverride.type;
-                l.anidb_id ??= manualOverride.anidb_id;
-                l.animecountdown_id ??= manualOverride.animecountdown_id;
-                l.animenewsnetwork_id ??= manualOverride.animenewsnetwork_id;
-                l.anime_planet_id ??= manualOverride.anime_planet_id;
-                l.anisearch_id ??= manualOverride.anisearch_id;
-                l.imdb_id ??= manualOverride.imdb_id;
-                l.kitsu_id ??= manualOverride.kitsu_id;
-                l.livechart_id ??= manualOverride.livechart_id;
-                l.mal_id ??= manualOverride.mal_id;
-                l.simkl_id ??= manualOverride.simkl_id;
-                l.themoviedb_id ??= manualOverride.themoviedb_id;
-                l.tvdb_id ??= manualOverride.tvdb_id;
-                l.tvdb_season ??= manualOverride.tvdb_season;
-                l.tmdb_season ??= manualOverride.tmdb_season;
-            }
-        });
+                if (!l.anilist_id.HasValue && !l.mal_id.HasValue)
+                    return;
 
-        await _db.BulkInsertOrUpdateAsync(links);
+                Model_Link? existingLink = null;
+
+                if (l.anilist_id.HasValue && anilistLinkLookup.TryGetValue(l.anilist_id.Value, out int anilistMap))
+                {
+                    existingLink = existingLinks[anilistMap];
+                }
+                else if (l.mal_id.HasValue && malLinkLookup.TryGetValue(l.mal_id.Value, out int malMap))
+                {
+                    existingLink = existingLinks[malMap];
+                }
+
+                if (existingLink != null)
+                {
+                    existingLink.anilist_id ??= l.anilist_id;
+                    existingLink.type ??= l.type;
+                    existingLink.anidb_id ??= l.anidb_id;
+                    existingLink.animecountdown_id ??= l.animecountdown_id;
+                    existingLink.animenewsnetwork_id ??= l.animenewsnetwork_id;
+                    existingLink.anime_planet_id ??= l.anime_planet_id;
+                    existingLink.anisearch_id ??= l.anisearch_id;
+                    existingLink.imdb_id ??= l.imdb_id;
+                    existingLink.kitsu_id ??= l.kitsu_id;
+                    existingLink.livechart_id ??= l.livechart_id;
+                    existingLink.mal_id ??= l.mal_id;
+                    existingLink.simkl_id ??= l.simkl_id;
+                    existingLink.themoviedb_id ??= l.themoviedb_id;
+                    existingLink.tvdb_id ??= l.tvdb_id;
+                    existingLink.tvdb_season ??= l.tvdb_season;
+                    existingLink.tmdb_season ??= l.tmdb_season;
+
+                    linkUpdates.Add(existingLink);
+                }
+                else
+                {
+                    linkAdditions.Add(l);
+                }
+            });
+
+            await _db.BulkUpdateAsync(linkUpdates);
+            await _db.BulkInsertAsync(linkAdditions);
+        }
+        finally
+        {
+            handlingImport = false;
+        }
     }
 
     private abstract class LinkDownloader
@@ -163,10 +181,6 @@ public class LinkService
                             foreach (JsonElement element in doc.RootElement.EnumerateArray())
                             {
                                 element.ExtractInt(nameof(anilist_id), out anilist_id);
-
-                                if (!anilist_id.HasValue)
-                                    continue;
-
                                 element.ExtractString(nameof(type), out type);
                                 element.ExtractInt(nameof(anidb_id), out anidb_id);
                                 element.ExtractInt(nameof(animecountdown_id), out animecountdown_id);
@@ -293,15 +307,11 @@ public class LinkService
 
                             Parallel.ForEach(entries, (el) =>
                             {
-                                Model_Link link = new Model_Link() { anilist_id = -1, };
+                                Model_Link link = new();
                                 JsonElement[] sources = [.. el.GetProperty("sources").EnumerateArray()];
 
                                 foreach (JsonElement source in sources)
                                     ExtractLinkBasedUrl(link, source.GetString());
-
-                                // if anilist id is null this app cannot use it...
-                                if (link.anilist_id == -1)
-                                    return;
 
                                 if (link.anidb_id.HasValue)
                                     anidbCentricLinks.AddOrUpdate(link.anidb_id.Value, link, (a, b) => link);

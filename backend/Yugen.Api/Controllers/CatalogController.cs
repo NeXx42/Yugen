@@ -47,11 +47,24 @@ public class CatalogController : ControllerBase
         return await ExceptionWrapper.WrapException(() => _catalogService.Search(query));
     }
 
+    [HttpGet("SearchSeasonal")]
+    public async Task<IResult> SearchSeasonal([FromQuery] string season, [FromQuery] int take, [FromQuery] int page)
+    {
+        return await ExceptionWrapper.WrapException(() => _catalogService.SearchSeasonal(season, take, page));
+    }
+
     [HttpGet("{id}")]
     public async Task<IResult> GetMediaInfo(int id)
     {
         HttpContext.TryGetUserFromSession(out UserSession? usr);
         return await ExceptionWrapper.WrapException(() => _catalogService.GetMediaInfoForUser(usr, id));
+    }
+
+    [HttpPost("{mediaId}/Recommended")]
+    public async Task<IResult> RecacheRecommended(int mediaId)
+    {
+        HttpContext.TryGetUserFromSession(out UserSession? usr);
+        return await ExceptionWrapper.WrapException(() => _catalogService.RecacheRecommended(usr, mediaId));
     }
 
     [HttpPost("RedownloadLinking")]

@@ -14,6 +14,8 @@ interface Props {
     content: MediaCardInfo[];
 
     loading?: boolean;
+    error?: any;
+
     drawer?: (card: MediaCardInfo) => ReactNode
 }
 
@@ -33,6 +35,12 @@ export default function (props: Props) {
     }
 
     const draw = () => {
+        if (props.error) {
+            return (
+                <>Failed to load</>
+            )
+        }
+
         if (props.loading) {
             return (
                 <>

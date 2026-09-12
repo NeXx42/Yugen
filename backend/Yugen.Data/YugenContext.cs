@@ -1,4 +1,3 @@
-using System.Reflection.Emit;
 using Microsoft.EntityFrameworkCore;
 using Yugen.Domain.Enums;
 using Yugen.Domain.Models;
@@ -29,7 +28,6 @@ public class YugenContext : DbContext
     public DbSet<Model_MediaRelation> mediaRelations { get; set; }
 
     public DbSet<Model_Link> links { get; set; }
-    public DbSet<Model_ManualLink> manualLinks { get; set; }
 
     // from download provider
     public DbSet<Model_DownloadedMedia> downloadedMedia { get; set; }
@@ -78,5 +76,41 @@ public class YugenContext : DbContext
 
         modelBuilder.Entity<Model_MediaRelation>().HasKey(r => new { r.MediaId, r.ConnectedMediaId });
         modelBuilder.Entity<Model_MediaRelation>().HasOne(r => r.Media).WithMany(m => m.RelatedMedia).HasForeignKey(r => r.MediaId);
+
+        modelBuilder.Entity<Model_Link>()
+            .HasOne(l => l.Media)
+            .WithOne(m => m.link)
+            .HasForeignKey<Model_Media>(m => m.Id);
+
+
+        Seed(modelBuilder);
+    }
+
+    private void Seed(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Model_Tag>().HasData();
+
+        string[] genres = [
+            "Action",
+            "Adventure",
+            "Comedy",
+            "Drama",
+            "Ecchi",
+            "Fantasy",
+            "Hentai",
+            "Horror",
+            "Mahou Shoujo",
+            "Mecha",
+            "Music",
+            "Mystery",
+            "Psychological",
+            "Romance",
+            "Sci-Fi",
+            "Slice of Life",
+            "Sports",
+            "Supernatural",
+            "Thriller",
+        ];
+        modelBuilder.Entity<Model_Genre>().HasData(genres.Select(g => new Model_Genre { Genre = g }));
     }
 }
