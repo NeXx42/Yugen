@@ -124,7 +124,7 @@ export default function ({ searchCriteria }: { searchCriteria: CaughtResponse<Se
 
                         < div className="Trending_Info">
                             <h1>{item?.title}</h1>
-                            <a>{item?.tags.slice(0, 5).map(t => t.title).join(" · ")}</a>
+                            <a>{item?.genres.slice(0, 5).map(t => t).join(" · ")}</a>
                             <p dangerouslySetInnerHTML={{ __html: item?.description ?? "" }} />
                         </div>
 

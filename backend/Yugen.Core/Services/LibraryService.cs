@@ -248,14 +248,20 @@ public class LibraryService
                 return await GetWatchHistory(session, req);
 
             case "downloaded":
-                query = _db.downloadedMedia.Include(m => m.downloadedEpisodes).Where(m => m.downloadedEpisodes.Any(e => e.fileId.HasValue)).Select(m => m.MediaId);
+                query = _db.downloadedMedia.Include(m => m.downloadedEpisodes)
+                    .Where(m => m.downloadedEpisodes.Any(e => e.fileId.HasValue))
+                    .OrderByDescending(m => m.MediaId)
+                    .Select(m => m.MediaId);
                 break;
 
             default:
 
                 if (Enum.TryParse(group, out BookmarkType bookmarkType))
                 {
-                    query = _db.userBookmarks.Where(b => b.UserId == session.User.Id && b.BookmarkId == (int)bookmarkType).Select(b => b.MediaId);
+                    query = _db.userBookmarks
+                        .Where(b => b.UserId == session.User.Id && b.BookmarkId == (int)bookmarkType)
+                        .OrderByDescending(b => b.DateAdded)
+                        .Select(b => b.MediaId);
                 }
 
                 break;
@@ -272,8 +278,7 @@ public class LibraryService
         List<int> ids = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
         MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds(ids);
 
-        var results = cards.Skip((page - 1) * pageSize).Take(pageSize).OrderBy(c => c.Title).ToArray();
-        return new PageResponse<MediaCard>(results, page, pageSize, totalResults);
+        return new PageResponse<MediaCard>(cards, page, pageSize, totalResults);
     }
 
     public async Task<PageResponse<MediaCard>> GetWatchHistory(UserSession usr, MediaSearchQuery? req)

@@ -33,6 +33,7 @@ public class TenraiMetadata_Responses_Anime
     public int mal_id { get; set; }
     public string? url { get; set; }
 
+    public Trailer? trailer { get; set; }
     public Images? images { get; set; }
 
     public string? title { get; set; }
@@ -54,13 +55,19 @@ public class TenraiMetadata_Responses_Anime
     public int? year { get; set; }
     public string? season { get; set; }
 
+    public bool airing { get; set; }
     public Aired? aired { get; set; }
     public Broadcast? broadcast { get; set; }
+
+    public Genres[]? genres { get; set; }
 
     public long? getNextEpisodeDate
     {
         get
         {
+            if (!airing)
+                return null;
+
             if (!aired.HasValue || string.IsNullOrEmpty(aired.Value.from))
                 return null;
 
@@ -92,6 +99,9 @@ public class TenraiMetadata_Responses_Anime
         }
     }
 
+    public long? getAiredFrom => string.IsNullOrEmpty(aired?.from) ? null : DateTimeOffset.Parse(aired.Value.from).ToUnixTimeSeconds();
+    public long? getAiredTo => string.IsNullOrEmpty(aired?.to) ? null : DateTimeOffset.Parse(aired.Value.to).ToUnixTimeSeconds();
+
     public struct Images
     {
         public Webp? webp { get; set; }
@@ -101,6 +111,22 @@ public class TenraiMetadata_Responses_Anime
             public string image_url { get; set; }
             public string small_image_url { get; set; }
             public string large_image_url { get; set; }
+        }
+    }
+
+    public struct Trailer
+    {
+        public Images? images { get; set; }
+
+        public struct Images
+        {
+            public string? getBestBanner => maximum_image_url ?? large_image_url ?? medium_image_url ?? small_image_url ?? image_url;
+
+            public string? image_url { get; set; }
+            public string? small_image_url { get; set; }
+            public string? medium_image_url { get; set; }
+            public string? large_image_url { get; set; }
+            public string? maximum_image_url { get; set; }
         }
     }
 
@@ -115,6 +141,14 @@ public class TenraiMetadata_Responses_Anime
     {
         public string? from { get; set; }
         public string? to { get; set; }
+    }
+
+    public struct Genres
+    {
+        public int mal_id { get; set; }
+        public string? type { get; set; }
+        public string? name { get; set; }
+        public string? url { get; set; }
     }
 }
 

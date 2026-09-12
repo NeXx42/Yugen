@@ -1,10 +1,12 @@
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Yugen.Domain.Data;
 using Yugen.Domain.Data.Media;
 using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.Linking;
+using Yugen.Domain.Models.Media;
 using Yugen.Providers.Helpers;
 
 namespace Yugen.Providers.Tenrai;
@@ -37,21 +39,31 @@ public class TenraiMetadataProvider : IMetaDataProvider
             TitleNative = media.title_japanese ?? media.title,
             TitleEnglish = media.title_english,
 
-            BannerImage = media.images?.webp?.image_url,
             CardImageLarge = media.images?.webp?.large_image_url,
             CardImageSmall = media.images?.webp?.small_image_url,
+
+            BannerImage = media.trailer?.images?.getBestBanner,
             thumbnailIcon = media.images?.webp?.image_url,
 
             Description = media.synopsis,
             AverageScore = media.score.HasValue ? (int)Math.Round(media.score.Value * 100) : null,
             MeanScore = media.score.HasValue ? (int)Math.Round(media.score.Value * 100) : null,
 
+            StartDate = media.getAiredFrom,
+            EndDate = media.getAiredTo,
             NextEpisodeReleaseDate = media.getNextEpisodeDate,
+
             Status = media.status,
             EpisodeCount = media.episodes,
             Season = media.season,
             Year = media.year,
             MediaFormat = media.type,
+
+            Genres = new Collection<Model_MediaGenre>(media.genres?.Select(g => new Model_MediaGenre
+            {
+                Genre = g.name!,
+                MediaId = -1
+            }).ToList() ?? [])
 
         }).ToArray();
     }
