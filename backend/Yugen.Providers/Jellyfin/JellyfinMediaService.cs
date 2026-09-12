@@ -34,7 +34,7 @@ public class JellyfinMediaService : IMediaProvider
 
         _http = new RestfulHelper(url, logger, new Dictionary<string, string>()
         {
-            { "X-Emby-Token", apiKey}
+            { "Authorization", $"MediaBrowser Token=\"{apiKey}\""}
         });
     }
 
@@ -145,7 +145,7 @@ public class JellyfinMediaService : IMediaProvider
         };
     }
 
-    public Task<string> ProxyUrl(string relative, bool includeApiKey = false) => Task.FromResult($"{_url}/{relative}{(includeApiKey ? $"&api_key={_apiKey}" : "")}");
+    public Task<string> ProxyUrl(string relative, bool includeApiKey = false) => Task.FromResult($"{_url}/{relative}{(includeApiKey ? $"&ApiKey={_apiKey}" : "")}");
 
     public async Task<string> GetPlaybackUrl(string jellyfinId, int source, bool hls, long? maxBitrate, string? videoCodecs, string? audioCodecs, int? audioIndex)
     {

@@ -44,7 +44,7 @@ public class SettingsController : ControllerBase
             using (HttpClient client = new HttpClient())
             {
                 HttpRequestMessage msg = new HttpRequestMessage(HttpMethod.Get, Path.Combine(req.url ?? "", "System", "Endpoint"));
-                msg.Headers.Add("X-Emby-Token", req.key);
+                msg.Headers.Add("Authorization", $"MediaBrowser Token=\"{req.key}\"");
 
                 var res = await client.SendAsync(msg);
 

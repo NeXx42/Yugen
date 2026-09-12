@@ -26,7 +26,7 @@ public class JellyfinUserService : IUserProvider
 
         _http = new RestfulHelper(url, logger, new Dictionary<string, string>()
         {
-            { "X-Emby-Token", apiKey}
+            { "Authorization", $"MediaBrowser Token=\"{apiKey}\""}
         });
     }
 
