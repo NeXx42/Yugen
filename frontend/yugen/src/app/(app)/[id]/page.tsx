@@ -78,7 +78,7 @@ export default async function ({ params }: { params: { id: number } }) {
                                 <MediaRecacher media={media} />
                             </div>
                             <div className="ViewPage_Info_Info_Tags">
-                                {media.genres?.map(t => <a key={t} style={{ backgroundColor: media.colour ?? "" }} href={`search?genres=${t}`}>{t}</a>)}
+                                {media.genres?.map(t => <a key={t} style={{ backgroundColor: media.colour ?? "#2c1b8c" }} href={`search?genres=${t}`}>{t}</a>)}
                             </div>
                             <p dangerouslySetInnerHTML={{ __html: media.description ?? "" }} />
 

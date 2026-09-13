@@ -2,7 +2,7 @@
 
 import * as api from "@lib/api.local"
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { MediaEpisodeInfo, MediaInfo, Playback_Info } from "@shared/types";
 import EpisodeList from "./episodeList";
 
@@ -23,6 +23,9 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
     const { showModal, closeModal } = useModals();
 
     const [isPlaying, setIsPlaying] = useState(false);
+    const [localPlaytime, setLocalPlaytime] = useState<Record<number, number>>();
+
+    const episodeIncrementor = useRef<{ incrementEpisode: () => void }>(null);
 
     const getSelectedEpisodeInfo = async (ep: MediaEpisodeInfo | undefined | null): Promise<SelectedEpisodeInfo | undefined> => {
         if (!ep)
@@ -44,7 +47,7 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
         }
     }
 
-    const drawMediaPlayer = (selectedEpisode: SelectedEpisodeInfo | undefined) => {
+    const drawMediaPlayer = (selectedEpisode: SelectedEpisodeInfo | undefined, onFinished?: () => void) => {
         const thumbnail = selectedEpisode?.episodeInfo?.thumbnail ?? selectedEpisode?.mediaInfo?.thumbnailImage;
 
         const attemptToPlay = () => {
@@ -56,10 +59,18 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
             }
         }
 
+        const updateLocalPlaytime = (epId: number, percentage: number) => {
+            console.log(localPlaytime);
+            setLocalPlaytime(prev => ({
+                ...prev,
+                [epId]: percentage
+            }))
+        }
+
         return (
             <div className="MediaPlayer_Container">
                 {selectedEpisode?.downloadInfo != undefined && isPlaying ? (
-                    <PlayerControl episode={selectedEpisode} />
+                    <PlayerControl episode={selectedEpisode} onFinished={onFinished} syncLocalPlaytime={updateLocalPlaytime} />
                 ) :
                     (
                         <div className="MediaPlayer_Container_Request" onClick={attemptToPlay}>
@@ -143,8 +154,8 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
     return (
         <div className="MediaContainer">
             <div className="MediaContainer_Media">
-                {drawMediaPlayer(selectedEpisode)}
-                <EpisodeList mediaInfo={mediaInfo} setSelectedItem={updatedSelectedEpisode} />
+                {drawMediaPlayer(selectedEpisode, () => episodeIncrementor.current?.incrementEpisode())}
+                <EpisodeList mediaInfo={mediaInfo} setSelectedItem={updatedSelectedEpisode} localPlaytime={localPlaytime ?? {}} incrementEpisode={episodeIncrementor} />
             </div>
 
             {selectedEpisode && episodeContainer && createPortal(drawEpisodeInfo(), episodeContainer)}

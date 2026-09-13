@@ -40,6 +40,15 @@
     gap: 15px;
 }
 
+@media (max-width: 1000px) {
+    .ViewPage_Container {
+        display: flex;
+        flex-direction: column;
+
+        align-items: stretch;
+    }
+}
+
 .ViewPage_Left {
     display: flex;
     flex-direction: column;

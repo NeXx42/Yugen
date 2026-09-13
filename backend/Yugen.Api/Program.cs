@@ -52,9 +52,16 @@ builder.Services.AddAuthentication(options =>
             if (userId == null)
                 return;
 
-            UserService userService = context.HttpContext.RequestServices.GetRequiredService<UserService>();
-            UserSession user = await userService.GetUser(Guid.Parse(userId));
-            context.HttpContext.Items["User"] = user;
+            try
+            {
+                UserService userService = context.HttpContext.RequestServices.GetRequiredService<UserService>();
+                UserSession user = await userService.GetUser(Guid.Parse(userId));
+                context.HttpContext.Items["User"] = user;
+            }
+            catch // invalid user
+            {
+                context.Response.Cookies.Delete("AuthToken");
+            }
         },
 
         OnAuthenticationFailed = context =>

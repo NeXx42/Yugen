@@ -68,9 +68,6 @@ public class TenraiMetadata_Responses_Anime
             if (!airing)
                 return null;
 
-            if (!aired.HasValue || string.IsNullOrEmpty(aired.Value.from))
-                return null;
-
             if (broadcast?.day != null && broadcast?.time != null && !string.IsNullOrEmpty(broadcast?.timezone))
             {
                 TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(broadcast.Value.timezone!);
@@ -99,8 +96,12 @@ public class TenraiMetadata_Responses_Anime
         }
     }
 
-    public long? getAiredFrom => string.IsNullOrEmpty(aired?.from) ? null : DateTimeOffset.Parse(aired.Value.from).ToUnixTimeSeconds();
-    public long? getAiredTo => string.IsNullOrEmpty(aired?.to) ? null : DateTimeOffset.Parse(aired.Value.to).ToUnixTimeSeconds();
+    public long? getAiredFrom => (aired?.prop?.from.HasValue ?? false) ? null
+        : new DateTimeOffset(aired!.Value.prop!.Value.from!.Value.year!.Value, aired!.Value.prop!.Value.from!.Value.month ?? 1, aired!.Value.prop!.Value.from!.Value.day ?? 1, 0, 0, 0, TimeSpan.MinValue).ToUnixTimeSeconds();
+
+    public long? getAiredTo => (aired?.prop?.to.HasValue ?? false) ? null
+        : new DateTimeOffset(aired!.Value.prop!.Value.to!.Value.year!.Value, aired!.Value.prop!.Value.to!.Value.month ?? 1, aired!.Value.prop!.Value.to!.Value.day ?? 1, 0, 0, 0, TimeSpan.MinValue).ToUnixTimeSeconds();
+
 
     public struct Images
     {
@@ -139,8 +140,20 @@ public class TenraiMetadata_Responses_Anime
 
     public struct Aired
     {
-        public string? from { get; set; }
-        public string? to { get; set; }
+        public Prop? prop { get; set; }
+
+        public struct Prop
+        {
+            public Prop_Comps? to { get; set; }
+            public Prop_Comps? from { get; set; }
+
+            public struct Prop_Comps
+            {
+                public int? day { get; set; }
+                public int? month { get; set; }
+                public int? year { get; set; }
+            }
+        }
     }
 
     public struct Genres

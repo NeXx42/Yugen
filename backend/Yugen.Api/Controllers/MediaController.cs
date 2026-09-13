@@ -55,40 +55,47 @@ public class MediaController : ControllerBase
     }
 
     [HttpGet("{jellyfinId}/{source}/stream.m3u8")]
-    public async Task StreamHLS(string jellyfinId, int source, [FromQuery] long? bitrate, [FromQuery] string videoCodecs, [FromQuery] string audioCodecs, [FromQuery] int? audioStreamIndex)
+    public async Task StreamHLS(string jellyfinId, int source, [FromQuery] long? bitrate, [FromQuery] string videoCodecs, [FromQuery] string audioCodecs, [FromQuery] int? audioStreamIndex, CancellationToken cancellationToken)
     {
         HttpContext.GetUserFromSession(out var usr);
         HttpRequestMessage request = await _mediaService.GetPlaybackRequest(usr, jellyfinId, source, true, bitrate, videoCodecs, audioCodecs, audioStreamIndex);
 
-        await ProxyRequest(request);
+        await ProxyRequest(request, cancellationToken);
     }
 
     [HttpGet("{jellyfinId}/{source}/main.m3u8")]
-    public async Task StreamHLS_Main(string jellyfinId)
+    public async Task StreamHLS_Main(string jellyfinId, CancellationToken cancellationToken)
     {
         string url = await _mediaService.ProxyUrl($"Videos/{jellyfinId}/main.m3u8{HttpContext.Request.QueryString.Value}", false);
-        await ProxyRequest(new HttpRequestMessage(HttpMethod.Get, url));
+        await ProxyRequest(new HttpRequestMessage(HttpMethod.Get, url), cancellationToken);
     }
 
     [HttpGet("{jellyfinId}/{source}/hls1/main/{segmentId}.{container}")]
-    public async Task StreamHLS_Segment(string jellyfinId, string segmentId, string container)
+    public async Task StreamHLS_Segment(string jellyfinId, string segmentId, string container, CancellationToken cancellationToken)
     {
         string url = await _mediaService.ProxyUrl($"Videos/{jellyfinId}/hls1/main/{segmentId}.{container}{HttpContext.Request.QueryString.Value}", false);
-        await ProxyRequest(new HttpRequestMessage(HttpMethod.Get, url));
+        await ProxyRequest(new HttpRequestMessage(HttpMethod.Get, url), cancellationToken);
     }
 
-    private async Task ProxyRequest(HttpRequestMessage request)
+    private async Task ProxyRequest(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        using (HttpResponseMessage response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+        try
         {
-            Response.StatusCode = (int)response.StatusCode;
-            Response.ContentType = response.Content.Headers.ContentType?.ToString() ?? "application/x-mpegURL";
+            using (HttpResponseMessage response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken))
+            {
+                Response.StatusCode = (int)response.StatusCode;
+                Response.ContentType = response.Content.Headers.ContentType?.ToString() ?? "application/x-mpegURL";
 
-            foreach (var header in response.Content.Headers)
-                Response.Headers[header.Key] = new StringValues(header.Value.ToArray());
+                foreach (var header in response.Content.Headers)
+                    Response.Headers[header.Key] = new StringValues(header.Value.ToArray());
 
-            await using Stream upstream = await response.Content.ReadAsStreamAsync();
-            await upstream.CopyToAsync(Response.Body);
+                await using Stream upstream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                await upstream.CopyToAsync(Response.Body, cancellationToken);
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
         }
     }
 

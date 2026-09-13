@@ -19,7 +19,7 @@ import WatchtimeSyncerPlayerControl from "@/app/components/playerControls/watcht
 import SegmentSkipperPlayerControl from "@/app/components/playerControls/segmentSkipperPlayerControl";
 import TimePlayerControl from "@/app/components/playerControls/timePlayerControl";
 
-import { useEffect, useRef, useState } from 'react';
+import { ReactEventHandler, useEffect, useRef, useState } from 'react';
 
 import "./playerControl.css"
 import PlaybackSpeedListPlayerControl from "./playbackSpeedListPlayerControl";
@@ -36,7 +36,21 @@ export type MenuType = "None" | "Settings" | "Subtitles" | "Audio";
 export type SettingsMenu = "None" | "Quality" | "PlaybackSpeed";
 
 
-export default function ({ episode }: { episode: SelectedEpisodeInfo }) {
+const bitrateOptions = [
+    { value: undefined, label: "Direct play" },
+    { value: -1, label: "Uncapped" },
+    { value: 10_000_000, label: "10 Mbps" },
+    { value: 8_000_000, label: "8 Mbps" },
+    { value: 6_000_000, label: "6 Mbps" },
+    { value: 4_000_000, label: "4 Mbps" },
+    { value: 3_000_000, label: "3 Mbps" },
+    { value: 1_500_000, label: "1.5 Mbps" },
+    { value: 720_000, label: "720 Kbps" },
+    { value: 420_000, label: "420 Kbps" }
+];
+
+
+export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: SelectedEpisodeInfo, syncLocalPlaytime?: (epId: number, percentage: number) => void, onFinished?: () => void }) {
     const source = episode.downloadInfo!.sources[0];
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -46,12 +60,14 @@ export default function ({ episode }: { episode: SelectedEpisodeInfo }) {
 
     const [viewSubLogs, setViewSubLogs] = useState(false);
     const [selectedSub, setSelectedSub] = useState<number>(-1);
+
+    const [subtitleBroadOffset, setSubtitleBroadOffset] = useState<number>(0);
     const [subtitleOffset, setSubtitleOffset] = useState<number>(0);
 
     const [settingsMenu, setSettingsMenu] = useState<SettingsMenu>("None");
     const [activeSubMenu, setActiveSubMenu] = useState<MenuType>("None");
 
-    const [hlsPlayback, setHlsPlayback] = useState(true);
+    const [hlsBitrate, setHlsBitrate] = useState<number | undefined>(-1);
 
     useEffect(() => {
         if (videoRef.current == null)
@@ -63,6 +79,14 @@ export default function ({ episode }: { episode: SelectedEpisodeInfo }) {
 
     }, [videoRef.current, selectedSub])
 
+    const updateTotalSubtitleOffset = (to: number) => {
+        const broad = Math.max(Math.min(20 * Math.round(to / 20), 40), -40);
+        const off = to - broad
+
+        setSubtitleBroadOffset(broad);
+        setSubtitleOffset(off);
+    }
+
     const drawSubMenu = () => {
         const middleMan = (callback: () => void) => {
             callback();
@@ -71,61 +95,90 @@ export default function ({ episode }: { episode: SelectedEpisodeInfo }) {
 
         switch (activeSubMenu) {
             case "Subtitles":
-                return (<div className="SubMenu_Subs">
-                    <div className="SubMenu_Subs_OffsetContainer">
-                        <input type="number" value={subtitleOffset} onChange={e => setSubtitleOffset(Number.parseInt(e.target.value))} />
-                        <input type="range" min={-20} max={20} value={subtitleOffset} onChange={e => setSubtitleOffset(Number.parseFloat(e.target.value))} step={0.01} />
-                        <button onClick={() => setViewSubLogs(true)}>Logs</button>
+                return (<>
+                    <h2>{activeSubMenu}</h2>
+                    <div className="SubMenu_Subs">
+                        <div className="SubMenu_Subs_OffsetContainer">
+                            <div>
+                                <input className="SubMenu_Subs_OffsetContainer_Total" type="number" value={subtitleBroadOffset + subtitleOffset} onChange={e => updateTotalSubtitleOffset(Number.parseInt(e.target.value))} />
+                                <button onClick={() => setViewSubLogs(true)}>Transcript</button>
+                            </div>
+                            <input className="SubMenu_Subs_OffsetContainer_Slider" type="range" min={-10} max={10} value={subtitleOffset} onChange={e => setSubtitleOffset(Number.parseFloat(e.target.value))} step={0.01} />
+                            <div className="SubMenu_Subs_OffsetContainer_Broad">
+                                <button className={subtitleBroadOffset === -40 ? "Selected" : ""} onClick={() => updateTotalSubtitleOffset(-40)}>-40</button>
+                                <button className={subtitleBroadOffset === -20 ? "Selected" : ""} onClick={() => updateTotalSubtitleOffset(-20)}>-20</button>
+                                <button className={subtitleBroadOffset === 0 ? "Selected" : ""} onClick={() => updateTotalSubtitleOffset(0)}>0</button>
+                                <button className={subtitleBroadOffset === 20 ? "Selected" : ""} onClick={() => updateTotalSubtitleOffset(20)}>20</button>
+                                <button className={subtitleBroadOffset === 40 ? "Selected" : ""} onClick={() => updateTotalSubtitleOffset(40)}>40</button>
+                            </div>
+                        </div>
+                        <div className="SubMenu_Options SubMenu_Generic_Container">
+                            <div onClick={() => setSelectedSub(-1)} className={selectedSub === -1 ? "Selected" : ""}>Off</div>
+                            {source.subs.map((t, i) => <div key={i} onClick={() => middleMan(() => setSelectedSub(i))} className={selectedSub === i ? "Selected" : ""}>{t.title}</div>)}
+                        </div>
                     </div>
-                    <div className="SubMenu_Subs_Subs SubMenu_Generic_Container">
-                        <div onClick={() => setSelectedSub(-1)} className={selectedSub === -1 ? "Selected" : ""}>Off</div>
-                        {source.subs.map((t, i) => <div key={i} onClick={() => middleMan(() => setSelectedSub(i))} className={selectedSub === i ? "Selected" : ""}>{t.title}</div>)}
-                    </div>
-                </div>)
+                </>)
 
             case "Settings":
+                var content;
+                var hasBackButton = false;
+
                 switch (settingsMenu) {
                     default:
-                        return (
+                        content = (
                             <div className="SubMenu_Options SubMenu_Generic_Container">
                                 <button onClick={() => setSettingsMenu("Quality")}>Quality</button>
                                 <button onClick={() => setSettingsMenu("PlaybackSpeed")}>Playback Speed</button>
                             </div>
                         )
+                        break;
 
                     case "PlaybackSpeed":
-                        return (
+                        hasBackButton = true;
+                        content = (
                             <>
-                                <button onClick={() => setSettingsMenu("None")}>Back</button>
                                 <div className="SubMenu_Options SubMenu_Generic_Container">
                                     <PlaybackSpeedListPlayerControl />
                                 </div>
                             </>
                         )
+                        break;
 
                     case "Quality":
-                        return (
+                        hasBackButton = true;
+                        content = (
                             <>
-
-                                <button onClick={() => setSettingsMenu("None")}>Back</button>
                                 <div className="SubMenu_Options SubMenu_Generic_Container">
-                                    <button className={!hlsPlayback ? "Selected" : ""} onClick={() => middleMan(() => setHlsPlayback(false))}>Direct Play</button>
-                                    <button className={hlsPlayback ? "Selected" : ""} onClick={() => middleMan(() => setHlsPlayback(true))}>HLS</button>
+                                    {bitrateOptions.map(b => <button key={b.value} className={hlsBitrate === b.value ? "Selected" : ""} onClick={() => middleMan(() => setHlsBitrate(b.value))}>{b.label}</button>)}
                                 </div>
                             </>
                         )
+                        break;
                 }
 
+                return (<>
+                    <div className="SubMenu_Options_Options_Titlebar">
+                        {
+                            hasBackButton && (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" onClick={() => setSettingsMenu("None")}>
+                                    <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z" />
+                                    <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466" />
+                                </svg>
 
+                            )
+                        }
+                        <h2>{activeSubMenu}</h2>
+                    </div>
+                    {content}
+                </>)
 
             case "Audio":
-                return (
+                return (<>
+                    <h2>{activeSubMenu}</h2>
                     <div className="SubMenu_Audio SubMenu_Generic_Container">
-                        {
-                            source.audio.map(a => <div key={a.id} onClick={() => middleMan(() => setSelectedAudio(a.id))} className={a.id === selectedAudio ? "Selected" : ""}>{a.title}</div>)
-                        }
+                        {source.audio.map(a => <div key={a.id} onClick={() => middleMan(() => setSelectedAudio(a.id))} className={a.id === selectedAudio ? "Selected" : ""}>{a.title}</div>)}
                     </div>
-                )
+                </>)
         }
 
         return <></>;
@@ -145,15 +198,21 @@ export default function ({ episode }: { episode: SelectedEpisodeInfo }) {
             videoRef?.current?.pause();
     }
 
-    const onMetadataLoad = (video: HTMLVideoElement) => {
+    const onMetadataLoad = (video: React.ChangeEvent<HTMLVideoElement>) => {
         if (episode.downloadInfo?.historicalTicks == null)
             return;
 
-        video.currentTime = episode.downloadInfo!.historicalTicks / 10_000_000;
+        const desiredDuration = episode.downloadInfo!.historicalTicks / 10_000_000
+
+        if (desiredDuration / video.currentTarget.duration >= .95)
+            return;
+
+        video.currentTarget.currentTime = desiredDuration;
     };
 
     const syncPlaybackTime = (runtime: number, percentage: number) => {
         void api.media_UpdateEpisodeTime(episode.mediaInfo.id, episode.episodeInfo!.number, runtime, percentage);
+        syncLocalPlaytime?.(episode.episodeInfo!.number, percentage);
     }
 
     const detectPlaybackCapabilities = () => {
@@ -181,20 +240,30 @@ export default function ({ episode }: { episode: SelectedEpisodeInfo }) {
     }
 
     const getPlaybackUrl = () => {
-        const format = hlsPlayback ? "m3u8" : "mkv";
+        const isHls = hlsBitrate != undefined;
+
+        const format = isHls ? "m3u8" : "mkv";
         let vidParams: string[] = [];
 
         if (selectedAudio) {
             vidParams.push(`audioStreamIndex=${selectedAudio}`)
         }
 
-        if (hlsPlayback) {
+        if (isHls) {
             const { videoCodecs, audioCodecs } = detectPlaybackCapabilities();
             vidParams.push(`videoCodecs=${videoCodecs}`);
             vidParams.push(`audioCodecs=${audioCodecs}`);
+
+            if (hlsBitrate > 0)
+                vidParams.push(`bitrate=${hlsBitrate}`);
         }
 
         return `api/media/${episode.downloadInfo!.jellyfinId}/${0}/stream.${format}?${vidParams.join("&")}`;
+    }
+
+    const onComplete = (vid: React.ChangeEvent<HTMLVideoElement>) => {
+        syncPlaybackTime(vid.currentTarget.duration, 1);
+        onFinished?.();
     }
 
     const playbackUrl = getPlaybackUrl();
@@ -204,8 +273,8 @@ export default function ({ episode }: { episode: SelectedEpisodeInfo }) {
         <Player.Provider>
             <Container className="VideoPlayer_Container">
                 {
-                    hlsPlayback ? <HlsVideo src={playbackUrl} ref={videoRef} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={(e) => onMetadataLoad(e.currentTarget)} />
-                        : <Video src={playbackUrl} ref={videoRef} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={(e) => onMetadataLoad(e.currentTarget)} />
+                    hlsBitrate != undefined ? <HlsVideo src={playbackUrl} ref={videoRef} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={onMetadataLoad} onEnded={onComplete} />
+                        : <Video src={playbackUrl} ref={videoRef} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={onMetadataLoad} onEnded={onComplete} />
                 }
 
 
@@ -213,7 +282,7 @@ export default function ({ episode }: { episode: SelectedEpisodeInfo }) {
                 <Gesture action="toggleFullscreen" type="doubletap" />
 
                 <WatchtimeSyncerPlayerControl syncFunc={syncPlaybackTime} />
-                <SubtitlesPlayerControl url={source.subs[selectedSub]?.uri} offset={subtitleOffset} viewLogs={viewSubLogs} setViewLogs={setViewSubLogs} setOffset={setSubtitleOffset} />
+                <SubtitlesPlayerControl url={source.subs[selectedSub]?.uri} offset={subtitleBroadOffset + subtitleOffset} viewLogs={viewSubLogs} setViewLogs={setViewSubLogs} setOffset={updateTotalSubtitleOffset} />
 
                 <SegmentSkipperPlayerControl video={videoRef} info={episode.downloadInfo!} />
 
@@ -292,7 +361,6 @@ export default function ({ episode }: { episode: SelectedEpisodeInfo }) {
                         activeSubMenu !== "None" && (
                             <div className="VideoPlayer_SubMenu_Container" onClick={e => { e.stopPropagation(); setActiveSubMenu("None"); }}>
                                 <div className="VideoPlayer_SubMenu" onClick={e => e.stopPropagation()}>
-                                    <h2>{activeSubMenu}</h2>
                                     {drawSubMenu()}
                                 </div>
                             </div>

@@ -447,9 +447,10 @@ public class LibraryService
 
         Model_DownloadedMedia? existingData = await _db.downloadedMedia.Include(d => d.downloadedEpisodes).FirstOrDefaultAsync(d => d.MediaId == mediaId);
 
-        Model_Media media = await _db.media.SingleAsync(m => m.Id == mediaId);
-        Model_Link? link = await _db.links.FirstOrDefaultAsync(l => l.MediaId == mediaId);
-        DownloadRequestInfo requestInfo = await _library.GetFactory(media!).GetRequestInfo(link ?? new Model_Link() { anilist_id = mediaId });
+        Model_Media media = await _db.media
+            .Include(m => m.link)
+            .SingleAsync(m => m.Id == mediaId);
+        DownloadRequestInfo requestInfo = await _library.GetFactory(media!).GetRequestInfo(media.link);
 
         if (existingData == null)
             existingData = await RecheckDownloads(usr, mediaId);

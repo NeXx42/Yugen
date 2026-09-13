@@ -14,7 +14,7 @@ interface Cue {
 interface Props {
     url: string | undefined,
     offset: number,
-    setOffset: Dispatch<SetStateAction<number>>,
+    setOffset: (val: number) => void,
 
     viewLogs: boolean,
     setViewLogs: Dispatch<SetStateAction<boolean>>

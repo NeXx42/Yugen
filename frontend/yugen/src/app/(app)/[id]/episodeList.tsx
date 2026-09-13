@@ -1,15 +1,18 @@
 "use client"
 
 import * as api from "@lib/api.local"
-import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import React, { RefObject, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 import "./episodeList.css"
 import { EpisodeCompletionThreshold, MediaEpisodeInfo, MediaInfo } from "@/app/shared/types";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import ErrorContainer from "@/app/components/errorContainer";
 
 interface Props {
     mediaInfo: MediaInfo,
+    localPlaytime: Record<number, number>,
+
+    incrementEpisode?: RefObject<{ incrementEpisode: () => void } | null>;
     setSelectedItem: (info: MediaEpisodeInfo | undefined) => void,
 }
 
@@ -51,6 +54,17 @@ export default function (props: Props) {
     const refreshMenuRef = useRef<HTMLDivElement>(null);
     const [refreshMenuOpen, setRefreshMenuOpen] = useState(false);
 
+    useImperativeHandle(props.incrementEpisode, () => ({ incrementEpisode }))
+
+    function incrementEpisode() {
+        if (selectedEpisodeIndex == null)
+            return;
+
+        if (episodes.length - 1 == selectedEpisodeIndex)
+            return;
+
+        onSelectEpisode(selectedEpisodeIndex + 1);
+    }
 
     useEffect(() => {
         fetchEpisodes(false, false);
@@ -147,11 +161,12 @@ export default function (props: Props) {
     }
 
     const drawEpisode = (ep: MediaEpisodeInfo, pos: number): React.ReactNode => {
-        const watchPercentage = ((ep.watchPercentage ?? 0) >= EpisodeCompletionThreshold ? 100 : (ep.watchPercentage ?? 0)) * 100;
+        const watchPercentage = props.localPlaytime[ep.number] ?? ep.watchPercentage ?? 0;
+        const width = (watchPercentage >= EpisodeCompletionThreshold ? 100 : watchPercentage) * 100;
 
         return (
             <button key={ep.number} className={selectedEpisodeIndex == pos ? "Episode Selected" : "Episode"} onClick={() => onSelectEpisode(pos)}>
-                <div style={{ width: `${watchPercentage}%` }} className="Episode_WatchPercentage" />
+                <div style={{ width: `${width}%` }} className="Episode_WatchPercentage" />
                 <a>{`${ep.number}. ${ep.title}`}</a>
                 {
                     ep.jellyfinId != undefined && (

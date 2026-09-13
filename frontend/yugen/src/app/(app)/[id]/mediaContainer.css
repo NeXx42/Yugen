@@ -12,6 +12,19 @@
     align-items: start;
 }
 
+@media (max-width: 1000px) {
+    .MediaContainer_Media {
+        display: flex;
+        flex-direction: column;
+
+        align-items: stretch;
+    }
+
+    .MediaContainer_Media>* {
+        align-self: auto;
+    }
+}
+
 .MediaContainer_EpisodeInfo {
     display: grid;
     grid-template-columns: auto auto;

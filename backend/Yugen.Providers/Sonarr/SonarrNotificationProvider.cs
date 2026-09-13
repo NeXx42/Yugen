@@ -26,7 +26,7 @@ public class SonarrNotificationProvider : INotificationService
                 case SonarrWebhookEventType.SeriesDelete:
                 case SonarrWebhookEventType.EpisodeFileDelete:
                 case SonarrWebhookEventType.SeriesAdd:
-                    await refreshDownloads(mediaId.anilist_id!.Value);
+                    await refreshDownloads(mediaId.MediaId);
                     break;
             }
 
@@ -42,7 +42,7 @@ public class SonarrNotificationProvider : INotificationService
                         Date = DateTime.UtcNow,
                         EventName = eventType.ToString(),
                         UserId = Guid.Empty,
-                        MediaId = mediaId.anilist_id!.Value,
+                        MediaId = mediaId.MediaId,
                         Message = eventType.ToString(),
                         Source = "Sonarr"
                     }];
