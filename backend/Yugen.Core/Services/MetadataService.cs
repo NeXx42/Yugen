@@ -118,7 +118,7 @@ public class MetadataService
         var res = await _provider.GetTimeOfNextEpisodes(links);
         return res.ToDictionary(r => mappings[r.Key], r => r.Value);
 
-        string GetLinkKey(Model_Link link) => (string)_linkProperty.GetValue(link)!;
+        string GetLinkKey(Model_Link link) => _linkProperty.GetValue(link)!.ToString()!;
     }
 
     public async Task<List<int>> GetTrending(int limit)

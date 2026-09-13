@@ -24,6 +24,7 @@ import { ReactEventHandler, useEffect, useRef, useState } from 'react';
 import "./playerControl.css"
 import PlaybackSpeedListPlayerControl from "./playbackSpeedListPlayerControl";
 import { SelectedEpisodeInfo } from "@/app/(app)/[id]/mediaContainer";
+import { EpisodeCompletionThreshold } from "@/app/shared/types";
 
 const Player = createPlayer({
     features: [
@@ -204,7 +205,7 @@ export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: 
 
         const desiredDuration = episode.downloadInfo!.historicalTicks / 10_000_000
 
-        if (desiredDuration / video.currentTarget.duration >= .95)
+        if (desiredDuration / video.currentTarget.duration >= EpisodeCompletionThreshold)
             return;
 
         video.currentTarget.currentTime = desiredDuration;
