@@ -45,4 +45,10 @@ public class AuthController : ControllerBase
 
         return session;
     }
+
+    [HttpPost("logout")]
+    public async Task Logout()
+    {
+        HttpContext.Response.Cookies.Delete("AuthToken");
+    }
 }

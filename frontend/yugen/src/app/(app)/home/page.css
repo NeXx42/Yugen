@@ -1,5 +1,8 @@
 .HomePage {
-    margin: 15px 80px 80px;
+    margin: 15px auto;
+    max-width: calc(1920px * .9);
+
+    padding: 0px 5px;
 
     display: flex;
     flex-direction: column;
@@ -10,6 +13,13 @@
     display: grid;
     grid-template-columns: auto 400px;
     gap: 25px;
+}
+
+@media (max-width: 1200px) {
+    .HomePage_Body {
+        display: flex;
+        flex-direction: column;
+    }
 }
 
 .HomePage_Right {

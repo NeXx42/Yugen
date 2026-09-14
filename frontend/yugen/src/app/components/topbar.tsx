@@ -16,6 +16,7 @@ import { MediaCardInfo, seasonLookup } from "../shared/types";
 type FoldoutType = "None" | "Notifications" | "Settings";
 
 export default function () {
+    const profileRef = useRef<HTMLDivElement>(null);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [currentFoldout, setCurrentFoldout] = useState<FoldoutType>("None")
     const [notificationCount, setNotificationCount] = useState(0);
@@ -37,6 +38,9 @@ export default function () {
         function handleClickOutside(event: MouseEvent) {
             if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
                 setQuickSearchOpen(false);
+            }
+            if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+                setIsProfileOpen(false);
             }
         }
 
@@ -161,7 +165,7 @@ export default function () {
                 <img loading="lazy" decoding="async" src="https://s4.anilist.co/file/anilistcdn/user/avatar/large/default.png"></img>
             </button>
             {
-                isProfileOpen && <ProfileFoldout isAuthenticated={authenticated} />
+                isProfileOpen && <ProfileFoldout isAuthenticated={authenticated} ref={profileRef} />
             }
         </div>
         {

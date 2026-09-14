@@ -14,9 +14,15 @@
     overflow: hidden;
 
     display: grid;
-    grid-template-columns: repeat(2, 70px);
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+
+    box-shadow: 0 0px 10px #000000b7;
 }
 
+.Profile a,
+.Profile Input,
+.Profile Select,
 .Profile button {
     background-color: var(--global-div);
     text-align: center;
@@ -33,6 +39,18 @@
     transition: all .1s;
 }
 
+
+.Profile Select {
+    text-align: left;
+}
+
+.Profile Input {
+    cursor: text;
+    text-align: left;
+}
+
+.Profile a:hover,
+.Profile Select:hover,
 .Profile button:hover {
     background-color: var(--primary-accent-bg);
     color: var(--primary-accent);

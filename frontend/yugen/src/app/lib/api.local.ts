@@ -7,7 +7,7 @@ export async function auth_Login(username: string, password: string) {
     return (await post<User>("auth/login", { username, password }))!;
 }
 export async function auth_Logout() {
-    await post("auth/logout");
+    await post("Auth/logout");
 }
 export async function getAllUsers(): Promise<User[]> {
     return (await get("Auth/all"))!;

@@ -54,6 +54,7 @@
     height: 100%;
 
     width: 50%;
+    max-width: 500px;
 
     display: flex;
     justify-content: stretch;
