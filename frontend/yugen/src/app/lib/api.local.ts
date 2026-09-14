@@ -72,8 +72,8 @@ export async function library_CurrentWatching(page: number, pageSize: number): P
 export async function library_RequestSeries(mediaId: number, mediaRequest: MediaRequest) {
     return (await post(`library/${mediaId}/Request`, mediaRequest))!;
 }
-export async function library_Request(aniListId: number, rootPath: string, quality: number): Promise<boolean> {
-    return (await post(`library/${aniListId}/Request`, {
+export async function library_Request(id: number, rootPath: string, quality: number): Promise<boolean> {
+    return (await post(`library/${id}/Request`, {
         rootPath,
         quality
     }))!

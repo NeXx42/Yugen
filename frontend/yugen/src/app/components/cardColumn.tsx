@@ -31,7 +31,7 @@ export default function (props: Props) {
         if (props.drawer != null)
             return props.drawer(card);
 
-        return <MediaCardHorizontal key={card.aniListId} card={card} season={undefined} />;
+        return <MediaCardHorizontal key={card.id} card={card} season={undefined} />;
     }
 
     const draw = () => {

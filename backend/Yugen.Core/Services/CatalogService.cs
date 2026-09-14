@@ -180,7 +180,7 @@ public class CatalogService
         List<int> initialCreates = new List<int>();
         HashSet<int> existingEntriesInDB = await _db.media
             .Where(m => remainingIds.Contains(m.Id) && !(
-                m.Status == "NOT_YET_RELEASED" && // for not yet released the info can change, ignore stale versions
+                m.Status == MediaStatus.NOT_YET_RELEASED && // for not yet released the info can change, ignore stale versions
                     (!m.LastUpdated.HasValue || m.LastUpdated.Value <= currentTime - 43200)
             ))
             .Select(m => m.Id)
@@ -202,13 +202,13 @@ public class CatalogService
 
         Dictionary<int, Model_Tag?> tagLookup = new();
         Dictionary<int, MediaCard?> mediaLookup = new();
-        Dictionary<int, Model_Link[]?> linkLookup = new();
+        Dictionary<int, Model_Link[]?> seasonalLinksLookup = new();
         HashSet<int> episodesToRehydrateUpcomingDate = new();
 
         foreach (Model_Media media in dbEntries)
         {
             remainingIds.Remove(media.Id);
-            linkLookup[media.Id] = null;
+            seasonalLinksLookup[media.Id] = null;
 
             foreach (var tag in media.Tags)
                 tagLookup[tag.TagId] = null;
@@ -223,11 +223,11 @@ public class CatalogService
             }
         }
 
-        var links = await (
+        var seasonalLinks = await (
             from l in _db.links
 
             where l.tvdb_id.HasValue
-                && linkLookup.Keys.Contains(l.MediaId)
+                && seasonalLinksLookup.Keys.Contains(l.MediaId)
 
             join cl in _db.links
                 on l.tvdb_id equals cl.tvdb_id
@@ -240,9 +240,9 @@ public class CatalogService
             }
         ).ToArrayAsync();
 
-        foreach (var link in links)
+        foreach (var link in seasonalLinks)
         {
-            linkLookup[link.id] = link.relatedIds.ToArray();
+            seasonalLinksLookup[link.id] = link.relatedIds.ToArray();
 
             foreach (Model_Link linkMediaId in link.relatedIds)
                 mediaLookup[linkMediaId.MediaId] = null;
@@ -257,13 +257,18 @@ public class CatalogService
         MediaCard[] cards = await GetOrCreateMediaCardsFromIds(mediaLookup.Keys.ToList());
 
         foreach (MediaCard card in cards)
-            mediaLookup[card.aniListId] = card;
+            mediaLookup[card.id] = card;
 
         var nextEpisodeReleaseDateLookup = await _hydrationService.HydrateReleaseDates(episodesToRehydrateUpcomingDate);
 
         foreach (Model_Media media in dbEntries)
         {
-            MediaCard[] recommend = media.RelatedMedia.Where(r => mediaLookup.ContainsKey(r.ConnectedMediaId)).Select(r => mediaLookup[r.ConnectedMediaId]!).ToArray();
+            MediaCard[] recommend = media.RelatedMedia
+                .Where(r => mediaLookup.ContainsKey(r.ConnectedMediaId))
+                .OrderByDescending(r => r.RelationScore)
+                .Select(r => mediaLookup[r.ConnectedMediaId]!)
+                .ToArray();
+
             Model_Tag?[] mediaTags = media.Tags.Select(t =>
             {
                 if (tagLookup.TryGetValue(t.TagId, out Model_Tag? tag))
@@ -274,9 +279,13 @@ public class CatalogService
 
             MediaInfo info = MediaInfo.Map(media).RegisterTags(mediaTags).RegisterRelated(recommend);
 
-            if (linkLookup.TryGetValue(media.Id, out Model_Link[]? linkedMedia) && linkedMedia != null)
+            if (seasonalLinksLookup.TryGetValue(media.Id, out Model_Link[]? seasonLinkedMedia) && seasonLinkedMedia != null)
             {
-                (Model_Link, MediaCard)[] hydratedLinks = linkedMedia.Where(l => mediaLookup.ContainsKey(l.MediaId)).Select(l => (l, mediaLookup[l.MediaId]!)).ToArray();
+                (Model_Link, MediaCard)[] hydratedLinks = seasonLinkedMedia
+                    .Where(l => mediaLookup.ContainsKey(l.MediaId))
+                    .Select(l => (l, mediaLookup[l.MediaId]!))
+                    .ToArray();
+
                 info.RegisterConnectedMedia(hydratedLinks);
             }
 
@@ -299,12 +308,17 @@ public class CatalogService
         if (media == null)
             return;
 
-        int[] recommendedIds = await _currentProvider.FetchRecommendedMedia(media.link);
+        Dictionary<int, int?> recommendedIds = await _currentProvider.FetchRecommendedMedia(media.link);
 
         _db.mediaRelations.RemoveRange(_db.mediaRelations.Where(r => r.MediaId == mediaId));
 
         await _db.SaveChangesAsync();
-        await _db.BulkInsertAsync(recommendedIds.Select(r => new Model_MediaRelation { MediaId = mediaId, ConnectedMediaId = r }));
+        await _db.BulkInsertAsync(recommendedIds.Select(r => new Model_MediaRelation
+        {
+            MediaId = mediaId,
+            ConnectedMediaId = r.Key,
+            RelationScore = r.Value
+        }));
 
         _cache.Remove(GetInfoCacheId(mediaId));
     }
@@ -322,7 +336,7 @@ public class CatalogService
         }
 
         MediaCard[] media = await GetOrCreateMediaCardsFromIds(upcoming.Keys.ToList());
-        return media.Select(x => x.WithReleaseDate(upcoming[x.aniListId])).OrderBy(x => x.nextReleaseDate).Take(take).ToArray();
+        return media.Select(x => x.WithReleaseDate(upcoming[x.id])).OrderBy(x => x.nextReleaseDate).Take(take).ToArray();
     }
 
     public async Task<MediaCard[]> UpcomingForDay(int? absoluteDayOfMonth)
@@ -339,7 +353,7 @@ public class CatalogService
         }
 
         MediaCard[] media = await GetOrCreateMediaCardsFromIds(upcoming.Keys.ToList());
-        return media.Select(x => x.WithReleaseDate(upcoming[x.aniListId])).OrderBy(x => x.nextReleaseDate).ToArray();
+        return media.Select(x => x.WithReleaseDate(upcoming[x.id])).OrderBy(x => x.nextReleaseDate).ToArray();
     }
 
     public async Task<MediaCard[]> GetOrCreateMediaCardsFromIds(List<int> ids)
@@ -369,7 +383,7 @@ public class CatalogService
             }
 
             card = MediaCard.Map(media);
-            _cache.Set(GetCardCacheId(card.aniListId), card);
+            _cache.Set(GetCardCacheId(card.id), card);
 
             ids.Remove(media.Id);
             results.Add(card);
@@ -378,14 +392,14 @@ public class CatalogService
         IEnumerable<MediaCard> newCards = (await _hydrationService.SaveMedia(ids)).Select(MediaCard.Map);
 
         foreach (MediaCard newCard in newCards)
-            _cache.Set(GetCardCacheId(newCard.aniListId), newCard);
+            _cache.Set(GetCardCacheId(newCard.id), newCard);
 
         return [.. results, .. newCards];
     }
 
     private bool ShouldUpdateMedia(Model_Media info)
     {
-        if (info.Status != "NOT_YET_RELEASED")
+        if (info.Status != MediaStatus.NOT_YET_RELEASED)
             return false;
 
         return !info.LastUpdated.HasValue || info.LastUpdated <= (DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 43200);
@@ -475,7 +489,7 @@ public class CatalogService
 
         MediaCard[] mediaCards = await GetOrCreateMediaCardsFromIds(distinctMedia);
 
-        List<int> mediaOfInterest = mediaCards.Where(m => m.nextReleaseDate.HasValue && m.nextReleaseDate < currentTime).Select(m => m.aniListId).ToList();
+        List<int> mediaOfInterest = mediaCards.Where(m => m.status == MediaStatus.RELEASING && m.nextReleaseDate.HasValue && m.nextReleaseDate < currentTime).Select(m => m.id).ToList();
 
         Dictionary<int, long?> newEpisodes = await _currentProvider.GetTimeOfNextEpisodes(mediaOfInterest);
         Dictionary<int, Model_Media> dbEntries = await _db.media.Where(m => mediaOfInterest.Contains(m.Id)).ToDictionaryAsync(m => m.Id, m => m);

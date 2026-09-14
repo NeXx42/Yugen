@@ -200,7 +200,7 @@ public class LibraryService
                     throw;
             }
 
-            if (usr != null) // jellyfin's api doesnt return all results without the userid??
+            if (usr != null) // jellyfin's api doesn't return all results without the userid??
                 await RecheckDownloads(usr, mediaId, true);
         }
 
@@ -304,7 +304,7 @@ public class LibraryService
         MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds(mediaIds);
 
         foreach (var fullHistory in history)
-            cards.FirstOrDefault(c => c.aniListId == fullHistory.Media.MediaId)?.WithWatchInfo(fullHistory.Media, fullHistory.Episode);
+            cards.FirstOrDefault(c => c.id == fullHistory.Media.MediaId)?.WithWatchInfo(fullHistory.Media, fullHistory.Episode);
 
         return new PageResponse<MediaCard>(cards, page, pageSize, totalCount);
     }

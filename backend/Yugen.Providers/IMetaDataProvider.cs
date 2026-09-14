@@ -23,7 +23,7 @@ public interface IMetaDataProvider
 
     public Task<MediaCreationModel[]> GetMediaInfo(IEnumerable<Model_Link> items);
     public Task<MediaEpisodeCreationModel[]> GetEpisodeData(Model_Link media);
-    public Task<string[]> FetchRecommendedMedia(Model_Link media);
+    public Task<Dictionary<string, int?>> FetchRecommendedMedia(Model_Link media);
 
     public Task<Dictionary<string, long?>> GetTimeOfNextEpisodes(ICollection<Model_Link> ids);
 }

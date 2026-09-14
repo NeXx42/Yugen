@@ -145,10 +145,10 @@ public class MetadataService
         return await ReconstructMediaLookup(res);
     }
 
-    public async Task<int[]> FetchRecommendedMedia(Model_Link media)
+    public async Task<Dictionary<int, int?>> FetchRecommendedMedia(Model_Link media)
     {
         var res = await _provider.FetchRecommendedMedia(media);
-        return await MapProviderIdsToMediaIdsArray(res);
+        return await ReconstructMediaLookup(res);
     }
 
     private async Task<Dictionary<int, T>> ReconstructMediaLookup<T>(Dictionary<string, T> originalData)

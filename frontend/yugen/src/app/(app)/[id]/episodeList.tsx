@@ -4,7 +4,7 @@ import * as api from "@lib/api.local"
 import React, { RefObject, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 import "./episodeList.css"
-import { EpisodeCompletionThreshold, MediaEpisodeInfo, MediaInfo } from "@/app/shared/types";
+import { EpisodeCompletionThreshold, MediaEpisodeInfo, MediaInfo, statusLookup } from "@/app/shared/types";
 import { useSearchParams } from "next/navigation";
 import ErrorContainer from "@/app/components/errorContainer";
 
@@ -186,7 +186,7 @@ export default function (props: Props) {
     return (
         <div className="EpisodeList ViewPageContainer">
             {
-                (props.mediaInfo.status === "NOT_YET_RELEASED" && episodes.length === 0) ? (
+                (props.mediaInfo.status && statusLookup[props.mediaInfo.status] === "NOT_YET_RELEASED" && episodes.length === 0) ? (
                     <div className="EpisodeList_Unaired">
                         {
                             upcomingDate != null ?

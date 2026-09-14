@@ -1,7 +1,19 @@
 export type BookmarkType = "None" | "Watching" | "OnHold" | "Planning" | "Completed" | "Dropped";
+export type MediaStatus =
+    "FINISHED" |
+    "RELEASING" |
+    "NOT_YET_RELEASED" |
+    "CANCELLED" |
+    "HIATUS";
+export const statusLookup: MediaStatus[] = ["FINISHED", "RELEASING", "NOT_YET_RELEASED", "CANCELLED", "HIATUS"]
 
-export type Season = "WINTER" | "SPRING" | "SUMMER" | "FALL";
+export type Season =
+    "WINTER" |
+    "SPRING" |
+    "SUMMER" |
+    "FALL";
 export const seasonLookup: Season[] = ["WINTER", "SPRING", "SUMMER", "FALL"]
+
 
 export const EpisodeCompletionThreshold = 0.9;
 
@@ -27,15 +39,15 @@ export interface User {
 }
 
 export interface MediaCardInfo {
-    aniListId: number,
+    id: number,
     title: string,
     type: string | null,
 
-    status: string | null,
+    status: number | null,
     nextReleaseDate: number | undefined,
 
     year: number | null,
-    season: Season | null,
+    season: number | null,
 
     colour: string,
     cardImg: string,
@@ -53,12 +65,12 @@ export interface MediaInfo {
     description: string | null;
     type: string | null,
 
-    status: string | null,
+    status: number | null,
     startDate: number | null,
     endDate: number | null,
     episodeCount: number | null,
     duration: number | null,
-    season: string | null,
+    season: number | null,
     upcomingEpisode: number | null,
 
     thumbnailImage: string | null;

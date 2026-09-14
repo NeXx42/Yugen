@@ -3,6 +3,8 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Yugen.Domain.Data;
 using Yugen.Domain.Data.Media;
+using Yugen.Domain.Enums;
+using Yugen.Domain.Helpers;
 using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.Linking;
@@ -16,12 +18,15 @@ public class TenraiMetadataProvider : IMetaDataProvider
     private readonly RestfulHelper _http;
     private readonly SemaphoreSlim _concurrentRequestLimit;
 
-    private static ConcurrentDictionary<int, TenraiMetadata_Responses_Anime?> animeDetailsCache = new(); // to save roundtrips as there is no bulk search by ids
+    private const int MAX_TAKE = 50;
+    private const int MAX_CONCURRENCY = 4;
+
+    private static ConcurrentDictionary<int, TenraiMetadata_Responses_Anime?> animeDetailsCache = new(); // to save round trips as there is no bulk search by ids
 
     public TenraiMetadataProvider(ILogging logger)
     {
         _http = new RestfulHelper("https://api.tenrai.org/v1/", logger);
-        _concurrentRequestLimit = new SemaphoreSlim(1);
+        _concurrentRequestLimit = new SemaphoreSlim(4);
     }
 
     public string getLinkPropertyName => nameof(Model_Link.mal_id);
@@ -53,9 +58,9 @@ public class TenraiMetadataProvider : IMetaDataProvider
             EndDate = media.getAiredTo,
             NextEpisodeReleaseDate = media.getNextEpisodeDate,
 
-            Status = media.status,
+            Status = MapStatus(media.status),
             EpisodeCount = media.episodes,
-            Season = media.season,
+            Season = media.season.ParseEnumNullable<MediaSeason>(),
             Year = media.year,
             MediaFormat = media.type,
 
@@ -66,72 +71,81 @@ public class TenraiMetadataProvider : IMetaDataProvider
             }).ToList() ?? [])
 
         }).ToArray();
+
+        MediaStatus? MapStatus(string? name)
+        {
+            switch (name)
+            {
+                case "Finished Airing": return MediaStatus.FINISHED;
+                case "Currently Airing": return MediaStatus.RELEASING;
+                case "Not yet aired": return MediaStatus.NOT_YET_RELEASED;
+                default: return null;
+            }
+        }
     }
 
     private async Task<List<TenraiMetadata_Responses_Anime>> InternalMediaDetailsSearch(IEnumerable<int> ids)
     {
         ConcurrentBag<TenraiMetadata_Responses_Anime> results = new();
-        const int batchSize = 4; // rate limit is 4 per sec
-
         Stopwatch batchWatcher = new Stopwatch();
 
-        try
+        for (int i = 0; i < ids.Count(); i += MAX_CONCURRENCY)
         {
-            await _concurrentRequestLimit.WaitAsync();
+            batchWatcher.Reset();
+            batchWatcher.Start();
 
-            for (int i = 0; i < ids.Count(); i += batchSize)
-            {
-                batchWatcher.Reset();
-                batchWatcher.Start();
+            await Task.WhenAll(ids.Skip(i).Take(MAX_CONCURRENCY).Select(item => HandleRequest(item)));
+            batchWatcher.Stop();
 
-                await Task.WhenAll(ids.Skip(i).Take(4).Select(item => HandleRequest(item)));
-                batchWatcher.Stop();
+            long ratelimitCooldown = 1_000 - batchWatcher.ElapsedMilliseconds;
 
-                long ratelimitCooldown = 1_000 - batchWatcher.ElapsedMilliseconds;
-
-                if (ratelimitCooldown > 0)
-                    await Task.Delay((int)ratelimitCooldown);
-            }
-        }
-        finally
-        {
-            _concurrentRequestLimit.Release();
+            if (ratelimitCooldown > 0)
+                await Task.Delay((int)ratelimitCooldown);
         }
 
         async Task HandleRequest(int id)
         {
-            string uri = Path.Combine("anime", id.ToString(), "full");
+            try
+            {
+                await _concurrentRequestLimit.WaitAsync();
+                string uri = Path.Combine("anime", id.ToString(), "full");
 
-            const int maxAttempts = 3;
-            for (int i = 0; i < maxAttempts; i++)
-                try
-                {
-                    if (!animeDetailsCache.TryGetValue(id, out TenraiMetadata_Responses_Anime? res))
+                const int maxAttempts = 3;
+                for (int i = 0; i < maxAttempts; i++)
+                    try
                     {
-                        res = (await _http.SendRequest<TenraiMetadata_Responses_Container<TenraiMetadata_Responses_Anime>>(uri, HttpMethod.Get))?.data;
-                        animeDetailsCache.AddOrUpdate(id, _ => res, (_, __) => res);
-                    }
+                        if (!animeDetailsCache.TryGetValue(id, out TenraiMetadata_Responses_Anime? res))
+                        {
 
-                    if (res != null)
-                        results.Add(res);
+                            res = (await _http.SendRequest<TenraiMetadata_Responses_Container<TenraiMetadata_Responses_Anime>>(uri, HttpMethod.Get))?.data;
+                            animeDetailsCache.AddOrUpdate(id, _ => res, (_, __) => res);
+                        }
 
-                    break;
-                }
-                catch (OverflowException e) // too many request, can try again
-                {
-                    if (e.Message.Contains("You have exceeded the 120 requests/minute limit"))
-                    {
-                        await Task.Delay(60 * 1000);
+                        if (res != null)
+                            results.Add(res);
+
+                        break;
                     }
-                    else
+                    catch (OverflowException e) // too many request, can try again
                     {
-                        await Task.Delay(1000);
+                        if (e.Message.Contains("You have exceeded the 120 requests/minute limit"))
+                        {
+                            await Task.Delay(60 * 1000);
+                        }
+                        else
+                        {
+                            await Task.Delay(1000);
+                        }
                     }
-                }
-                catch
-                {
-                    break;
-                }
+                    catch
+                    {
+                        break;
+                    }
+            }
+            finally
+            {
+                _concurrentRequestLimit.Release();
+            }
         }
 
         return results.ToList();
@@ -184,13 +198,11 @@ public class TenraiMetadataProvider : IMetaDataProvider
 
     public async Task<(int total, string[] providerIds)> SearchMedia(MediaSearchQuery filter)
     {
-        List<string> queryParams = [
-            $"page={filter.page}",
-            $"limit={filter.pageSize}",
-            $"sfw={(filter.allowAdultContent ?? false).ToString()!.ToLower()}",
-        ];
-
+        List<string> queryParams = new();
         if (!string.IsNullOrEmpty(filter.text)) queryParams.Add($"q={filter.text}");
+        queryParams.Add($"page={filter.page}");
+        queryParams.Add($"limit={GetTakeSize(filter.pageSize)}");
+        queryParams.Add($"sfw={GetSFWFilter(filter.allowAdultContent)}");
 
         List<string> responseIds = new();
         var resContainer = await HandlePageResponse($"anime?{string.Join("&", queryParams)}", item => responseIds.Add(item.mal_id.ToString()));
@@ -205,10 +217,10 @@ public class TenraiMetadataProvider : IMetaDataProvider
     {
         List<string> queryParams = [
             $"page={filter.page}",
-            $"limit={filter.pageSize}",
+            $"limit={GetTakeSize(filter.pageSize)}",
             $"order_by=start_date",
             $"sort=asc",
-            $"sfw={(filter.allowAdultContent ?? false).ToString()!.ToLower()}",
+            $"sfw={GetSFWFilter(filter.allowAdultContent)}",
         ];
 
         List<string> responseIds = new();
@@ -247,7 +259,7 @@ public class TenraiMetadataProvider : IMetaDataProvider
         return results;
     }
 
-    public async Task<string[]> FetchRecommendedMedia(Model_Link media)
+    public async Task<Dictionary<string, int?>> FetchRecommendedMedia(Model_Link media)
     {
         if (!media.mal_id.HasValue)
             return [];
@@ -260,10 +272,12 @@ public class TenraiMetadataProvider : IMetaDataProvider
 
         return res!.data!
             .OrderByDescending(d => d.votes)
-            .Select(d => d.entry.mal_id.ToString())
             .Take(10)
-            .ToArray();
+            .ToDictionary(d => d.entry.mal_id.ToString(), d => (int?)d.votes);
     }
+
+    private int GetTakeSize(int? desired) => Math.Min(desired ?? 10, MAX_TAKE);
+    private string GetSFWFilter(bool? allowAdultContent) => (!(allowAdultContent ?? false)).ToString().ToLower();
 
     private async Task<TenraiMetadata_Responses_Page<TenraiMetadata_Responses_Anime>?> HandlePageResponse(string uri, Action<TenraiMetadata_Responses_Anime> handler)
     {

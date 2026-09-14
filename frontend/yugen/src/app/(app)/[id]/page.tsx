@@ -1,6 +1,6 @@
 import * as api from "@lib/api.server"
 
-import { MediaInfo } from "@shared/types";
+import { MediaInfo, seasonLookup, statusLookup } from "@shared/types";
 import MediaContainer from "./mediaContainer";
 
 import MediaRequester from "./seriesControls";
@@ -33,8 +33,6 @@ export default async function ({ params }: { params: { id: number } }) {
         return <>Not found</>
     }
 
-    const seasons = media.connectedMedia?.filter(c => c.card != null).sort((a, b) => ((a?.card.year ?? a.season) ?? 0) - ((b?.card.year ?? b.season) ?? 0));
-
     const getDate = (unixSeconds: number | null): string => {
         if (unixSeconds == null)
             return "Unknown";
@@ -51,7 +49,7 @@ export default async function ({ params }: { params: { id: number } }) {
 
         return `${month} ${day} ${year}`;
     }
-
+    console.log(media.connectedMedia);
     return (
         <div className="ViewPage">
             <MediaContainer mediaInfo={media} />
@@ -85,10 +83,10 @@ export default async function ({ params }: { params: { id: number } }) {
                             <div className="ViewPage_Info_Info_MetaData">
                                 <div>
                                     <div>Format:<strong>{media.type}</strong></div>
-                                    <div>Status:<strong>{media.status}</strong></div>
+                                    <div>Status:<strong>{media.status ? statusLookup[media.status] : "-"}</strong></div>
                                     <div>Episodes:<strong>{media.episodeCount ?? "-"}</strong></div>
                                     <div>Duration:<strong>{media.duration ?? "-"}</strong></div>
-                                    <div>Season:<strong>{media.season ?? "-"}</strong></div>
+                                    <div>Season:<strong>{media.season ? seasonLookup[media.season] : "-"}</strong></div>
                                 </div>
                                 <div>
                                     <div>Start Date:<strong>{getDate(media.startDate)}</strong></div>
@@ -104,7 +102,7 @@ export default async function ({ params }: { params: { id: number } }) {
                     {(media.connectedMedia?.length ?? 0) > 1 && (
                         <div className="ViewPage_Seasons ViewPageContainer">
                             <h2>Related</h2>
-                            {seasons.filter(m => m.card).map(m => <MediaCardHorizontal key={m.card.aniListId} card={m.card} selected={m.card.aniListId === media.id} season={m.season} />)}
+                            {media.connectedMedia.filter(m => m.card).map(m => <MediaCardHorizontal key={m.card.id} card={m.card} selected={m.card.id === media.id} season={m.season} />)}
                         </div>
                     )}
 

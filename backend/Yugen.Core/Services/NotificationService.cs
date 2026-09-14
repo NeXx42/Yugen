@@ -90,7 +90,7 @@ public class NotificationService
         for (int i = 0; i < notifis.Length; i++)
         {
             Model_Notification n = notifis[i];
-            MediaCard? media = cards.FirstOrDefault(c => c.aniListId == n.MediaId);
+            MediaCard? media = cards.FirstOrDefault(c => c.id == n.MediaId);
 
             results[i] = new Notification()
             {

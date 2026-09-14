@@ -39,7 +39,7 @@ export default function ({ searchQuery }: { searchQuery: SearchRequest }) {
 
     return (
         <div className="SearchContainer">
-            <PageContainer search={search} pageSize={pageSize} currentPage={currentPage} setCurrentPage={setCurrentPage} drawElement={e => <MediaCard key={e.aniListId} Card={e} />} track={[searchQuery]} />
+            <PageContainer search={search} pageSize={pageSize} currentPage={currentPage} setCurrentPage={setCurrentPage} drawElement={e => <MediaCard key={e.id} Card={e} />} track={[searchQuery]} />
         </div>
     )
 }

@@ -1,4 +1,5 @@
 using Yugen.Core.Data;
+using Yugen.Domain.Enums;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.Bookmarks;
 using Yugen.Domain.Models.Linking;
@@ -19,12 +20,12 @@ public class MediaInfo
     public string? cardImage { get; set; }
     public string? colour { get; set; }
 
-    public string? status { get; set; }
+    public MediaStatus? status { get; set; }
     public long? startDate { get; set; }
     public long? endDate { get; set; }
     public int? episodeCount { get; set; }
     public int? duration { get; set; }
-    public string? season { get; set; }
+    public MediaSeason? season { get; set; }
     public long? upcomingEpisode { get; set; }
 
     public int? bookmark { get; set; }
@@ -68,13 +69,17 @@ public class MediaInfo
         if (media == null)
             return this;
 
-        connectedMedia = media?.Select(m => new Connection()
-        {
-            season = m.link.tvdb_season,
-            type = m.link.type,
+        connectedMedia = media?
+            .Select(m => new Connection()
+            {
+                season = m.link.tvdb_season ?? m.link.tmdb_season,
+                type = m.link.type,
 
-            card = m.media,
-        }).ToArray();
+                card = m.media,
+            })
+            .OrderBy(m => m.season)
+            .ToArray();
+
         return this;
     }
 

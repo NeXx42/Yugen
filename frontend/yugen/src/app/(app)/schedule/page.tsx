@@ -83,7 +83,7 @@ export default function () {
                     <a>{key}:00</a>
                 </div>
                 <div className="Schedule_Content_Entries">
-                    {data.map(d => <MediaCardHorizontal key={d.aniListId} card={d} />)}
+                    {data.map(d => <MediaCardHorizontal key={d.id} card={d} />)}
                 </div>
             </div>
         )

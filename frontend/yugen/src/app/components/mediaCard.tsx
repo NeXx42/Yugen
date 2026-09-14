@@ -1,7 +1,7 @@
 "use client"
 
 import * as api from "@lib/api.local"
-import { MediaCardInfo } from "@shared/types";
+import { MediaCardInfo, seasonLookup, statusLookup } from "@shared/types";
 
 import "./mediaCard.css"
 
@@ -24,7 +24,7 @@ export default function ({ Card, requestRefresh }: { Card: MediaCardInfo, reques
         e.stopPropagation();
         e.preventDefault();
 
-        api.library_ClearWatchHistory(Card.aniListId).then(() => {
+        api.library_ClearWatchHistory(Card.id).then(() => {
             if (requestRefresh != null) {
                 requestRefresh();
                 return;
@@ -34,7 +34,7 @@ export default function ({ Card, requestRefresh }: { Card: MediaCardInfo, reques
         });
     }
 
-    return (<a key={Card.aniListId} className="MediCard" href={`${Card.aniListId}`} style={{ "--hover-color": Card.colour } as React.CSSProperties} title={Card.title}>
+    return (<a key={Card.id} className="MediCard" href={`${Card.id}`} style={{ "--hover-color": Card.colour } as React.CSSProperties} title={Card.title}>
         <div className="MediaCard_Container">
             <div className="MediaCard_Img">
                 <img src={Card.cardImg} loading="lazy" decoding="async" />
@@ -59,13 +59,13 @@ export default function ({ Card, requestRefresh }: { Card: MediaCardInfo, reques
             </div>
             <div className={`MediaCard_Content`}>
                 <div className="MediaCard_Content_Title">
-                    {Card.status === "RELEASING" ? <div /> : <></>}
+                    {Card.status && statusLookup[Card.status] === "RELEASING" ? <div /> : <></>}
                     <h3 >{Card.title}</h3>
                 </div>
                 <div className="MediaCard_Content_Items">
                     {Card.type != null && <p>{Card.type}</p>}
                     {Card.year != null && <p>{Card.year}</p>}
-                    {Card.season != null && <p>{Card.season}</p>}
+                    {Card.season != null && <p>{seasonLookup[Card.season]}</p>}
                 </div>
             </div>
         </div>

@@ -76,7 +76,7 @@ export default function ({ criteria }: { criteria: SearchCriteria | null }) {
     }
 
     const drawCard = (inp: MediaCardInfo): ReactNode => {
-        return <MediaCard key={inp.aniListId} Card={inp} requestRefresh={() => setRefresh(refresh + 1)} />
+        return <MediaCard key={inp.id} Card={inp} requestRefresh={() => setRefresh(refresh + 1)} />
     }
     return (
         <div className="Library">

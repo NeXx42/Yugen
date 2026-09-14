@@ -11,7 +11,7 @@ import SettingsFoldout from "../foldouts/settingsFoldout";
 import ProfileFoldout from "../foldouts/profileFoldout";
 
 import "./topbar.css"
-import { MediaCardInfo } from "../shared/types";
+import { MediaCardInfo, seasonLookup } from "../shared/types";
 
 type FoldoutType = "None" | "Notifications" | "Settings";
 
@@ -89,7 +89,7 @@ export default function () {
 
     const renderQuickSearchResult = (card: MediaCardInfo): ReactNode => {
         return (
-            <a className="Topbar_QuickSearch_Result" key={card.aniListId} href={`${card.aniListId}`}>
+            <a className="Topbar_QuickSearch_Result" key={card.id} href={`${card.id}`}>
                 <div className="Topbar_QuickSearch_Result_Img">
                     {card.cardImg && <img src={card.cardImg} />}
                 </div>
@@ -99,7 +99,7 @@ export default function () {
                     </div>
                     <div className="Topbar_QuickSearch_Result_Info_Items">
                         {card.year && <p>{card.year}</p>}
-                        {card.season && <p>{card.season}</p>}
+                        {card.season && <p>{seasonLookup[card.season]}</p>}
                         {card.type && <p>{card.type}</p>}
                     </div>
                 </div>

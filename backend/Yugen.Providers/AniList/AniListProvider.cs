@@ -5,6 +5,8 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Yugen.Domain.Data;
 using Yugen.Domain.Data.Media;
+using Yugen.Domain.Enums;
+using Yugen.Domain.Helpers;
 using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models;
 using Yugen.Domain.Models.Linking;
@@ -157,7 +159,7 @@ public class AniListProvider : IMetaDataProvider
                     throw new Exception("Failed");
 
                 responses.AddRange(res.data.page.media);
-                await Task.Delay(200); // dont want to spam their servers
+                await Task.Delay(200); // don't want to spam their servers
             }
             catch (Exception e)
             {
@@ -178,13 +180,13 @@ public class AniListProvider : IMetaDataProvider
                 TitleEnglish = media.title?.english,
                 TitleNative = media.title?.native,
                 Description = media.description,
-                Status = media.status,
+                Status = media.status.ParseEnumNullable<MediaStatus>(),
                 MediaFormat = media.format,
                 SiteUrl = media.siteUrl,
 
                 Duration = media.duration,
                 EpisodeCount = media.episodes,
-                Season = media.season,
+                Season = media.season.ParseEnumNullable<MediaSeason>(),
                 Year = media.seasonYear,
                 AverageScore = media.averageScore,
                 MeanScore = media.meanScore,
@@ -567,7 +569,7 @@ public class AniListProvider : IMetaDataProvider
         }
     }
 
-    public async Task<string[]> FetchRecommendedMedia(Model_Link media)
+    public async Task<Dictionary<string, int?>> FetchRecommendedMedia(Model_Link media)
     {
         if (!media.anilist_id.HasValue)
             return [];
@@ -589,6 +591,7 @@ public class AniListProvider : IMetaDataProvider
         if ((res?.data?.media?.recommendations?.nodes?.Length ?? 0) == 0)
             return [];
 
-        return res!.data.media.recommendations!.nodes!.Select(n => n.mediaRecommendation.id.ToString()).ToArray();
+        return res!.data.media.recommendations!.nodes!
+            .ToDictionary(n => n.mediaRecommendation.id.ToString(), _ => (int?)null);
     }
 }

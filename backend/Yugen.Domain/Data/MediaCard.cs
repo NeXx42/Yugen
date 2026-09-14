@@ -1,4 +1,5 @@
 using Yugen.Domain.Data;
+using Yugen.Domain.Enums;
 using Yugen.Domain.Models.History;
 using Yugen.Domain.Models.Media;
 
@@ -6,15 +7,15 @@ namespace Yugen.Core.Data;
 
 public class MediaCard
 {
-    public required int aniListId { get; set; }
-    public string? Title { get; set; }
+    public required int id { get; set; }
+    public string? title { get; set; }
     public string? type { get; set; }
 
-    public string? status { get; set; }
+    public MediaStatus? status { get; set; }
     public long? nextReleaseDate { get; set; }
 
     public int? year { get; set; }
-    public string? season { get; set; }
+    public MediaSeason? season { get; set; }
 
     public string? colour { get; set; }
     public string? cardImg { get; set; }
@@ -28,8 +29,8 @@ public class MediaCard
     {
         return new MediaCard()
         {
-            aniListId = dbData.Id,
-            Title = dbData.TitleEnglish ?? dbData.TitleNative,
+            id = dbData.Id,
+            title = dbData.TitleEnglish ?? dbData.TitleNative,
 
             year = dbData.Year,
             season = dbData.Season,

@@ -35,7 +35,7 @@ export default function () {
         }
     }
 
-    const drawer = (c: MediaCardInfo) => <MediaCard key={c.aniListId} Card={c} />
+    const drawer = (c: MediaCardInfo) => <MediaCard key={c.id} Card={c} />
 
     const updateSort = (to: SortType) => {
         setPage(1);

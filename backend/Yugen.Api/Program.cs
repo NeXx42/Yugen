@@ -109,8 +109,8 @@ builder.Services.AddHostedService<SettingsInit>();
 
 if (builder.Environment.IsProduction())
 {
-    builder.Services.AddSingleton<IScheduledJob, LinkDownloadJob>();
     builder.Services.AddSingleton<IScheduledJob, EpisodeNotificationJob>();
+    builder.Services.AddSingleton<IScheduledJob, LinkDownloadJob>();
     builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Critical);
 }
 

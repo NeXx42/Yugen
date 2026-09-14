@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using Yugen.Domain.Enums;
 using Yugen.Domain.Models.Linking;
 
 namespace Yugen.Domain.Models.Media;
@@ -26,11 +26,11 @@ public class Model_Media
     public int? EpisodeCount { get; set; }
     public long? StartDate { get; set; }
     public long? EndDate { get; set; }
-    public string? Season { get; set; }
+    public MediaSeason? Season { get; set; }
     public int? Year { get; set; }
 
     public string? Description { get; set; }
-    public string? Status { get; set; }
+    public MediaStatus? Status { get; set; }
     public string? SiteUrl { get; set; }
 
     public int? AverageScore { get; set; }

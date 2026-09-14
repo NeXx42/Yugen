@@ -43,8 +43,8 @@ async function getWithAuth<T>(uri: string, nextCaching: NextFetchRequestConfig |
     }
 }
 
-export async function catalog_GetInfo(aniListId: number): Promise<CaughtResponse<MediaInfo>> {
-    return await getWithAuth<MediaInfo>(`catalog/${aniListId}`, {
+export async function catalog_GetInfo(id: number): Promise<CaughtResponse<MediaInfo>> {
+    return await getWithAuth<MediaInfo>(`catalog/${id}`, {
         revalidate: 60
     });
 }
@@ -57,8 +57,8 @@ export async function catalog_SearchCriteria(): Promise<CaughtResponse<SearchCri
 }
 
 
-export async function media_SyncWatchTime(aniListId: number): Promise<CaughtResponse<void>> {
-    return await postWithAuth(`media/${aniListId}/SyncWatchHistory`, {
+export async function media_SyncWatchTime(id: number): Promise<CaughtResponse<void>> {
+    return await postWithAuth(`media/${id}/SyncWatchHistory`, {
         revalidate: 60
     });
 }

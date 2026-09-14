@@ -65,7 +65,7 @@ public class TenraiMetadata_Responses_Anime
     {
         get
         {
-            if (!airing)
+            if (!airing || !(status ?? "").Equals("Currently Airing"))
                 return null;
 
             if (broadcast?.day != null && broadcast?.time != null && !string.IsNullOrEmpty(broadcast?.timezone))

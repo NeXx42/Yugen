@@ -1,4 +1,4 @@
-import { MediaCardInfo } from "@shared/types";
+import { MediaCardInfo, seasonLookup } from "@shared/types";
 import "./mediaCardHorizontal.css"
 
 interface Props {
@@ -22,7 +22,7 @@ export default function (props: Props) {
         return `${minutes}m`
     }
 
-    return (<a key={props.card.aniListId} className={`MediaCardHorizontal ${props.selected ? "Selected" : ""}`} href={`${props.card.aniListId}`} style={{ "--hover-color": props.card.colour } as React.CSSProperties}>
+    return (<a key={props.card.id} className={`MediaCardHorizontal ${props.selected ? "Selected" : ""}`} href={`${props.card.id}`} style={{ "--hover-color": props.card.colour } as React.CSSProperties}>
         <div className="MediaCardHorizontal_Content">
             {props.card.cardImg && <img className="MediaCardHorizontal_Icon" src={props.card.cardImg} loading="lazy" decoding="async" />}
             {props.card.banner &&
@@ -40,7 +40,7 @@ export default function (props: Props) {
                 <div>
                     {props.card.type != null && <p>{props.card.type}</p>}
                     {props.card.year != null && <p>{props.card.year}</p>}
-                    {props.card.season != null && <p>{props.card.season}</p>}
+                    {props.card.season != null && <p>{seasonLookup[props.card.season]}</p>}
                 </div>
             </div>
         </div>

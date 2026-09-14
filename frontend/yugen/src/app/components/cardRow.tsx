@@ -23,7 +23,7 @@ export default function (props: Props) {
         }
 
         return (<>
-            {props.cards?.map(x => <MediaCard Card={x} key={x.aniListId} />)}
+            {props.cards?.map(x => <MediaCard Card={x} key={x.id} />)}
         </>)
     }
 

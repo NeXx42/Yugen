@@ -9,6 +9,8 @@ public class Model_MediaRelation
     public required int MediaId { get; set; }
     public Model_Media? Media { get; set; }
 
+    public int? RelationScore { get; set; }
+
     [Required]
     public required int ConnectedMediaId { get; set; }
 }
