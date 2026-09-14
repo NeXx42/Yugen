@@ -102,10 +102,12 @@
     background-image: linear-gradient(to top, #000000ab, #0000004d, #0000);
 
     transition: all .3s ease-in-out;
+    cursor: none;
 }
 
 .VideoPlayer_Controls[data-visible] {
     opacity: 1;
+    cursor: unset;
 }
 
 .VideoPlayer_Controls_Top {

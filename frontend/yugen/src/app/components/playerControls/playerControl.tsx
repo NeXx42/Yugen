@@ -289,7 +289,7 @@ export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: 
 
                 <Controls.Root className="VideoPlayer_Controls" onClick={handleVideoClick}>
                     <Controls.Group className="VideoPlayer_Controls_Top">
-                        <h2>{episode.episodeInfo.title}</h2>
+                        <h2>{episode.episodeInfo.number === -1 ? "Film - " : `Episode ${episode.episodeInfo.number} - `} {episode.episodeInfo.title}</h2>
                     </Controls.Group>
 
                     <Controls.Group className="VideoPlayer_Controls_Bottom" onClick={e => e.stopPropagation()}>
