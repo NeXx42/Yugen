@@ -50,14 +50,17 @@ const bitrateOptions = [
     { value: 420_000, label: "420 Kbps" }
 ];
 
+interface MediaPlaybackManifest {
+    bitrate: number | undefined,
+    audioSource: number | null,
+    savedTime: number | null
+}
 
 export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: SelectedEpisodeInfo, syncLocalPlaytime?: (epId: number, percentage: number) => void, onFinished?: () => void }) {
     const source = episode.downloadInfo!.sources[0];
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
-    const [selectedAudio, setSelectedAudio] = useState<number | null>(() => {
-        return source.audio.find(a => a.isDefault)?.id ?? null;
-    });
+    const [currentManifest, setCurrentManifest] = useState<MediaPlaybackManifest>(({ bitrate: -1, audioSource: null, savedTime: null }));
 
     const [viewSubLogs, setViewSubLogs] = useState(false);
     const [selectedSub, setSelectedSub] = useState<number>(-1);
@@ -67,8 +70,6 @@ export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: 
 
     const [settingsMenu, setSettingsMenu] = useState<SettingsMenu>("None");
     const [activeSubMenu, setActiveSubMenu] = useState<MenuType>("None");
-
-    const [hlsBitrate, setHlsBitrate] = useState<number | undefined>(-1);
 
     useEffect(() => {
         if (videoRef.current == null)
@@ -80,12 +81,29 @@ export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: 
 
     }, [videoRef.current, selectedSub])
 
+    useEffect(() => {
+        setCurrentManifest(({
+            bitrate: -1,
+            audioSource: source.audio.find(a => a.isDefault)?.id ?? null,
+            savedTime: episode?.downloadInfo?.historicalTicks ? (episode.downloadInfo.historicalTicks / 10_000_000) : null
+        }));
+
+    }, [episode])
+
     const updateTotalSubtitleOffset = (to: number) => {
         const broad = Math.max(Math.min(20 * Math.round(to / 20), 40), -40);
         const off = to - broad
 
         setSubtitleBroadOffset(broad);
         setSubtitleOffset(off);
+    }
+
+    const updateManifest = <T extends keyof MediaPlaybackManifest>(key: T, value: MediaPlaybackManifest[T]) => {
+        setCurrentManifest(({
+            ...currentManifest,
+            [key]: value,
+            savedTime: videoRef.current?.currentTime ?? null
+        }));
     }
 
     const drawSubMenu = () => {
@@ -150,7 +168,7 @@ export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: 
                         content = (
                             <>
                                 <div className="SubMenu_Options SubMenu_Generic_Container">
-                                    {bitrateOptions.map(b => <button key={b.value} className={hlsBitrate === b.value ? "Selected" : ""} onClick={() => middleMan(() => setHlsBitrate(b.value))}>{b.label}</button>)}
+                                    {bitrateOptions.map(b => <button key={b.label} className={currentManifest.bitrate === b.value ? "Selected" : ""} onClick={() => middleMan(() => updateManifest("bitrate", b.value))}>{b.label}</button>)}
                                 </div>
                             </>
                         )
@@ -162,7 +180,7 @@ export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: 
                         {
                             hasBackButton && (
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" onClick={() => setSettingsMenu("None")}>
-                                    <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z" />
+                                    <path fillRule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z" />
                                     <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466" />
                                 </svg>
 
@@ -177,7 +195,7 @@ export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: 
                 return (<>
                     <h2>{activeSubMenu}</h2>
                     <div className="SubMenu_Audio SubMenu_Generic_Container">
-                        {source.audio.map(a => <div key={a.id} onClick={() => middleMan(() => setSelectedAudio(a.id))} className={a.id === selectedAudio ? "Selected" : ""}>{a.title}</div>)}
+                        {source.audio.map(a => <div key={a.id} onClick={() => middleMan(() => updateManifest("audioSource", a.id))} className={a.id === currentManifest.audioSource ? "Selected" : ""}>{a.title}</div>)}
                     </div>
                 </>)
         }
@@ -200,15 +218,13 @@ export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: 
     }
 
     const onMetadataLoad = (video: React.ChangeEvent<HTMLVideoElement>) => {
-        if (episode.downloadInfo?.historicalTicks == null)
+        if (currentManifest.savedTime == null)
             return;
 
-        const desiredDuration = episode.downloadInfo!.historicalTicks / 10_000_000
-
-        if (desiredDuration / video.currentTarget.duration >= EpisodeCompletionThreshold)
+        if (currentManifest.savedTime / video.currentTarget.duration >= EpisodeCompletionThreshold)
             return;
 
-        video.currentTarget.currentTime = desiredDuration;
+        video.currentTarget.currentTime = currentManifest.savedTime;
     };
 
     const syncPlaybackTime = (runtime: number, percentage: number) => {
@@ -241,13 +257,13 @@ export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: 
     }
 
     const getPlaybackUrl = () => {
-        const isHls = hlsBitrate != undefined;
+        const isHls = currentManifest.bitrate != undefined;
 
         const format = isHls ? "m3u8" : "mkv";
         let vidParams: string[] = [];
 
-        if (selectedAudio) {
-            vidParams.push(`audioStreamIndex=${selectedAudio}`)
+        if (currentManifest.audioSource) {
+            vidParams.push(`audioStreamIndex=${currentManifest.audioSource}`)
         }
 
         if (isHls) {
@@ -255,8 +271,8 @@ export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: 
             vidParams.push(`videoCodecs=${videoCodecs}`);
             vidParams.push(`audioCodecs=${audioCodecs}`);
 
-            if (hlsBitrate > 0)
-                vidParams.push(`bitrate=${hlsBitrate}`);
+            if (currentManifest.bitrate! > 0)
+                vidParams.push(`bitrate=${currentManifest.bitrate}`);
         }
 
         return `api/media/${episode.downloadInfo!.jellyfinId}/${0}/stream.${format}?${vidParams.join("&")}`;
@@ -274,10 +290,9 @@ export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: 
         <Player.Provider>
             <Container className="VideoPlayer_Container">
                 {
-                    hlsBitrate != undefined ? <HlsVideo src={playbackUrl} ref={videoRef} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={onMetadataLoad} onEnded={onComplete} />
-                        : <Video src={playbackUrl} ref={videoRef} playsInline autoPlay className="VideoPlayer_Video" onLoadedMetadata={onMetadataLoad} onEnded={onComplete} />
+                    currentManifest.bitrate != undefined ? <HlsVideo src={playbackUrl} ref={videoRef} playsInline autoPlay={true} className="VideoPlayer_Video" onLoadedMetadata={onMetadataLoad} onEnded={onComplete} />
+                        : <Video src={playbackUrl} ref={videoRef} playsInline autoPlay={true} className="VideoPlayer_Video" onLoadedMetadata={onMetadataLoad} onEnded={onComplete} />
                 }
-
 
                 <BufferingIndicator className="VideoPlayer_Buffering" />
                 <Gesture action="toggleFullscreen" type="doubletap" />
