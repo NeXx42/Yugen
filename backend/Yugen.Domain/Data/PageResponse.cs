@@ -8,6 +8,21 @@ public class PageResponse<T>
 
     public T[] data { get; set; }
 
+    public PageResponse(IEnumerable<int> ordering, IEnumerable<T> data, Func<T, int> getKey, int page, int pageSize, int count)
+    {
+        List<T> orderedData = new(Math.Min(ordering.Count(), data.Count()));
+        Dictionary<int, T> keyedData = data.ToDictionary(d => getKey(d), d => d);
+
+        foreach (int orderedKey in ordering)
+            if (keyedData.TryGetValue(orderedKey, out T? dat))
+                orderedData.Add(dat);
+
+        this.data = orderedData.ToArray();
+        this.page = page;
+        this.pageSize = pageSize;
+        this.totalResults = count;
+    }
+
     public PageResponse(T[] data, int page, int pageSize, int count)
     {
         this.data = data;

@@ -275,10 +275,10 @@ public class LibraryService
         int page = Math.Max(req?.page ?? 1, 1);
         int pageSize = req?.pageSize ?? 10;
 
-        List<int> ids = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-        MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds(ids);
+        int[] ids = await query.Skip((page - 1) * pageSize).Take(pageSize).ToArrayAsync();
+        MediaCard[] cardLookup = await _catalogService.GetOrCreateMediaCardsFromIds([.. ids]); // function consumes the list when working with the cache, so need it to not affect the relookup here
 
-        return new PageResponse<MediaCard>(cards, page, pageSize, totalResults);
+        return new PageResponse<MediaCard>(ids, cardLookup, c => c.id, page, pageSize, totalResults);
     }
 
     public async Task<PageResponse<MediaCard>> GetWatchHistory(UserSession usr, MediaSearchQuery? req)
@@ -301,12 +301,12 @@ public class LibraryService
         var history = await query.Skip((page - 1) * pageSize).Take(pageSize).ToArrayAsync();
 
         List<int> mediaIds = history.Select(m => m.Media.MediaId).ToList();
-        MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds(mediaIds);
+        MediaCard[] cards = await _catalogService.GetOrCreateMediaCardsFromIds([.. mediaIds]); // function consumes the list when working with the cache, so need it to not affect the relookup here
 
         foreach (var fullHistory in history)
             cards.FirstOrDefault(c => c.id == fullHistory.Media.MediaId)?.WithWatchInfo(fullHistory.Media, fullHistory.Episode);
 
-        return new PageResponse<MediaCard>(cards, page, pageSize, totalCount);
+        return new PageResponse<MediaCard>(mediaIds, cards, c => c.id, page, pageSize, totalCount);
     }
 
     public async Task UpdateBookmark(UserSession usr, int mediaId, int bookmarkId)
