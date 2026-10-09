@@ -294,4 +294,9 @@ public class TenraiMetadataProvider : IMetaDataProvider
 
         return res;
     }
+
+    public void ClearCache()
+    {
+        animeDetailsCache.Clear();
+    }
 }

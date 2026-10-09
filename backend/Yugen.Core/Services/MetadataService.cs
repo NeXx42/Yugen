@@ -162,4 +162,6 @@ public class MetadataService
 
         return reconstructedLookup;
     }
+
+    public void ClearCache() => _provider.ClearCache();
 }

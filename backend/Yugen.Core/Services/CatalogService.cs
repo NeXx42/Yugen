@@ -430,8 +430,6 @@ public class CatalogService
         await ClearCache();
     }
 
-    public async Task ClearCache() => _cache.Clear();
-
     public async Task<SearchCriteria> GetSearchCriteria()
     {
         if (!_settings.getCache.Get(ConfigKeys.HasSearchCriteriaCached, false))
@@ -489,7 +487,9 @@ public class CatalogService
 
         MediaCard[] mediaCards = await GetOrCreateMediaCardsFromIds(distinctMedia);
 
-        List<int> mediaOfInterest = mediaCards.Where(m => m.status == MediaStatus.RELEASING && m.nextReleaseDate.HasValue && m.nextReleaseDate < currentTime).Select(m => m.id).ToList();
+        List<int> mediaOfInterest = mediaCards.Where(m => (m.status == MediaStatus.RELEASING || m.status == MediaStatus.NOT_YET_RELEASED) && m.nextReleaseDate.HasValue && m.nextReleaseDate < currentTime)
+            .Select(m => m.id)
+            .ToList();
 
         Dictionary<int, long?> newEpisodes = await _currentProvider.GetTimeOfNextEpisodes(mediaOfInterest);
         Dictionary<int, Model_Media> dbEntries = await _db.media.Where(m => mediaOfInterest.Contains(m.Id)).ToDictionaryAsync(m => m.Id, m => m);
@@ -531,5 +531,11 @@ public class CatalogService
             await _db.AddRangeAsync(newNotifications);
 
         await _db.SaveChangesAsync();
+    }
+
+    public async Task ClearCache()
+    {
+        _cache.Clear();
+        _currentProvider.ClearCache();
     }
 }

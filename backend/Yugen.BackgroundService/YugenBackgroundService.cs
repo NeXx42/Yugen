@@ -1,11 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Yugen.Core.Services;
-using Yugen.Data;
 using Yugen.Domain.Interfaces;
-using Yugen.Domain.Models;
-using Yugen.Domain.Models.Media;
 
 namespace Yugen.YugenBackgroundService;
 
@@ -31,10 +26,13 @@ public class YugenBackgroundService : BackgroundService
         if (job.immediateStart)
             await RunJob(job, cancellationToken);
 
-        using var timer = new PeriodicTimer(job.GetInterval());
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            await job.WaitForNextTickAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
 
-        while (await timer.WaitForNextTickAsync(cancellationToken))
             await RunJob(job, cancellationToken);
+        }
     }
 
     private async Task RunJob(IScheduledJob job, CancellationToken cancellationToken)

@@ -26,4 +26,6 @@ public interface IMetaDataProvider
     public Task<Dictionary<string, int?>> FetchRecommendedMedia(Model_Link media);
 
     public Task<Dictionary<string, long?>> GetTimeOfNextEpisodes(ICollection<Model_Link> ids);
+
+    public void ClearCache();
 }

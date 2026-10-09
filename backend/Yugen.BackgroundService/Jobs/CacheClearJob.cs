@@ -1,25 +1,24 @@
 using Microsoft.Extensions.DependencyInjection;
 using Yugen.Core.Services;
-using Yugen.YugenBackgroundService;
 
 namespace Yugen.YugenBackgroundService.Jobs;
 
-public class LinkDownloadJob : IScheduledJob
+public class CacheClearJob : IScheduledJob
 {
-    public bool immediateStart => true;
+    public bool immediateStart => false;
 
     public async Task ExecuteAsync(IServiceScopeFactory factory, CancellationToken cancellationToken)
     {
         using var scope = factory.CreateScope();
 
-        LinkService linkFactory = scope.ServiceProvider.GetRequiredService<LinkService>();
-        await linkFactory.RedownloadLinks();
+        CatalogService catalogFactory = scope.ServiceProvider.GetRequiredService<CatalogService>();
+        await catalogFactory.ClearCache();
     }
 
     public async Task WaitForNextTickAsync(CancellationToken token)
     {
         DateTime now = DateTime.Now;
-        DateTime nextRun = now.Date;
+        DateTime nextRun = now.Date.AddHours(2);
 
         if (now >= nextRun)
             nextRun = nextRun.AddDays(1);

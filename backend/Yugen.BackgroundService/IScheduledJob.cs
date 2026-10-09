@@ -5,7 +5,7 @@ namespace Yugen.YugenBackgroundService;
 public interface IScheduledJob
 {
     public bool immediateStart { get; }
-    public TimeSpan GetInterval();
 
+    public Task WaitForNextTickAsync(CancellationToken token);
     public Task ExecuteAsync(IServiceScopeFactory factory, CancellationToken cancellationToken);
 }

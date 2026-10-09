@@ -594,4 +594,9 @@ public class AniListProvider : IMetaDataProvider
         return res!.data.media.recommendations!.nodes!
             .ToDictionary(n => n.mediaRecommendation.id.ToString(), _ => (int?)null);
     }
+
+    public void ClearCache()
+    {
+
+    }
 }

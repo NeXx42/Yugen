@@ -8,7 +8,6 @@ using Yugen.Core.Services;
 using Yugen.Data;
 using Yugen.Domain.Data.Users;
 using Yugen.Domain.Interfaces;
-using Yugen.Domain.Models;
 using Yugen.YugenBackgroundService;
 using Yugen.YugenBackgroundService.Jobs;
 
@@ -111,6 +110,8 @@ if (builder.Environment.IsProduction())
 {
     builder.Services.AddSingleton<IScheduledJob, EpisodeNotificationJob>();
     builder.Services.AddSingleton<IScheduledJob, LinkDownloadJob>();
+    builder.Services.AddSingleton<IScheduledJob, CacheClearJob>();
+
     builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Critical);
 }
 
