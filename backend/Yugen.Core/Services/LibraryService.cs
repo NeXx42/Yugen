@@ -205,7 +205,7 @@ public class LibraryService
         }
 
         List<Model_MediaEpisode> episodeMetadata = await _db.mediaEpisodes.Where(e => e.MediaId == mediaId).OrderBy(e => e.EpisodeNumber).ToListAsync();
-        List<Model_DownloadedEpisode> downloadMetadata = await _db.downloadedEpisodes.Where(e => e.MediaId == mediaId).OrderBy(e => e.EpisodeNumber).ToListAsync();
+        List<Model_DownloadedEpisode> downloadMetadata = await _db.downloadedEpisodes.Where(e => e.MediaId == mediaId && e.JellyfinId != null).OrderBy(e => e.EpisodeNumber).ToListAsync();
 
         Dictionary<int, (Model_MediaEpisode? metaData, Model_DownloadedEpisode? downloadData, Model_WatchedEpisode? watchData)>
             episodes = episodeMetadata.ToDictionary(e => e.EpisodeNumber, e => (metaData: e, downloadData: (Model_DownloadedEpisode?)null, watchData: (Model_WatchedEpisode?)null))!;
