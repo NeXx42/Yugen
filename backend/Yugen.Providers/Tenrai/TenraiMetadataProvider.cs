@@ -156,13 +156,26 @@ public class TenraiMetadataProvider : IMetaDataProvider
         if (!media.mal_id.HasValue)
             return [];
 
-        string uri = $"anime/{media.mal_id}/episodes";
-        var res = await _http.SendRequest<TenraiMetadata_Responses_Page<TenraiMetadata_Responses_Episode>>(uri, HttpMethod.Get);
+        int page = 1;
+        bool hasNextPage = true;
 
-        if ((res?.data?.Length ?? 0) == 0)
-            return [];
+        List<MediaEpisodeCreationModel> results = new();
 
-        return res!.data!.Select(Map).ToArray();
+        while (hasNextPage)
+        {
+            string uri = $"anime/{media.mal_id}/episodes?page={page}";
+            var res = await _http.SendRequest<TenraiMetadata_Responses_Page<TenraiMetadata_Responses_Episode>>(uri, HttpMethod.Get);
+
+            if ((res?.data?.Length ?? 0) == 0)
+                return [];
+
+            page++;
+            hasNextPage = res?.pagination?.has_next_page ?? false;
+
+            results.AddRange(res!.data!.Select(Map));
+        }
+
+        return results.ToArray();
 
         MediaEpisodeCreationModel Map(TenraiMetadata_Responses_Episode ep) =>
             new MediaEpisodeCreationModel
