@@ -7,6 +7,7 @@ import { ReactNode, useEffect, useState } from "react";
 
 import "./massSubtitleEditor.css"
 import { useToast } from "@/app/context/toast";
+import { LanguageCodes, Languages } from "@/app/shared/enum_Languages";
 
 export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
     const [loading, setLoading] = useState(false);
@@ -27,12 +28,12 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
         setLoading(false);
     }
 
-    const [selectedLanguage, setSelectedLanguage] = useState<string | undefined>(undefined);
+    const [selectedLanguage, setSelectedLanguage] = useState<string>(LanguageCodes[0]);
     const [inspectingFiles, setInspectingFiles] = useState<File[] | undefined>(undefined);
     const [selectedSubFile, setSelectedSubFile] = useState<(number | undefined)[] | undefined>(undefined);
 
     const uploadSelectedSubs = () => {
-        if (inspectingFiles === undefined || selectedSubFile === undefined || selectedLanguage === undefined)
+        if (inspectingFiles === undefined || selectedSubFile === undefined)
             return;
 
         setLoading(true);
@@ -75,24 +76,7 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
             <>
                 <div className="MassSubtitlesEditor_Settings">
                     <select name="language" value={selectedLanguage} onChange={e => setSelectedLanguage(e.target.value)}>
-                        <option value="eng">English</option>
-                        <option value="spa">Spanish</option>
-                        <option value="fra">French</option>
-                        <option value="deu">German</option>
-                        <option value="ita">Italian</option>
-                        <option value="por">Portuguese</option>
-                        <option value="nld">Dutch</option>
-                        <option value="swe">Swedish</option>
-                        <option value="nor">Norwegian</option>
-                        <option value="dan">Danish</option>
-                        <option value="fin">Finnish</option>
-                        <option value="pol">Polish</option>
-                        <option value="rus">Russian</option>
-                        <option value="tur">Turkish</option>
-                        <option value="ara">Arabic</option>
-                        <option value="zho">Chinese</option>
-                        <option value="jpn">Japanese</option>
-                        <option value="kor">Korean</option>
+                        {LanguageCodes.map(code => <option key={code} value={code}>{Languages[code]}</option>)}
                     </select>
 
                     <input type="file" name="subtitle" multiple accept=".srt,.vtt,.ass,.ssa" onChange={selectSubs} />

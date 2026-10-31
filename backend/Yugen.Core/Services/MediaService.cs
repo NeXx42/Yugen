@@ -32,14 +32,14 @@ public class MediaService
         _mediaProvider = new JellyfinMediaService(settings.Get(ConfigKeys.Jellyfin_Url), settings.Get(ConfigKeys.Jellyfin_ApiKey), logger);
     }
 
-    public async Task<PlaybackInfo> GetPlaybackInfo(UserSession usr, int? mediaId, int? episodeNumber, string jellyfinId)
+    public async Task<PlaybackInfo> GetPlaybackInfo(JWTUser usr, int? mediaId, int? episodeNumber, string jellyfinId)
     {
         PlaybackInfo info = await _mediaProvider.GetPlaybackInfo(jellyfinId);
 
         if (episodeNumber.HasValue && mediaId.HasValue)
         {
             Model_WatchedEpisode? episodeWatchData = await _db.watchHistory
-                .Where(w => w.UserId == usr.User.Id && w.MediaId == mediaId)
+                .Where(w => w.UserId == usr.Id && w.MediaId == mediaId)
                 .Include(w => w.WatchedEpisodes)
                 .SelectMany(w => w.WatchedEpisodes)
                 .FirstOrDefaultAsync(e => e.EpisodeNumber == episodeNumber);
@@ -53,7 +53,7 @@ public class MediaService
 
     public async Task<string> ProxyUrl(string relative, bool includeApiKey) => await _mediaProvider.ProxyUrl(relative, includeApiKey);
 
-    public async Task<HttpRequestMessage> GetPlaybackRequest(UserSession usr, string jellyfinId, int source, bool hls, long? bitrate = null, string? videoCodecs = "", string? audioCodecs = "", int? audioIndex = null)
+    public async Task<HttpRequestMessage> GetPlaybackRequest(JWTUser usr, string jellyfinId, int source, bool hls, long? bitrate = null, string? videoCodecs = "", string? audioCodecs = "", int? audioIndex = null)
     {
         string url = await _mediaProvider.GetPlaybackUrl(jellyfinId, source, hls, bitrate, videoCodecs, audioCodecs, audioIndex);
         HttpRequestMessage http = new HttpRequestMessage(HttpMethod.Get, url);
@@ -61,7 +61,7 @@ public class MediaService
         return http;
     }
 
-    public async Task<HttpRequestMessage> GetSubtitleRequest(UserSession usr, string jellyfinId, string mediaId, int subtitleId)
+    public async Task<HttpRequestMessage> GetSubtitleRequest(JWTUser usr, string jellyfinId, string mediaId, int subtitleId)
     {
         string url = await _mediaProvider.GetSubtitleUrl(jellyfinId, mediaId, subtitleId);
         HttpRequestMessage http = new HttpRequestMessage(HttpMethod.Get, url);
@@ -72,9 +72,9 @@ public class MediaService
 
 
 
-    public async Task<string?[]?> GetJellyfinIdsForEpisodes(UserSession usr, ICollection<Model_DownloadedEpisode> episodes) => await _mediaProvider.MapPathToJellyfinId(usr, episodes);
+    public async Task<string?[]?> GetJellyfinIdsForEpisodes(JWTUser usr, ICollection<Model_DownloadedEpisode> episodes) => await _mediaProvider.MapPathToJellyfinId(usr, episodes);
 
-    public async Task UpdateEpisodeWatchTime(UserSession usr, int mediaId, int epNumber, float percentage, long ticks)
+    public async Task UpdateEpisodeWatchTime(JWTUser usr, int mediaId, int epNumber, float percentage, long ticks)
     {
         Model_WatchHistory? history = await _db.watchHistory.Include(e => e.WatchedEpisodes).FirstOrDefaultAsync(e => e.MediaId == mediaId);
 
@@ -85,7 +85,7 @@ public class MediaService
                 MediaId = mediaId,
                 UpdatedTime = DateTime.UtcNow,
                 LastWatchedEpisodeNumber = epNumber,
-                UserId = usr.User.Id,
+                UserId = usr.Id,
 
                 WatchedEpisodes = [
                     new Model_WatchedEpisode(){

@@ -137,6 +137,7 @@ public class JellyfinMediaService : IMediaProvider
                 {
                     id = a.Index,
                     title = a.DisplayTitle ?? a.Title,
+                    language = a.Language,
                     isDefault = a.IsDefault ?? false
 
                 }).ToArray() ?? []
@@ -199,7 +200,7 @@ public class JellyfinMediaService : IMediaProvider
 
     public async Task<string> GetSubtitleUrl(string jellyfinId, string mediaId, int subtitleId) => $"{_url}/Videos/{jellyfinId}/{mediaId}/Subtitles/{subtitleId}/Stream.vtt?api_key={_apiKey}";
 
-    public async Task<string?[]?> MapPathToJellyfinId(UserSession usr, ICollection<Model_DownloadedEpisode> episodes)
+    public async Task<string?[]?> MapPathToJellyfinId(JWTUser usr, ICollection<Model_DownloadedEpisode> episodes)
     {
         Dictionary<string, List<Jellyfin_Response_Item>> byFilename = new(StringComparer.OrdinalIgnoreCase);
         int offset = 0;

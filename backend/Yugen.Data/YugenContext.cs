@@ -6,6 +6,7 @@ using Yugen.Domain.Models.History;
 using Yugen.Domain.Models.Library;
 using Yugen.Domain.Models.Linking;
 using Yugen.Domain.Models.Media;
+using Yugen.Domain.Models.User;
 
 namespace Yugen.Data;
 
@@ -43,6 +44,7 @@ public class YugenContext : DbContext
 
     public DbSet<UserModel> user { get; set; }
     public DbSet<Model_Notification> notifications { get; set; }
+    public DbSet<Model_UserSetting> userSettings => Set<Model_UserSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -82,6 +84,10 @@ public class YugenContext : DbContext
             .WithOne(m => m.link)
             .HasForeignKey<Model_Media>(m => m.Id);
 
+        modelBuilder.Entity<Model_UserSetting>().HasKey(u => new { u.UserId, u.Key });
+        modelBuilder.Entity<Model_UserSetting>()
+            .HasOne(us => us.User)
+            .WithMany(u => u.settings);
 
         Seed(modelBuilder);
     }

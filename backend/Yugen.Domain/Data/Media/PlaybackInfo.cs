@@ -41,6 +41,7 @@ public class PlaybackInfo
         {
             public required int id { get; set; }
             public string? title { get; set; }
+            public string? language { get; set; }
             public bool isDefault { get; set; }
         }
     }

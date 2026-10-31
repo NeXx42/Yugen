@@ -136,7 +136,7 @@ public class SettingsService
         }
     }
 
-    public async Task TriggerUpdate(UserSession usr)
+    public async Task TriggerUpdate(JWTUser usr)
     {
         // ;/
     }

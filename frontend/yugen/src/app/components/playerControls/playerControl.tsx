@@ -19,12 +19,14 @@ import WatchtimeSyncerPlayerControl from "@/app/components/playerControls/watcht
 import SegmentSkipperPlayerControl from "@/app/components/playerControls/segmentSkipperPlayerControl";
 import TimePlayerControl from "@/app/components/playerControls/timePlayerControl";
 
-import { ReactEventHandler, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import "./playerControl.css"
 import PlaybackSpeedListPlayerControl from "./playbackSpeedListPlayerControl";
 import { SelectedEpisodeInfo } from "@/app/(app)/[id]/mediaContainer";
-import { EpisodeCompletionThreshold } from "@/app/shared/types";
+import { EpisodeCompletionThreshold, Playback_Info_Subtitle } from "@/app/shared/types";
+import { useUser } from "@/app/context/userContext";
+import { UserSettingTypes } from "@/app/shared/enum_UserSettings";
 
 const Player = createPlayer({
     features: [
@@ -53,17 +55,19 @@ const bitrateOptions = [
 interface MediaPlaybackManifest {
     bitrate: number | undefined,
     audioSource: number | null,
-    savedTime: number | null
+    savedTime: number | null,
+    selectedSubtitle: Playback_Info_Subtitle | undefined;
 }
 
 export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: SelectedEpisodeInfo, syncLocalPlaytime?: (epId: number, percentage: number) => void, onFinished?: () => void }) {
+    const { session } = useUser();
+
     const source = episode.downloadInfo!.sources[0];
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
-    const [currentManifest, setCurrentManifest] = useState<MediaPlaybackManifest>(({ bitrate: -1, audioSource: null, savedTime: null }));
+    const [currentManifest, setCurrentManifest] = useState<MediaPlaybackManifest>(({ bitrate: -1, audioSource: null, savedTime: null, selectedSubtitle: undefined }));
 
     const [viewSubLogs, setViewSubLogs] = useState(false);
-    const [selectedSub, setSelectedSub] = useState<number>(-1);
 
     const [subtitleBroadOffset, setSubtitleBroadOffset] = useState<number>(0);
     const [subtitleOffset, setSubtitleOffset] = useState<number>(0);
@@ -72,20 +76,23 @@ export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: 
     const [activeSubMenu, setActiveSubMenu] = useState<MenuType>("None");
 
     useEffect(() => {
-        if (videoRef.current == null)
-            return;
+        let audioSourceId = source.audio.find(a => a.isDefault)?.id ?? null;
+        let selectedSubtitle: Playback_Info_Subtitle | undefined = undefined;
 
-        for (let i = 0; i < videoRef.current!.textTracks.length; i++) {
-            videoRef.current!.textTracks[i].mode = selectedSub === i ? "showing" : "disabled";
-        }
+        const preferredAudioLanguage = session?.settings?.[UserSettingTypes.PreferredAudioLanguage];
+        const preferredSubtitleLanguage = session?.settings?.[UserSettingTypes.PreferredSubtitleLanguage];
 
-    }, [videoRef.current, selectedSub])
+        if (preferredAudioLanguage)
+            audioSourceId = source.audio.find(a => a.language === preferredAudioLanguage)?.id ?? audioSourceId;
 
-    useEffect(() => {
+        if (preferredSubtitleLanguage)
+            selectedSubtitle = source.subs.find(a => a.language === preferredSubtitleLanguage) ?? undefined;
+
         setCurrentManifest(({
             bitrate: -1,
-            audioSource: source.audio.find(a => a.isDefault)?.id ?? null,
-            savedTime: episode?.downloadInfo?.historicalTicks ? (episode.downloadInfo.historicalTicks / 10_000_000) : null
+            audioSource: audioSourceId,
+            savedTime: episode?.downloadInfo?.historicalTicks ? (episode.downloadInfo.historicalTicks / 10_000_000) : null,
+            selectedSubtitle: selectedSubtitle
         }));
 
     }, [episode])
@@ -99,6 +106,7 @@ export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: 
     }
 
     const updateManifest = <T extends keyof MediaPlaybackManifest>(key: T, value: MediaPlaybackManifest[T]) => {
+        currentManifest[key] = value;
         setCurrentManifest(({
             ...currentManifest,
             [key]: value,
@@ -132,8 +140,8 @@ export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: 
                             </div>
                         </div>
                         <div className="SubMenu_Options SubMenu_Generic_Container">
-                            <div onClick={() => setSelectedSub(-1)} className={selectedSub === -1 ? "Selected" : ""}>Off</div>
-                            {source.subs.map((t, i) => <div key={i} onClick={() => middleMan(() => setSelectedSub(i))} className={selectedSub === i ? "Selected" : ""}>{t.title}</div>)}
+                            <div onClick={() => middleMan(() => updateManifest("selectedSubtitle", undefined))} className={currentManifest.selectedSubtitle === undefined ? "Selected" : ""}>Off</div>
+                            {source.subs.map((sub, i) => <div key={i} onClick={() => middleMan(() => updateManifest("selectedSubtitle", sub))} className={currentManifest.selectedSubtitle === sub ? "Selected" : ""}>{sub.title}</div>)}
                         </div>
                     </div>
                 </>)
@@ -298,7 +306,7 @@ export default function ({ episode, syncLocalPlaytime, onFinished }: { episode: 
                 <Gesture action="toggleFullscreen" type="doubletap" />
 
                 <WatchtimeSyncerPlayerControl syncFunc={syncPlaybackTime} />
-                <SubtitlesPlayerControl url={source.subs[selectedSub]?.uri} offset={subtitleBroadOffset + subtitleOffset} viewLogs={viewSubLogs} setViewLogs={setViewSubLogs} setOffset={updateTotalSubtitleOffset} />
+                <SubtitlesPlayerControl sub={currentManifest.selectedSubtitle} offset={subtitleBroadOffset + subtitleOffset} viewLogs={viewSubLogs} setViewLogs={setViewSubLogs} setOffset={updateTotalSubtitleOffset} />
 
                 <SegmentSkipperPlayerControl video={videoRef} info={episode.downloadInfo!} />
 

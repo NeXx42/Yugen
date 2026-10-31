@@ -34,7 +34,7 @@ public class NotificationController : ControllerBase
     [Authorize]
     public async Task<IResult> GetNotificationCount()
     {
-        HttpContext.GetUserFromSession(out UserSession usr);
+        User.GetUserFromSession(out JWTUser usr);
         return await ExceptionWrapper.WrapException(() => _notificationService.GetNotificationCount(usr));
     }
 
@@ -42,7 +42,7 @@ public class NotificationController : ControllerBase
     [Authorize]
     public async Task<IResult> GetNotifications()
     {
-        HttpContext.GetUserFromSession(out UserSession usr);
+        User.GetUserFromSession(out JWTUser usr);
         return await ExceptionWrapper.WrapException(() => _notificationService.GetNotifications(usr));
     }
 
@@ -50,7 +50,7 @@ public class NotificationController : ControllerBase
     [Authorize]
     public async Task<IResult> ReadNotification(int id)
     {
-        HttpContext.GetUserFromSession(out UserSession usr);
+        User.GetUserFromSession(out JWTUser usr);
         return await ExceptionWrapper.WrapException(() => _notificationService.ReadNotification(usr, id));
     }
 
@@ -58,21 +58,21 @@ public class NotificationController : ControllerBase
     [Authorize]
     public async Task<IResult> RemoveNotification(int id)
     {
-        HttpContext.GetUserFromSession(out UserSession usr);
+        User.GetUserFromSession(out JWTUser usr);
         return await ExceptionWrapper.WrapException(() => _notificationService.RemoveNotification(usr, id));
     }
 
     [HttpPost("Clear")]
     public async Task<IResult> ClearReadNotifications()
     {
-        HttpContext.GetUserFromSession(out UserSession usr);
+        User.GetUserFromSession(out JWTUser usr);
         return await ExceptionWrapper.WrapException(() => _notificationService.ClearReadNotifications(usr));
     }
 
     [HttpPost("ReadAll")]
     public async Task<IResult> ReadAllNotifications([FromQuery] string[] sources)
     {
-        HttpContext.GetUserFromSession(out UserSession usr);
+        User.GetUserFromSession(out JWTUser usr);
         return await ExceptionWrapper.WrapException(() => _notificationService.MarkAllAsRead(usr, sources));
     }
 }

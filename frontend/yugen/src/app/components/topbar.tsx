@@ -12,10 +12,13 @@ import ProfileFoldout from "../foldouts/profileFoldout";
 
 import "./topbar.css"
 import { MediaCardInfo, seasonLookup } from "../shared/types";
+import { useUser } from "../context/userContext";
 
 type FoldoutType = "None" | "Notifications" | "Settings";
 
 export default function () {
+    const { session } = useUser();
+
     const profileRef = useRef<HTMLDivElement>(null);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [currentFoldout, setCurrentFoldout] = useState<FoldoutType>("None")
@@ -26,14 +29,12 @@ export default function () {
     const [quickSearchOpen, setQuickSearchOpen] = useState(false);
     const [quickSearchItems, setQuickSearchItems] = useState<MediaCardInfo[] | undefined>();
 
-    const [authenticated, setAuthenticated] = useState(false);
-
     const navigate = useRouter();
     const search = (inpt: string) => navigate.push(`search?query=${inpt}`)
 
     useEffect(() => {
-        // replace with actual profile fetch
-        api.notification_Count().then(() => setAuthenticated(true)).catch(() => setAuthenticated(false));
+        if (session)
+            api.notification_Count().then(setNotificationCount);
 
         function handleClickOutside(event: MouseEvent) {
             if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -54,11 +55,6 @@ export default function () {
         };
 
     }, [])
-
-    useEffect(() => {
-        if (authenticated)
-            api.notification_Count().then(setNotificationCount);
-    }, [authenticated])
 
     useEffect(() => {
         const callback = () => {
@@ -85,7 +81,7 @@ export default function () {
     const renderFoldout = (): ReactNode => {
         switch (currentFoldout) {
             case "Notifications": return <NotificationFoldout refreshNumber={setNotificationCount} />
-            case "Settings": return <SettingsFoldout isAuthenticated={authenticated} requestClose={() => toggleFoldout("None")} />
+            case "Settings": return <SettingsFoldout requestClose={() => toggleFoldout("None")} />
         }
 
         return <></>
@@ -149,7 +145,7 @@ export default function () {
         </div>
         <div className="Topbar_Right">
             {
-                authenticated && (<>
+                session && (<>
                     <button className="Topbar_Right_Notifications Topbar_btn" onClick={() => toggleFoldout("Notifications")}>
                         <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 576 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
                             <path d="M567.938 243.908L462.25 85.374A48.003 48.003 0 0 0 422.311 64H153.689a48 48 0 0 0-39.938 21.374L8.062 243.908A47.994 47.994 0 0 0 0 270.533V400c0 26.51 21.49 48 48 48h480c26.51 0 48-21.49 48-48V270.533a47.994 47.994 0 0 0-8.062-26.625zM162.252 128h251.497l85.333 128H376l-32 64H232l-32-64H76.918l85.334-128z" />
@@ -165,7 +161,7 @@ export default function () {
                 <img loading="lazy" decoding="async" src="https://s4.anilist.co/file/anilistcdn/user/avatar/large/default.png"></img>
             </button>
             {
-                isProfileOpen && <ProfileFoldout isAuthenticated={authenticated} ref={profileRef} />
+                isProfileOpen && <ProfileFoldout ref={profileRef} />
             }
         </div>
         {

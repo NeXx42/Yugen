@@ -7,14 +7,20 @@ import { useEffect, useState } from "react"
 
 import "./settingsFoldout.css"
 import SettingsModal from "../modals/settingsModal";
+import { useUser } from "../context/userContext";
 
-export default function ({ isAuthenticated, requestClose }: { isAuthenticated: boolean, requestClose: () => void }) {
+export default function ({ requestClose }: { requestClose: () => void }) {
+    const { session } = useUser();
+
     const [modelOpen, setModalOpen] = useState(false);
     const [links, setLinks] = useState<{ jellyfin: string | null, sonarr: string | null, radarr: string | null }>({ jellyfin: null, sonarr: null, radarr: null });
 
     useEffect(() => {
-        api.settings_Links().then(setLinks);
-    }, [])
+        if (session)
+            api.settings_Links()
+                .then(setLinks);
+
+    }, [session])
 
     const pathname = usePathname();
     const navigate = useRouter();
@@ -46,7 +52,7 @@ export default function ({ isAuthenticated, requestClose }: { isAuthenticated: b
                                 Home
                             </button>
                             {
-                                isAuthenticated && (
+                                session && (
                                     <button className={getNavigationClassName("/library")} onClick={() => changePage("library")}>
                                         <svg height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M0 0h24v24H0V0z" fill="none" />
@@ -89,7 +95,7 @@ export default function ({ isAuthenticated, requestClose }: { isAuthenticated: b
                     </div>
 
                     {
-                        isAuthenticated && (
+                        session && (
                             <div className="Settings_Foldout_Bottom">
                                 <button onClick={() => setModalOpen(true)}>Settings</button>
                             </div>

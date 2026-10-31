@@ -4,6 +4,7 @@ import { selectTime, usePlayer } from "@videojs/react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import "./subtitlesPlayerControl.css"
+import { Playback_Info_Subtitle } from "@/app/shared/types";
 
 interface Cue {
     start: number;
@@ -12,7 +13,7 @@ interface Cue {
 }
 
 interface Props {
-    url: string | undefined,
+    sub: Playback_Info_Subtitle | undefined,
     offset: number,
     setOffset: (val: number) => void,
 
@@ -127,17 +128,17 @@ export default function (props: Props) {
     }
 
     useEffect(() => {
-        if (props.url === undefined) {
+        if (props.sub === undefined) {
             SetCues(undefined);
             return;
         }
 
-        fetch(props.url, {
+        fetch(props.sub.uri, {
             method: "GET",
             credentials: "include",
         }).then((r) => r.text().then(parseVtt));
 
-    }, [props.url])
+    }, [props.sub])
 
     if (cues === undefined)
         return <></>;

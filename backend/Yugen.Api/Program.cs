@@ -44,25 +44,6 @@ builder.Services.AddAuthentication(options =>
             return Task.CompletedTask;
         },
 
-        OnTokenValidated = async context =>
-        {
-            string? userId = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (userId == null)
-                return;
-
-            try
-            {
-                UserService userService = context.HttpContext.RequestServices.GetRequiredService<UserService>();
-                UserSession user = await userService.GetUser(Guid.Parse(userId));
-                context.HttpContext.Items["User"] = user;
-            }
-            catch // invalid user
-            {
-                context.Response.Cookies.Delete("AuthToken");
-            }
-        },
-
         OnAuthenticationFailed = context =>
         {
             Console.WriteLine(context.Exception);

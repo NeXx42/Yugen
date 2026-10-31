@@ -30,7 +30,7 @@ public class LinkService
         _library = LibraryFactory.Create(settings, logger);
     }
 
-    public async Task SaveManualLink(UserSession usr, LibraryProviderType provider, int mediaId, int linkedId, int? linkedSeason)
+    public async Task SaveManualLink(JWTUser usr, LibraryProviderType provider, int mediaId, int linkedId, int? linkedSeason)
     {
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(RedownloadLinks));
         Model_Link? existingLink = await _db.links.FirstOrDefaultAsync(l => l.MediaId == mediaId);
@@ -49,7 +49,7 @@ public class LinkService
         }
     }
 
-    public async Task RedownloadLinks(UserSession usr, bool force = false)
+    public async Task RedownloadLinks(JWTUser usr, bool force = false)
     {
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(RedownloadLinks));
 

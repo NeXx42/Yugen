@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Yugen.Api.Helpers;
 using Yugen.Core.Services;
 using Yugen.Domain.Data.Users;
 
@@ -28,22 +30,48 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<UserSession?> Login([FromBody] LoginRequest req)
+    public async Task<bool> Login([FromBody] LoginRequest req)
     {
-        UserSession? session = await _userService.LoginUser(req.username, req.password);
+        string? accessToken = await _userService.LoginUser(req.username, req.password);
 
-        if (session != null)
+        if (!string.IsNullOrEmpty(accessToken))
         {
-            HttpContext.Response.Cookies.Append("AuthToken", session.AccessToken, new CookieOptions
+            HttpContext.Response.Cookies.Append("AuthToken", accessToken, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTimeOffset.UtcNow.AddDays(7)
             });
+
+            return true;
         }
 
-        return session;
+        return false;
+    }
+
+    [HttpGet("Session")]
+    public async Task<UserSession?> GetSession()
+    {
+        User.TryGetUserFromSession(out JWTUser? usr);
+        return await _userService.GetSession(usr);
+    }
+
+    [Authorize]
+    [HttpPost("SaveSetting")]
+    public async Task<IResult> UpdateUserSetting([FromQuery] string key, [FromBody] string? value)
+    {
+        try
+        {
+            User.GetUserFromSession(out JWTUser usr);
+            await _userService.SaveUserSetting(usr.Id, key, value);
+
+            return Results.Ok();
+        }
+        catch
+        {
+            return Results.BadRequest();
+        }
     }
 
     [HttpPost("logout")]

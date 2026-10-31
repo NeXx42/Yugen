@@ -7,7 +7,7 @@ public class EndpointDeduplicator
 {
     private readonly ConcurrentDictionary<string, byte> _activeRequests = new();
 
-    public IDisposable? TryAcquire(UserSession? session, string endpointName, params string[] extra)
+    public IDisposable? TryAcquire(JWTUser? session, string endpointName, params string[] extra)
     {
         if (session == null)
             return null;

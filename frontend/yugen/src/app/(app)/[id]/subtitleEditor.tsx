@@ -5,6 +5,7 @@ import { useModals } from "@/app/context/modalContext";
 import { ReactNode, SubmitEvent, useEffect, useRef, useState } from "react"
 
 import "./subtitleEditor.css"
+import { LanguageCodes, Languages } from "@/app/shared/enum_Languages";
 
 interface Props {
     mediaInfo: MediaInfo,
@@ -50,25 +51,10 @@ export default function (props: Props) {
                 <h2>Episode {props.episodeInfo?.number}</h2>
                 <form onSubmit={uploadSubtitle}>
                     <div>
-                        <select name="language">
-                            <option value="eng">English</option>
-                            <option value="spa">Spanish</option>
-                            <option value="fra">French</option>
-                            <option value="deu">German</option>
-                            <option value="ita">Italian</option>
-                            <option value="por">Portuguese</option>
-                            <option value="nld">Dutch</option>
-                            <option value="swe">Swedish</option>
-                            <option value="nor">Norwegian</option>
-                            <option value="dan">Danish</option>
-                            <option value="fin">Finnish</option>
-                            <option value="pol">Polish</option>
-                            <option value="rus">Russian</option>
-                            <option value="tur">Turkish</option>
-                            <option value="ara">Arabic</option>
-                            <option value="zho">Chinese</option>
-                            <option value="jpn">Japanese</option>
-                            <option value="kor">Korean</option>
+                        <select name="language" value={LanguageCodes[0]}>
+                            {
+                                LanguageCodes.map(c => <option key={c} value={c}>{Languages[c]}</option>)
+                            }
                         </select>
                         <input type="file" name="subtitle" accept=".srt,.vtt,.ass,.ssa" />
                     </div>

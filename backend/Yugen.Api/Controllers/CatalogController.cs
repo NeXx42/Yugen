@@ -56,14 +56,14 @@ public class CatalogController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IResult> GetMediaInfo(int id)
     {
-        HttpContext.TryGetUserFromSession(out UserSession? usr);
+        User.TryGetUserFromSession(out JWTUser? usr);
         return await ExceptionWrapper.WrapException(() => _catalogService.GetMediaInfoForUser(usr, id));
     }
 
     [HttpPost("{mediaId}/Recommended")]
     public async Task<IResult> RecacheRecommended(int mediaId)
     {
-        HttpContext.TryGetUserFromSession(out UserSession? usr);
+        User.TryGetUserFromSession(out JWTUser? usr);
         return await ExceptionWrapper.WrapException(() => _catalogService.RecacheRecommended(usr, mediaId));
     }
 
@@ -73,7 +73,7 @@ public class CatalogController : ControllerBase
     {
         try
         {
-            HttpContext.GetUserFromSession(out UserSession usr);
+            User.GetUserFromSession(out JWTUser usr);
             await _linkService.RedownloadLinks(usr);
             return true;
         }

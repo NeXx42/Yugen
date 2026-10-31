@@ -97,7 +97,7 @@ public class CatalogService
         return pageResponse ?? new PageResponse<MediaCard>([], page, take, 0);
     }
 
-    public async Task<MediaInfo?> GetMediaInfoForUser(UserSession? usr, int mediaId)
+    public async Task<MediaInfo?> GetMediaInfoForUser(JWTUser? usr, int mediaId)
     {
         MediaInfo? info = await GetMediaInfo(mediaId);
 
@@ -114,7 +114,7 @@ public class CatalogService
         {
             if (usr != null)
             {
-                Model_UserBookmark? bookmark = await _db.userBookmarks.FirstOrDefaultAsync(b => b.UserId == usr.User.Id && b.MediaId == mediaId);
+                Model_UserBookmark? bookmark = await _db.userBookmarks.FirstOrDefaultAsync(b => b.UserId == usr.Id && b.MediaId == mediaId);
                 info.RegisterBookmark(bookmark);
             }
 
@@ -299,7 +299,7 @@ public class CatalogService
         return results.ToArray();
     }
 
-    public async Task RecacheRecommended(UserSession? usr, int mediaId)
+    public async Task RecacheRecommended(JWTUser? usr, int mediaId)
     {
         Model_Media? media = await _db.media
             .Include(m => m.link)

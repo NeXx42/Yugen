@@ -603,6 +603,23 @@ namespace Yugen.Data.Migrations
                     b.ToTable("tags");
                 });
 
+            modelBuilder.Entity("Yugen.Domain.Models.User.Model_UserSetting", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Key")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId", "Key");
+
+                    b.ToTable("userSettings");
+                });
+
             modelBuilder.Entity("Yugen.Domain.Models.UserModel", b =>
                 {
                     b.Property<Guid>("Id")
@@ -720,6 +737,17 @@ namespace Yugen.Data.Migrations
                     b.Navigation("Tag");
                 });
 
+            modelBuilder.Entity("Yugen.Domain.Models.User.Model_UserSetting", b =>
+                {
+                    b.HasOne("Yugen.Domain.Models.UserModel", "User")
+                        .WithMany("settings")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Yugen.Domain.Models.History.Model_WatchHistory", b =>
                 {
                     b.Navigation("WatchedEpisodes");
@@ -744,6 +772,11 @@ namespace Yugen.Data.Migrations
                     b.Navigation("RelatedMedia");
 
                     b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("Yugen.Domain.Models.UserModel", b =>
+                {
+                    b.Navigation("settings");
                 });
 #pragma warning restore 612, 618
         }

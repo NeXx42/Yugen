@@ -38,6 +38,12 @@ export interface User {
     id: string,
 }
 
+export interface UserSession {
+    name: string,
+    id: string,
+    settings: Record<string, string>
+}
+
 export interface MediaCardInfo {
     id: number,
     title: string,
@@ -243,6 +249,7 @@ export interface Playback_Info_Subtitle {
 export interface Playback_Info_AudioSource {
     id: number,
     title: string | undefined,
+    language: string | undefined,
     isDefault: boolean
 }
 

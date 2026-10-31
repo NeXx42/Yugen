@@ -1,7 +1,7 @@
 "use client"
 
 import { post, get, upload, deleteReq } from "./api.shared";
-import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo, SearchRequest, DownloadRequestInfo, MediaRequest, Playback_Info, MediaInfo, MediaSubtitle, CaughtResponse, MediaConnection } from "@shared/types";
+import { ConfigSetting, MediaCardInfo, PageResponse, User, UserNotification, MediaEpisodeInfo, SearchRequest, DownloadRequestInfo, MediaRequest, Playback_Info, MediaInfo, MediaSubtitle, CaughtResponse, MediaConnection, UserSession } from "@shared/types";
 
 export async function auth_Login(username: string, password: string) {
     return (await post<User>("auth/login", { username, password }))!;
@@ -12,7 +12,12 @@ export async function auth_Logout() {
 export async function getAllUsers(): Promise<User[]> {
     return (await get("Auth/all"))!;
 }
-
+export async function getSession(): Promise<UserSession> {
+    return (await get<UserSession>("Auth/session"))!;
+}
+export async function auth_SaveUserSetting(key: string, value: string) {
+    return (await post<UserSession>(`Auth/SaveSetting?key=${key}`, value))!;
+}
 
 export async function setup_Check() {
     return (await get("Settings/Setup"))

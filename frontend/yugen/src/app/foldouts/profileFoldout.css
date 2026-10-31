@@ -55,3 +55,9 @@
     background-color: var(--primary-accent-bg);
     color: var(--primary-accent);
 }
+
+.Profile>span {
+    color: red;
+    font-size: 12px;
+    align-self: center;
+}

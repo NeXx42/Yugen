@@ -2,29 +2,60 @@
 
 import * as api from "@lib/api.local"
 
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ComponentType, ReactNode, useEffect, useState } from "react";
 import { useToast } from "@/app/context/toast"
 
 import "./settingsModal.css"
 import { useModals } from "../context/modalContext";
 import LoadingModal from "./loadingModal";
 
+import appSettings from "./settings/appSettings";
+import externalSettings from "./settings/externalSettings";
+import librarySettings from "./settings/librarySettings";
+import userSettings from "./settings/userSettings";
 
-type SettingsGroup = "App" | "External" | "Library";
-const groups: SettingsGroup[] = ["App", "External", "Library"];
+
+export interface SettingsGroupProps {
+    Button: (label: string, btnLabel: string, btnClass: string, action: () => Promise<void>, suppressToast?: boolean) => ReactNode;
+    Toggle: (label: string, configKey: string) => ReactNode;
+    ApiGroup: (label: string, apiUrlKey: string, apiKeyKey: string) => ReactNode;
+    Dropdown: (label: string, optionKey: string, options: string[], callback?: (to: string) => Promise<void>) => ReactNode;
+
+    ShowToast: (msg: string, type?: string) => void;
+}
+
+interface SettingsGroup {
+    type: SettingsGroupType;
+    node: ComponentType<SettingsGroupProps>;
+}
+
+type SettingsGroupType = "App" | "External" | "Library" | "User";
+const groups: SettingsGroup[] = [
+    {
+        type: "App",
+        node: appSettings
+    },
+    {
+        type: "External",
+        node: externalSettings
+    },
+    {
+        type: "Library",
+        node: librarySettings
+    },
+    {
+        type: "User",
+        node: userSettings
+    },
+];
 
 
 export default function () {
     const { showToast } = useToast();
     const { showModal, closeModal } = useModals();
 
-    const filePicker = useRef<HTMLInputElement>(null);
-
-
-    const [selectedSettingsGroup, setSelectedSettingsGroup] = useState<SettingsGroup>(groups[0]);
-    const [savedConfigValues, setSavedConfigValues] = useState<Record<string, string>>()
-
-    const [filePickerCall, setFilePickerCallback] = useState<(() => void) | undefined>();
+    const [selectedSettingsGroup, setSelectedSettingsGroup] = useState<SettingsGroupType>("App");
+    const [savedConfigValues, setSavedConfigValues] = useState<Record<string, string>>();
 
     const loadApiRequest = (loading: () => Promise<any>) => {
         showModal(<LoadingModal closeRequest={closeModal} loadingCall={loading} />)
@@ -38,89 +69,9 @@ export default function () {
         ));
     }, [])
 
-    const tryToImportLibrary = async () => {
-        setFilePickerCallback(() => () => {
-            if (filePicker?.current?.files?.[0] == undefined) {
-                showToast("Invalid file", "Error")
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append("file", filePicker!.current!.files![0]!);
-
-            api.library_Upload(formData).then(() => {
-                showToast("Imported");
-            }).catch(() => {
-                showToast("Failed", "Error");
-            });
-        })
-
-        if (filePicker?.current == undefined) {
-            showToast("File picked doesnt exist", "Error")
-            return;
-        }
-
-        filePicker.current.accept = ".txt";
-        filePicker.current.click();
-    }
-
     const renderSettingsGroup = (): ReactNode => {
-        switch (selectedSettingsGroup) {
-            case "App":
-                return (
-                    <>
-                        <h2>Settings</h2>
-                        <div className="Settings_Menu_Content_Entries_Settings">
-                            {renderSetting_Toggle("Allow adult content", "AdultContent")}
-                        </div>
-
-                        <h2>Caching</h2>
-                        <div className="Settings_Menu_Content_Entries_Settings">
-                            {renderSetting_Button("Clear cache", "Clear", "Negative", api.catalog_ClearCache)}
-                            {renderSetting_Button("Clear database cache", "Clear", "Negative", api.catalog_ClearDatabase)}
-                        </div>
-                    </>)
-
-            case "External":
-                const librarySyncCallback = async () => {
-                    try {
-                        const importCount = await api.library_sync();
-                        showToast(`Imported ${importCount}`);
-                    } catch {
-                        showToast("Failed import", "Error");
-                    }
-                }
-                return (<>
-                    <h2>Metadata</h2>
-                    <div className="Settings_Menu_Content_Entries_Settings">
-                        {renderSettings_Dropdown("Metadata provider", "MetadataProviderId", ["Anilist", "Tenrai"])}
-                        {renderSetting_Button("Update links", "Download", "", api.catalog_ReloadLinks)}
-                    </div >
-
-                    <h2>Jellyfin</h2>
-                    <div className="Settings_Menu_Content_Entries_Settings">
-                        {renderSetting_ApiGroup("Jellyfin API", "Jellyfin_Url", "Jellyfin_ApiKey")}
-                    </div >
-
-                    <h2>Indexers</h2>
-                    <div className="Settings_Menu_Content_Entries_Settings">
-                        {renderSetting_Button("Sync Downloads", "Sync", "", librarySyncCallback)}
-                        {renderSetting_ApiGroup("Sonarr API", "Sonarr_Url", "Sonarr_ApiKey")}
-                        {renderSetting_ApiGroup("Radarr API", "Radarr_Url", "Radarr_ApiKey")}
-                    </div >
-
-                </>)
-
-            case "Library":
-                return (<>
-                    <h2>Import / Export</h2>
-                    <div className="Settings_Menu_Content_Entries_Settings">
-                        {renderSetting_Button("Import Library", "Import", "", tryToImportLibrary)}
-                    </div >
-                </>)
-        }
-
-        return <></>
+        const SettingGroupType = groups.filter(g => g.type === selectedSettingsGroup)[0].node
+        return <SettingGroupType Button={renderSetting_Button} Toggle={renderSetting_Toggle} ApiGroup={renderSetting_ApiGroup} Dropdown={renderSettings_Dropdown} ShowToast={showToast} />
     }
 
     const renderSetting_Toggle = (label: string, configKey: string): ReactNode => {
@@ -222,11 +173,16 @@ export default function () {
         )
     }
 
-    const renderSettings_Dropdown = (label: string, optionKey: string, options: string[]): ReactNode => {
+    const renderSettings_Dropdown = (label: string, optionKey: string, options: string[], callback?: (value: string) => void): ReactNode => {
         if (savedConfigValues === undefined)
             return (<>LOADING...</>)
 
         const updateKey = async (to: string) => {
+            if (callback) {
+                callback(to);
+                return;
+            }
+
             await setSavedConfigValues((prev) => {
                 if (prev === undefined) return prev;
                 return {
@@ -257,14 +213,13 @@ export default function () {
 
     return (
         <div className="Settings_Menu" onClick={e => e.stopPropagation()}>
-            <input ref={filePicker} type="file" hidden onChange={() => filePickerCall?.()} />
 
             <header className="Settings_Menu_Header">
                 <h1>Settings</h1>
             </header>
             <div className="Settings_Menu_Content">
                 <aside className="Settings_Menu_Content_Sidebar">
-                    {groups.map(g => <button className={g === selectedSettingsGroup ? "Selected" : ""} key={g} onClick={() => setSelectedSettingsGroup(g)}>{g}</button>)}
+                    {groups.map(g => <button className={g.type === selectedSettingsGroup ? "Selected" : ""} key={g.type} onClick={() => setSelectedSettingsGroup(g.type)}>{g.type}</button>)}
                 </aside>
                 <div className="Settings_Menu_Content_Entries">
                     <div>

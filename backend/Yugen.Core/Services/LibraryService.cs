@@ -56,7 +56,7 @@ public class LibraryService
         _library = LibraryFactory.Create(settings, loggingService);
     }
 
-    public async Task<Model_DownloadedMedia?> RecheckDownloads(UserSession usr, int mediaId, bool force = false)
+    public async Task<Model_DownloadedMedia?> RecheckDownloads(JWTUser usr, int mediaId, bool force = false)
     {
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(RecheckDownloads), mediaId.ToString());
 
@@ -103,7 +103,7 @@ public class LibraryService
         return downloadedMedia;
     }
 
-    public async Task<int?> ResyncLibrary(UserSession usr)
+    public async Task<int?> ResyncLibrary(JWTUser usr)
     {
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(ResyncLibrary));
 
@@ -161,7 +161,7 @@ public class LibraryService
         return importCount;
     }
 
-    public async Task<EpisodeInfo?> GetFilmEpisodeContainer(UserSession? usr, int mediaId, bool refetch)
+    public async Task<EpisodeInfo?> GetFilmEpisodeContainer(JWTUser? usr, int mediaId, bool refetch)
     {
         Model_DownloadedMedia? media = await _db.downloadedMedia.Include(m => m.downloadedEpisodes).FirstOrDefaultAsync(m => m.MediaId == mediaId);
 
@@ -174,12 +174,12 @@ public class LibraryService
         Model_WatchHistory? history = null;
 
         if (usr != null)
-            history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.User.Id && w.MediaId == mediaId);
+            history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.Id && w.MediaId == mediaId);
 
         return EpisodeInfo.Map((null, media.downloadedEpisodes.ElementAt(0), history?.WatchedEpisodes.FirstOrDefault()));
     }
 
-    public async Task<EpisodeInfo[]> GetMediaEpisodesForUser(UserSession? usr, int mediaId, bool refetch, bool clearOld)
+    public async Task<EpisodeInfo[]> GetMediaEpisodesForUser(JWTUser? usr, int mediaId, bool refetch, bool clearOld)
     {
         Model_Media? media = await _db.media.FirstOrDefaultAsync(m => m.Id == mediaId);
 
@@ -226,7 +226,7 @@ public class LibraryService
 
         if (usr != null)
         {
-            history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.User.Id && w.MediaId == mediaId); ;
+            history = await _db.watchHistory.Include(w => w.WatchedEpisodes).FirstOrDefaultAsync(w => w.UserId == usr.Id && w.MediaId == mediaId); ;
 
             foreach (Model_WatchedEpisode watch in history?.WatchedEpisodes ?? [])
             {
@@ -238,7 +238,7 @@ public class LibraryService
         return episodes.Values.Select(EpisodeInfo.Map).ToArray();
     }
 
-    public async Task<PageResponse<MediaCard>> SearchLibrary(UserSession session, MediaSearchQuery? req, string group)
+    public async Task<PageResponse<MediaCard>> SearchLibrary(JWTUser session, MediaSearchQuery? req, string group)
     {
         IQueryable<int>? query = null;
 
@@ -259,7 +259,7 @@ public class LibraryService
                 if (Enum.TryParse(group, out BookmarkType bookmarkType))
                 {
                     query = _db.userBookmarks
-                        .Where(b => b.UserId == session.User.Id && b.BookmarkId == (int)bookmarkType)
+                        .Where(b => b.UserId == session.Id && b.BookmarkId == (int)bookmarkType)
                         .OrderByDescending(b => b.DateAdded)
                         .Select(b => b.MediaId);
                 }
@@ -281,14 +281,14 @@ public class LibraryService
         return new PageResponse<MediaCard>(ids, cardLookup, c => c.id, page, pageSize, totalResults);
     }
 
-    public async Task<PageResponse<MediaCard>> GetWatchHistory(UserSession usr, MediaSearchQuery? req)
+    public async Task<PageResponse<MediaCard>> GetWatchHistory(JWTUser usr, MediaSearchQuery? req)
     {
         int page = Math.Max(req?.page ?? 1, 1);
         int pageSize = req?.pageSize ?? 10;
 
         var query = _db.watchHistory
             .Include(w => w.WatchedEpisodes)
-            .Where(w => w.UserId == usr.User.Id && w.LastWatchedEpisodeNumber.HasValue)
+            .Where(w => w.UserId == usr.Id && w.LastWatchedEpisodeNumber.HasValue)
             .OrderByDescending(w => w.UpdatedTime)
             .Select(w => new
             {
@@ -309,11 +309,11 @@ public class LibraryService
         return new PageResponse<MediaCard>(mediaIds, cards, c => c.id, page, pageSize, totalCount);
     }
 
-    public async Task UpdateBookmark(UserSession usr, int mediaId, int bookmarkId)
+    public async Task UpdateBookmark(JWTUser usr, int mediaId, int bookmarkId)
     {
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(UpdateBookmark), mediaId.ToString());
 
-        _db.RemoveRange(_db.userBookmarks.Where(b => b.UserId == usr.User.Id && b.MediaId == mediaId));
+        _db.RemoveRange(_db.userBookmarks.Where(b => b.UserId == usr.Id && b.MediaId == mediaId));
 
         if (bookmarkId <= 0 || bookmarkId > (int)BookmarkType.Dropped)
             return;
@@ -321,14 +321,14 @@ public class LibraryService
         await _db.AddAsync(new Model_UserBookmark()
         {
             MediaId = mediaId,
-            UserId = usr.User.Id,
+            UserId = usr.Id,
             BookmarkId = bookmarkId,
             DateAdded = DateTime.UtcNow,
         });
         await _db.SaveChangesAsync();
     }
 
-    public async Task UploadLibrary(UserSession usr, IFormFile file)
+    public async Task UploadLibrary(JWTUser usr, IFormFile file)
     {
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(UploadLibrary));
 
@@ -350,7 +350,7 @@ public class LibraryService
                     {
                         allBookmarks.AddRange(currentGroup.Select(i => new Model_UserBookmark()
                         {
-                            UserId = usr.User.Id,
+                            UserId = usr.Id,
                             MediaId = i,
                             BookmarkId = (int)currentGroupHeader.Value,
                             DateAdded = dateAdded,
@@ -393,19 +393,19 @@ public class LibraryService
         {
             allBookmarks.AddRange(currentGroup.Select(i => new Model_UserBookmark()
             {
-                UserId = usr.User.Id,
+                UserId = usr.Id,
                 MediaId = i,
                 BookmarkId = (int)currentGroupHeader.Value,
                 DateAdded = dateAdded,
             }));
         }
 
-        _db.RemoveRange(_db.userBookmarks.Where(b => b.UserId == usr.User.Id));
+        _db.RemoveRange(_db.userBookmarks.Where(b => b.UserId == usr.Id));
         await _db.SaveChangesAsync();
         await _db.BulkInsertAsync(allBookmarks);
     }
 
-    public async Task<bool> RequestSeries(UserSession usr, int mediaId, DownloadRequest request)
+    public async Task<bool> RequestSeries(JWTUser usr, int mediaId, DownloadRequest request)
     {
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(RequestSeries), mediaId.ToString());
 
@@ -433,7 +433,7 @@ public class LibraryService
         return false;
     }
 
-    public async Task ResearchDownloads(UserSession usr, int mediaId)
+    public async Task ResearchDownloads(JWTUser usr, int mediaId)
     {
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(GetSeriesRequestInfo), mediaId.ToString());
 
@@ -441,7 +441,7 @@ public class LibraryService
         if (media != null) await _library.GetFactory(media).ResearchMedia(media);
     }
 
-    public async Task<DownloadRequestInfo> GetSeriesRequestInfo(UserSession usr, int mediaId)
+    public async Task<DownloadRequestInfo> GetSeriesRequestInfo(JWTUser usr, int mediaId)
     {
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(GetSeriesRequestInfo), mediaId.ToString());
 
@@ -485,7 +485,7 @@ public class LibraryService
         return requestInfo;
     }
 
-    public async Task DeleteMedia(UserSession usr, int mediaId)
+    public async Task DeleteMedia(JWTUser usr, int mediaId)
     {
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(DeleteMedia), mediaId.ToString());
 
@@ -501,9 +501,9 @@ public class LibraryService
         }
     }
 
-    public async Task ClearMediaHistory(UserSession usr, int mediaId)
+    public async Task ClearMediaHistory(JWTUser usr, int mediaId)
     {
-        _db.RemoveRange(_db.watchHistory.Include(h => h.WatchedEpisodes).Where(e => e.UserId == usr.User.Id && e.MediaId == mediaId));
+        _db.RemoveRange(_db.watchHistory.Include(h => h.WatchedEpisodes).Where(e => e.UserId == usr.Id && e.MediaId == mediaId));
 
         await _db.SaveChangesAsync();
 

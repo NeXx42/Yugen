@@ -75,14 +75,14 @@ public class NotificationService
             return link;
         }
 
-        async Task RefreshDownloads(int mediaId) => await _library.RecheckDownloads(UserSession.Master, mediaId, true);
+        async Task RefreshDownloads(int mediaId) => await _library.RecheckDownloads(JWTUser.SystemStandIn, mediaId, true);
     }
 
-    public async Task<Notification[]> GetNotifications(UserSession usr)
+    public async Task<Notification[]> GetNotifications(JWTUser usr)
     {
         Model_Notification[] notifis = await _db.notifications
             .OrderByDescending(n => n.Date)
-            .Where(n => n.UserId == usr.User.Id)
+            .Where(n => n.UserId == usr.Id)
             .Take(99)
             .ToArrayAsync();
 
@@ -116,11 +116,11 @@ public class NotificationService
         return results.ToArray();
     }
 
-    public async Task<int> GetNotificationCount(UserSession usr) => await _db.notifications.Where(n => n.UserId == usr.User.Id && n.HasInteracted != true).CountAsync();
+    public async Task<int> GetNotificationCount(JWTUser usr) => await _db.notifications.Where(n => n.UserId == usr.Id && n.HasInteracted != true).CountAsync();
 
-    public async Task ReadNotification(UserSession usr, int id)
+    public async Task ReadNotification(JWTUser usr, int id)
     {
-        Model_Notification? notif = await _db.notifications.FirstOrDefaultAsync(n => n.Id == id && n.UserId == usr.User.Id);
+        Model_Notification? notif = await _db.notifications.FirstOrDefaultAsync(n => n.Id == id && n.UserId == usr.Id);
 
         if (notif == null)
             return;
@@ -129,21 +129,21 @@ public class NotificationService
         await _db.SaveChangesAsync();
     }
 
-    public async Task RemoveNotification(UserSession usr, int id)
+    public async Task RemoveNotification(JWTUser usr, int id)
     {
-        _db.Remove(_db.notifications.First(n => n.Id == id && n.UserId == usr.User.Id));
+        _db.Remove(_db.notifications.First(n => n.Id == id && n.UserId == usr.Id));
         await _db.SaveChangesAsync();
     }
 
-    public async Task ClearReadNotifications(UserSession usr)
+    public async Task ClearReadNotifications(JWTUser usr)
     {
-        _db.RemoveRange(_db.notifications.Where(n => n.UserId == usr.User.Id && n.HasInteracted));
+        _db.RemoveRange(_db.notifications.Where(n => n.UserId == usr.Id && n.HasInteracted));
         await _db.SaveChangesAsync();
     }
 
-    public async Task MarkAllAsRead(UserSession usr, string[] sources)
+    public async Task MarkAllAsRead(JWTUser usr, string[] sources)
     {
-        Model_Notification[] notifications = await _db.notifications.Where(n => n.UserId == usr.User.Id && !n.HasInteracted && (sources.Length == 0 || sources.Contains(n.Source))).ToArrayAsync();
+        Model_Notification[] notifications = await _db.notifications.Where(n => n.UserId == usr.Id && !n.HasInteracted && (sources.Length == 0 || sources.Contains(n.Source))).ToArrayAsync();
 
         foreach (Model_Notification notification in notifications)
             notification.HasInteracted = true;

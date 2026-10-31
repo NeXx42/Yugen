@@ -102,7 +102,7 @@ public class SettingsController : ControllerBase
     {
         try
         {
-            HttpContext.GetUserFromSession(out UserSession usr);
+            User.GetUserFromSession(out JWTUser usr);
             await _settings.TriggerUpdate(usr);
 
             return Ok();

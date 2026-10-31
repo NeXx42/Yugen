@@ -26,14 +26,14 @@ public class MediaController : ControllerBase
     [HttpGet("{jellyfinId}/PlaybackInfo")]
     public async Task<PlaybackInfo> PlaybackInfo(string jellyfinId, [FromQuery] int? mediaId, [FromQuery] int? episodeNumber)
     {
-        HttpContext.GetUserFromSession(out var usr);
+        User.GetUserFromSession(out var usr);
         return await _mediaService.GetPlaybackInfo(usr, mediaId, episodeNumber, jellyfinId);
     }
 
     [HttpGet("{jellyfinId}/{source}/stream.mkv")]
     public async Task Stream(string jellyfinId, int source)
     {
-        HttpContext.GetUserFromSession(out var usr);
+        User.GetUserFromSession(out var usr);
         HttpRequestMessage request = await _mediaService.GetPlaybackRequest(usr, jellyfinId, source, false);
 
         if (Request.Headers.TryGetValue("Range", out var rangeHeader) && System.Net.Http.Headers.RangeHeaderValue.TryParse(rangeHeader, out var range))
@@ -57,7 +57,7 @@ public class MediaController : ControllerBase
     [HttpGet("{jellyfinId}/{source}/stream.m3u8")]
     public async Task StreamHLS(string jellyfinId, int source, [FromQuery] long? bitrate, [FromQuery] string videoCodecs, [FromQuery] string audioCodecs, [FromQuery] int? audioStreamIndex, CancellationToken cancellationToken)
     {
-        HttpContext.GetUserFromSession(out var usr);
+        User.GetUserFromSession(out var usr);
         HttpRequestMessage request = await _mediaService.GetPlaybackRequest(usr, jellyfinId, source, true, bitrate, videoCodecs, audioCodecs, audioStreamIndex);
 
         await ProxyRequest(request, cancellationToken);
@@ -104,7 +104,7 @@ public class MediaController : ControllerBase
     [HttpGet("{jellyfinId}/{mediaId}/{subtitleId}/Subtitle")]
     public async Task GetSubtitle(string jellyfinId, string mediaId, int subtitleId)
     {
-        HttpContext.GetUserFromSession(out var usr);
+        User.GetUserFromSession(out var usr);
         HttpRequestMessage request = await _mediaService.GetSubtitleRequest(usr, jellyfinId, mediaId, subtitleId);
 
         using (HttpResponseMessage response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
@@ -131,7 +131,7 @@ public class MediaController : ControllerBase
     {
         long ticks = new DateTimeOffset().AddSeconds(data.runtimeSeconds).Ticks;
 
-        HttpContext.GetUserFromSession(out var usr);
+        User.GetUserFromSession(out var usr);
         await _mediaService.UpdateEpisodeWatchTime(usr, mediaId, episode, data.percentage, ticks);
     }
 

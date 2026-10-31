@@ -6,8 +6,14 @@ import CardRow from "@/app/components/cardRow";
 import { useEffect, useMemo } from "react";
 import { MediaCardInfo, PageResponse } from "@/app/shared/types";
 import { useRequest } from "@/app/effects/useRequest";
+import { useUser } from "@/app/context/userContext";
 
 export default function () {
+    const { session } = useUser();
+
+    if (!session)
+        return <></>
+
     const { data, execute } = useRequest<PageResponse<MediaCardInfo>>(() => api.library_CurrentWatching(1, 10));
 
     useEffect(() => { execute(); }, [])

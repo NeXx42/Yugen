@@ -1,7 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Yugen.Core.Configs;
@@ -9,6 +8,7 @@ using Yugen.Data;
 using Yugen.Domain.Data.Users;
 using Yugen.Domain.Interfaces;
 using Yugen.Domain.Models;
+using Yugen.Domain.Models.User;
 using Yugen.Providers;
 using Yugen.Providers.Jellyfin;
 
@@ -16,6 +16,9 @@ namespace Yugen.Core.Services;
 
 public class UserService
 {
+    public const string CLAIM_ID = "ID";
+    public const string CLAIM_JELLYFIN_ID = "JELLYFIN_ID";
+
     private readonly YugenContext _db;
 
     private readonly CacheService _cache;
@@ -33,19 +36,18 @@ public class UserService
         _jwtToken = Convert.FromBase64String(encryptionSettings.Value.jwtToken);
     }
 
-    public async Task<UserSession> GetUser(Guid userId)
+    public async Task<JWTUser> GetUser(Guid userId)
     {
         string CACHE_KEY = $"USER_SESSION_{userId}";
 
-        if (_cache.TryGetValue(CACHE_KEY, out UserSession? usr))
+        if (_cache.TryGetValue(CACHE_KEY, out JWTUser? usr))
             return usr!;
 
         UserModel dbUser = await _db.user.SingleAsync(x => x.Id == userId);
-        usr = new UserSession()
+        usr = new JWTUser()
         {
-            User = dbUser!,
-            JellyfinId = dbUser.ProviderId,
-            AccessToken = GenerateToken(dbUser)
+            Id = dbUser!.Id,
+            JellyfinId = dbUser.ProviderId
         };
 
         _cache.SetIfNotExists(CACHE_KEY, usr);
@@ -57,7 +59,7 @@ public class UserService
         return await _userProvider.GetAllUsers();
     }
 
-    public async Task<UserSession?> LoginUser(string username, string password)
+    public async Task<string?> LoginUser(string username, string password)
     {
         string? jellyfinId = await _userProvider.LoginUser(username, password);
 
@@ -68,21 +70,73 @@ public class UserService
 
         if (dbUser == null)
         {
-            await _db.AddAsync(new UserModel()
+            dbUser = new UserModel()
             {
                 ProviderId = jellyfinId
-            });
+            };
 
+            await _db.AddAsync(dbUser);
             await _db.SaveChangesAsync();
-            dbUser = _db.user.FirstOrDefault(x => x.ProviderId == jellyfinId);
         }
+
+        return GenerateToken(dbUser!);
+    }
+
+    public async Task<UserSession?> GetSession(JWTUser? usr)
+    {
+        if (usr == null)
+            return null;
+
+        UserModel? usrModel = await _db.user
+            .Include(u => u.settings)
+            .Where(u => u.Id == usr.Id)
+            .SingleOrDefaultAsync();
+
+        if (usrModel == null)
+            return null;
 
         return new UserSession()
         {
-            User = dbUser!,
-            JellyfinId = dbUser!.ProviderId,
-            AccessToken = GenerateToken(dbUser)
+            Id = usr.Id,
+            Settings = usrModel.settings.ToDictionary(s => s.Key, s => s.Value)
         };
+    }
+
+    public async Task SaveUserSetting(Guid userId, string key, string? value)
+    {
+        UserModel? usr = await _db.user
+            .Include(s => s.settings.Where(s => s.Key.Equals(key)))
+            .Where(u => u.Id == userId)
+            .SingleOrDefaultAsync();
+
+        if (usr == null)
+            throw new Exception("User doesnt exist");
+
+        if (string.IsNullOrEmpty(value))
+        {
+            if (usr.settings.Count == 0)
+                return;
+
+            _db.RemoveRange(usr.settings);
+        }
+        else
+        {
+            if (usr.settings.Count == 0)
+            {
+                await _db.AddAsync(new Model_UserSetting
+                {
+                    UserId = userId,
+                    Key = key,
+                    Value = value
+                });
+            }
+            else
+            {
+                usr.settings.Single().Value = value;
+            }
+        }
+
+        await _db.SaveChangesAsync();
     }
 
     public string GenerateToken(UserModel usr)
@@ -92,7 +146,8 @@ public class UserService
         {
             Subject = new ClaimsIdentity(new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, usr.Id.ToString()),
+                new Claim(CLAIM_ID, usr.Id.ToString()),
+                new Claim(CLAIM_JELLYFIN_ID, usr.ProviderId)
             }),
             Audience = "Yugen",
             Issuer = "Yugen",
