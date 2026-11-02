@@ -195,6 +195,7 @@ public class CatalogService
         // hydrate
 
         Model_Media[] dbEntries = await _db.media
+            .Include(m => m.link)
             .Include(m => m.Tags)
             .Include(m => m.Genres)
             .Include(m => m.RelatedMedia)
@@ -266,8 +267,9 @@ public class CatalogService
             MediaCard[] recommend = media.RelatedMedia
                 .Where(r => mediaLookup.ContainsKey(r.ConnectedMediaId))
                 .OrderByDescending(r => r.RelationScore)
-                .Select(r => mediaLookup[r.ConnectedMediaId]!)
-                .ToArray();
+                .Select(r => mediaLookup[r.ConnectedMediaId])
+                .Where(c => c != null) // its possible for the referenced card to not exist in the get call
+                .ToArray()!;
 
             Model_Tag?[] mediaTags = media.Tags.Select(t =>
             {

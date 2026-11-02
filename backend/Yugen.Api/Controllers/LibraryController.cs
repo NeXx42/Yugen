@@ -111,12 +111,7 @@ public class LibraryController : ControllerBase
     public async Task<IResult> RequestSeries(int mediaId, [FromBody] DownloadRequest request)
     {
         User.GetUserFromSession(out JWTUser usr);
-        bool res = await _libraryService.RequestSeries(usr, mediaId, request);
-
-        if (res)
-            return Results.Ok();
-
-        return Results.BadRequest();
+        return await ExceptionWrapper.WrapException(() => _libraryService.RequestSeries(usr, mediaId, request));
     }
 
     [HttpGet("{mediaId}/Request")]

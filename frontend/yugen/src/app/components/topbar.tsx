@@ -33,9 +33,6 @@ export default function () {
     const search = (inpt: string) => navigate.push(`search?query=${inpt}`)
 
     useEffect(() => {
-        if (session)
-            api.notification_Count().then(setNotificationCount);
-
         function handleClickOutside(event: MouseEvent) {
             if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
                 setQuickSearchOpen(false);
@@ -55,6 +52,12 @@ export default function () {
         };
 
     }, [])
+
+    useEffect(() => {
+        if (session)
+            api.notification_Count().then(setNotificationCount);
+
+    }, [session])
 
     useEffect(() => {
         const callback = () => {

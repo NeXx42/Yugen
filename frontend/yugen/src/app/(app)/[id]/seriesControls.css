@@ -1,10 +1,8 @@
-.SeriesControls {
-    display: grid;
-    grid-template-columns: auto 35px;
-    gap: 8px;
-}
-
 .SeriesControl_Bookmark {
     font-size: 15px;
     padding-left: 10px;
+}
+
+.SeriesController_ElementContainerGroup {
+    display: grid;
 }

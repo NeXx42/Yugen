@@ -10,13 +10,12 @@ import { useUser } from "@/app/context/userContext";
 
 export default function () {
     const { session } = useUser();
-
-    if (!session)
-        return <></>
-
     const { data, execute } = useRequest<PageResponse<MediaCardInfo>>(() => api.library_CurrentWatching(1, 10));
 
-    useEffect(() => { execute(); }, [])
+    useEffect(() => {
+        if (session)
+            execute();
+    }, [session])
 
     const watchingEntries: MediaCardInfo[] = useMemo(() => {
         if ((data?.data?.length ?? 0) > 0)
@@ -24,6 +23,9 @@ export default function () {
 
         return []
     }, [data])
+
+    if (!session)
+        return <></>
 
     return (
         watchingEntries.length > 0 && (<div>

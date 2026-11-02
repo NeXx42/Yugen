@@ -27,7 +27,10 @@ export default function (props: Props) {
         setLoadedContent(props.content);
     }, [props.content]);
 
-    const drawElement = (card: MediaCardInfo) => {
+    const drawElement = (card: MediaCardInfo | undefined) => {
+        if (!card)
+            return <></>;
+
         if (props.drawer != null)
             return props.drawer(card);
 

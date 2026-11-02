@@ -6,6 +6,8 @@ import { MediaInfo, DownloadRequestInfo, MediaRequest } from "@shared/types";
 import { ReactNode, useEffect, useState } from "react";
 
 import "./seriesRequestModal.css"
+import LoadingCover from "@/app/components/Misc/LoadingCover";
+import ErrorBox from "@/app/components/Misc/errorBox";
 
 export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInfo, onUpdate: () => void, onClose: () => void }) {
     const [loading, setLoading] = useState(false);
@@ -109,10 +111,7 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
     }
 
     const drawEpisodes = (): ReactNode => {
-        if (mediaRequest == null)
-            return (<></>)
-
-        if (requestInfo?.downloadedEpisodes == null)
+        if (!requestInfo?.downloadedEpisodes)
             return (<p>Unknown series</p>);
 
         return (
@@ -121,7 +120,7 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
                     <tr className="MediaRequest_Menu_Episodes_Header">
                         <th>Episode</th>
                         <th>Downloaded</th>
-                        <th> Monitored</th>
+                        <th>Monitored</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -177,94 +176,87 @@ export default function ({ mediaInfo, onUpdate, onClose }: { mediaInfo: MediaInf
         </form>)
     }
 
-    const drawMenuContent = (info: DownloadRequestInfo): ReactNode => {
+    const drawWrapper = () => {
+        if (error)
+            return <ErrorBox error={""} />
+
+        const drawIds = () => {
+            if (!requestInfo)
+                return <></>
+
+            if (requestInfo.libraryProvider === 1)
+                return <div>TMDB Id: <strong>{requestInfo.sonarrRequestId ?? "UNKNOWN"}</strong></div>;
+
+            return (<>
+                <div>TVDB Id: <strong>{requestInfo!.sonarrRequestId ?? "UNKNOWN"}</strong></div>
+                <div>Season: <strong>{requestInfo!.sonarrSeasonId ?? "UNKNOWN"}</strong></div>
+            </>)
+        }
+
+        const drawEpisodesList = () => {
+            if (!requestInfo)
+                return drawEpisodes();
+
+            if (requestInfo.downloadedEpisodes)
+                return (<>
+                    <div className="MediaRequest_Menu_Status">
+                        <a>Monitored</a>
+                        <input type="checkbox" checked={mediaRequest?.monitorSeason ?? false} onChange={e => toggleSeasonMonitor()} />
+                    </div>
+
+                    <div className="MediaRequest_Menu_Episodes">
+                        {
+                            requestInfo?.sonarrRequestId
+                                ? drawEpisodes()
+                                : drawManualLinker()
+                        }
+                    </div>
+
+                    <div className="MediaRequest_Menu_Controls">
+                        <button onClick={deleteMedia}>Delete</button>
+
+                        <div>
+                            <button onClick={research}>Search Monitored</button>
+                            <button onClick={requestMedia}>Update Monitor Status</button>
+                        </div>
+                    </div>
+                </>)
+
+            return (<div className="MediaRequest_Menu_DownloadMetadata">
+                {
+                    requestInfo?.sonarrRequestId != undefined ? (<>
+                        <p>Unknown series</p>
+                        <button onClick={() => { toggleSeasonMonitor(true); return requestMedia(); }}>Download Provider data</button>
+                    </>)
+                        : drawManualLinker()
+                }
+            </div >);
+        }
 
         return (<>
             <div className="MediaRequest_Menu_Ids">
-                {
-                    info.libraryProvider === 1 ?
-                        (
-                            <div>TMDB Id: <strong>{info.sonarrRequestId ?? "UNKNOWN"}</strong></div>
-                        )
-                        : (
-                            <>
-                                <div>TVDB Id: <strong>{info.sonarrRequestId ?? "UNKNOWN"}</strong></div>
-                                <div>Season: <strong>{info.sonarrSeasonId ?? "UNKNOWN"}</strong></div>
-                            </>
-                        )
-                }
-
+                {drawIds()}
                 <div>Root:
-                    <select value={info!.selectedRoot ?? 0} onChange={e => updateSelectedRoot(e.target.value)}>
-                        {info.roots.map(r => <option key={r.path} value={r.path}>{r.path}</option>)}
+                    <select value={requestInfo?.selectedRoot ?? 0} onChange={e => updateSelectedRoot(e.target.value)}>
+                        {requestInfo?.roots.map(r => <option key={r.path} value={r.path}>{r.path}</option>) ?? <option>LOADING</option>}
                     </select>
                 </div>
 
                 <div>Quality:
-                    <select value={info!.selectedQuality ?? 0} onChange={e => updateSelectedQuality(Number.parseInt(e.target.value))}>
-                        {info.qualities.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}
+                    <select value={requestInfo?.selectedQuality ?? 0} onChange={e => updateSelectedQuality(Number.parseInt(e.target.value))}>
+                        {requestInfo?.qualities.map(r => <option key={r.id} value={r.id}>{r.title}</option>) ?? <option>LOADING</option>}
                     </select>
                 </div>
-
                 <button onClick={resync}>Refresh</button>
             </div>
-
-            {
-                info?.downloadedEpisodes ? (
-                    <>
-                        <div className="MediaRequest_Menu_Status">
-                            <a>Monitored</a>
-                            <input type="checkbox" checked={mediaRequest!.monitorSeason} onChange={e => toggleSeasonMonitor()} />
-                        </div>
-
-                        <div className="MediaRequest_Menu_Episodes">
-                            {
-                                info.sonarrRequestId != undefined
-                                    ? drawEpisodes()
-                                    : drawManualLinker()
-                            }
-                        </div>
-
-                        <div className="MediaRequest_Menu_Controls">
-                            <button onClick={deleteMedia}>Delete</button>
-
-                            <div>
-                                <button onClick={research}>Search Monitored</button>
-                                <button onClick={requestMedia}>Update Monitor Status</button>
-                            </div>
-                        </div>
-                    </>
-                ) : (
-                    <div className="MediaRequest_Menu_DownloadMetadata">
-                        {
-                            info.sonarrRequestId != undefined ? (<>
-                                <p>Unknown series</p>
-                                <button onClick={() => { toggleSeasonMonitor(true); return requestMedia(); }}>Download Provider data</button>
-                            </>)
-                                : drawManualLinker()
-                        }
-
-                    </div>
-                )
-            }
-
-
+            {drawEpisodesList()}
         </>)
-    }
-
-    const drawWrapper = () => {
-        if (error || requestInfo == null)
-            return (<>{error ?? "Failed to load"}</>)
-
-        if (loading)
-            return (<>loading...</>)
-
-        return drawMenuContent(requestInfo);
     }
 
     return (
         <div className="MediaRequest_Menu" >
             <h1>{mediaInfo.title}</h1>
             {drawWrapper()}
+            {loading && <LoadingCover />}
         </div>)
 }

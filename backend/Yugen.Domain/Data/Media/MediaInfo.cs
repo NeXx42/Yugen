@@ -37,8 +37,21 @@ public class MediaInfo
     public MediaCard[]? recommended { get; set; }
     public Connection[]? connectedMedia { get; set; }
 
+    public Dictionary<string, string>? externalLinks { get; set; } = new Dictionary<string, string>();
+
     public static MediaInfo Map(Model_Media media)
     {
+        Dictionary<string, string> links = new Dictionary<string, string>();
+
+        if (media.link != null)
+        {
+            if (media.link.anilist_id.HasValue)
+                links.Add("anilist", media.link.anilist_id.Value.ToString());
+
+            if (media.link.mal_id.HasValue)
+                links.Add("mal", media.link.mal_id.Value.ToString());
+        }
+
         return new MediaInfo()
         {
             id = media.Id,
@@ -60,7 +73,9 @@ public class MediaInfo
             colour = media.Colour,
 
             lastViewed = media.lastViewed,
-            genres = media.Genres.Select(g => g.Genre).ToArray()
+            genres = media.Genres.Select(g => g.Genre).ToArray(),
+
+            externalLinks = links
         };
     }
 

@@ -2,7 +2,7 @@
 
 import * as api from "@lib/api.local"
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { SettingsGroupProps } from "../settingsModal"
 import { useUser } from "@/app/context/userContext";
 import { LanguageCodes, Languages } from "@/app/shared/enum_Languages";
@@ -71,7 +71,7 @@ export default function (master: SettingsGroupProps) {
     }
 
     return Object.keys(groupedSettings).map(s =>
-        <>
+        <React.Fragment key={s}>
             <h2>{s}</h2>
             <div className="Settings_Menu_Content_Entries_Settings">
                 {
@@ -100,6 +100,6 @@ export default function (master: SettingsGroupProps) {
                     })
                 }
             </div>
-        </>
+        </React.Fragment>
     )
 }

@@ -158,6 +158,8 @@ public class SonarrLibraryProvider : ILibraryProvider
             await Task.Delay(1000); // :)))))
             await _http.SendRequest<SonarrRequest_FetchLibrary>(Path.Combine("series", series!.id.ToString()), HttpMethod.Put, series);
 
+            episodes = await _http.SendRequest<SonarrLibrary_Response_Episode[]>($"episode?seriesId={series.id}&seasonNumber={mediaRequest.seasonId}", HttpMethod.Get);
+
             return new Model_DownloadedMedia()
             {
                 MediaId = mediaId,
@@ -171,14 +173,7 @@ public class SonarrLibraryProvider : ILibraryProvider
                 ExternalRoot = series.rootFolderPath,
 
                 LastChecked = DateTime.UtcNow,
-                downloadedEpisodes = episodes!.Select(e => new Model_DownloadedEpisode()
-                {
-                    MediaId = mediaId,
-
-                    Id = e.id,
-                    EpisodeNumber = e.episodeNumber,
-                    monitored = false,
-                }).ToArray()
+                downloadedEpisodes = episodes!.Select(MapEpisodes).ToArray()
             };
         }
 
@@ -194,16 +189,18 @@ public class SonarrLibraryProvider : ILibraryProvider
         existing.IsMonitored = mediaRequest.monitorSeason;
         series = await _http.SendRequest<SonarrRequest_FetchLibrary>(Path.Combine("series", series!.id.ToString()), HttpMethod.Put, series);
 
-        SonarrLibrary_Response_Episode[]? eps = await _http.SendRequest<SonarrLibrary_Response_Episode[]>($"episode?seriesId={existing.ProviderId}&seasonNumber={mediaRequest.seasonId}", HttpMethod.Get);
-        existing.downloadedEpisodes = eps?.Select(e => new Model_DownloadedEpisode()
+        episodes = await _http.SendRequest<SonarrLibrary_Response_Episode[]>($"episode?seriesId={existing.ProviderId}&seasonNumber={mediaRequest.seasonId}", HttpMethod.Get);
+        existing.downloadedEpisodes = episodes?.Select(MapEpisodes).ToArray() ?? [];
+
+        return existing;
+
+        Model_DownloadedEpisode MapEpisodes(SonarrLibrary_Response_Episode e) => new Model_DownloadedEpisode()
         {
             Id = e.id,
             MediaId = mediaId,
             EpisodeNumber = e.episodeNumber,
             monitored = e.monitored,
-        }).ToArray() ?? [];
-
-        return existing;
+        };
     }
 
     public async Task<bool> ResearchMedia(Model_DownloadedMedia existingDownload)

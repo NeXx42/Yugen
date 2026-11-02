@@ -8,6 +8,7 @@ import { ReactNode, useEffect, useState } from "react";
 import "./massSubtitleEditor.css"
 import { useToast } from "@/app/context/toast";
 import { LanguageCodes, Languages } from "@/app/shared/enum_Languages";
+import LoadingCover from "@/app/components/Misc/LoadingCover";
 
 export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
     const [loading, setLoading] = useState(false);
@@ -109,9 +110,7 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
                 </div>
 
                 {
-                    loading && (<div className="MassSubtitlesEditor_Loading">
-                        Loading...
-                    </div>)
+                    loading && (<LoadingCover />)
                 }
             </>
         )

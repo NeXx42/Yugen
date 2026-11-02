@@ -60,7 +60,6 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
         }
 
         const updateLocalPlaytime = (epId: number, percentage: number) => {
-            console.log(localPlaytime);
             setLocalPlaytime(prev => ({
                 ...prev,
                 [epId]: percentage
@@ -96,7 +95,7 @@ export default function ({ mediaInfo }: { mediaInfo: MediaInfo }) {
         )
     }
 
-    if (mediaInfo.type === "MOVIE") {
+    if (mediaInfo.type?.toLowerCase() === "movie") {
         const [filmEpisode, setFileEpisode] = useState<SelectedEpisodeInfo | null>();
 
         useEffect(() => {

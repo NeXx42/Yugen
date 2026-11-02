@@ -405,7 +405,7 @@ public class LibraryService
         await _db.BulkInsertAsync(allBookmarks);
     }
 
-    public async Task<bool> RequestSeries(JWTUser usr, int mediaId, DownloadRequest request)
+    public async Task RequestSeries(JWTUser usr, int mediaId, DownloadRequest request)
     {
         using var concurrentCheck = _endpointDeduplicator.TryAcquire(usr, nameof(RequestSeries), mediaId.ToString());
 
@@ -413,14 +413,14 @@ public class LibraryService
         Model_DownloadedMedia? newDownload = await _library.GetFactory((LibraryProviderType)request.libraryProvider).RequestSeries(mediaId, existingDownload, request);
 
         if (newDownload == null)
-            return false;
+            return;
 
         if (existingDownload == null)
         {
             await _db.AddAsync(newDownload);
             await _db.SaveChangesAsync();
 
-            return true;
+            return;
         }
 
         _db.RemoveRange(existingDownload.downloadedEpisodes);
@@ -429,8 +429,6 @@ public class LibraryService
 
         await _db.AddAsync(newDownload);
         await _db.SaveChangesAsync();
-
-        return false;
     }
 
     public async Task ResearchDownloads(JWTUser usr, int mediaId)

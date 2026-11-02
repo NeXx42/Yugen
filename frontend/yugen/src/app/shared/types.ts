@@ -90,6 +90,8 @@ export interface MediaInfo {
     tags: MediaTag[],
     recommended: MediaCardInfo[]
     connectedMedia: MediaConnection[]
+
+    externalLinks?: Record<string, string>
 }
 
 export interface MediaEpisodeInfo {
