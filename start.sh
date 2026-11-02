@@ -1,32 +1,33 @@
-#!/bin/sh
-set -e
+#!/bin/bash
+set -u
 
-echo "Starting ASP.NET API..."
-dotnet /app/backend/Yugen.Api.dll &
+prefix() {
+  local tag="$1" line
+  while IFS= read -r line || [ -n "$line" ]; do
+    printf '[%s] %s\n' "$tag" "$line"
+  done
+}
+
+dotnet /app/backend/Yugen.Api.dll \
+  > >(prefix api) \
+  2> >(prefix api >&2) &
 API_PID=$!
 
-echo "Starting Next.js..."
-node /app/frontend/server.js &
+node /app/frontend/server.js \
+  > >(prefix web) \
+  2> >(prefix web >&2) &
 WEB_PID=$!
 
 shutdown() {
-  echo "Stopping services..."
-
-  kill -TERM "$API_PID" 2>/dev/null || true
-  kill -TERM "$WEB_PID" 2>/dev/null || true
-
-  wait "$API_PID" 2>/dev/null || true
-  wait "$WEB_PID" 2>/dev/null || true
-
-  echo "Shutdown complete"
+  trap - TERM INT
+  kill -TERM "$API_PID" "$WEB_PID" 2>/dev/null
+  wait "$API_PID" "$WEB_PID" 2>/dev/null
 }
+trap shutdown TERM INT
 
-trap shutdown INT TERM
+wait -n "$API_PID" "$WEB_PID"
+EXIT_CODE=$?
 
-while kill -0 "$API_PID" 2>/dev/null && kill -0 "$WEB_PID" 2>/dev/null
-do
-  sleep 1
-done
-
-echo "One service exited, shutting down container..."
+echo "[start] a service exited with code $EXIT_CODE, stopping the other" >&2
 shutdown
+exit "$EXIT_CODE"
